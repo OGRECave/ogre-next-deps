@@ -1,5 +1,7 @@
 # provide configuration options to choose which of the dependencies to build
+option(OGREDEPS_BUILD_CG "Build Cg dependency" TRUE)
 option(OGREDEPS_BUILD_FREEIMAGE "Build FreeImage dependency" TRUE)
+option(OGREDEPS_BUILD_FREETYPE "Build FreeType dependency" TRUE)
 option(OGREDEPS_BUILD_OIS "Build OIS dependency" TRUE)
 option(OGREDEPS_BUILD_ZLIB "Build zlib dependency" TRUE)
 option(OGREDEPS_BUILD_ZZIPLIB "Build zziplib dependency" TRUE)
@@ -18,6 +20,17 @@ else ()
   set(OGREDEPS_RELEASE_PATH "")
   set(OGREDEPS_DEBUG_PATH "")
 endif ()
+
+# postfix debug libraries with a _d
+set(CMAKE_DEBUG_POSTFIX "_d")
+
+# Add -fPIC flag to x64 GCC builds
+if (CMAKE_COMPILER_IS_GNUCXX AND NOT MINGW)
+  if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
+    add_definitions(-fPIC)
+  endif ()
+endif ()
+
 
 # by default, install to source directory
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -70,8 +83,14 @@ endmacro()
 
 
 # setup the individual dependencies
+if (OGREDEPS_BUILD_CG)
+  add_subdirectory(Cg)
+endif ()
 if (OGREDEPS_BUILD_FREEIMAGE)
   add_subdirectory(FreeImage)
+endif ()
+if (OGREDEPS_BUILD_FREETYPE)
+  add_subdirectory(freetype)
 endif ()
 if (OGREDEPS_BUILD_OIS)
   add_subdirectory(ois)

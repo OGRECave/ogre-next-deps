@@ -542,3 +542,8 @@ include_directories(Source/ZLib)
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS)
 add_library(FreeImage STATIC ${FreeImage_SOURCES})
 install_dep(FreeImage include Source/FreeImage.h)
+
+set(FreeImage_INCLUDE_DIR "${FreeImage_SOURCE_DIR}/Source" CACHE PATH "" FORCE)
+set(FreeImage_LIBRARY_DBG FreeImage CACHE STRING "" FORCE)
+set(FreeImage_LIBRARY_REL FreeImage CACHE STRING "" FORCE)
+mark_as_advanced(FreeImage_INCLUDE_DIR FreeImage_LIBRARY_DBG FreeImage_LIBRARY_REL)

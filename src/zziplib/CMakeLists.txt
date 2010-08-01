@@ -48,3 +48,8 @@ endif ()
 
 add_library(zziplib STATIC ${zziplib_SOURCES})
 install_dep(zziplib include/zzip zzip/_config.h zzip/conf.h zzip/types.h zzip/zzip.h)
+
+set(ZZip_INCLUDE_DIR "${zziplib_SOURCE_DIR}" CACHE PATH "" FORCE)
+set(ZZip_LIBRARY_DBG "zziplib" CACHE STRING "" FORCE)
+set(ZZip_LIBRARY_REL "zziplib" CACHE STRING "" FORCE)
+mark_as_advanced(ZZip_INCLUDE_DIR ZZip_LIBRARY_DBG ZZip_LIBRARY_REL)

@@ -38,6 +38,8 @@ set(zziplib_SOURCES
   zzip/zzip.h
 )
 
+# need zlib includes
+include_directories(${OGREDEPS_SOURCE_DIR}/src/zlib)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WIN32)

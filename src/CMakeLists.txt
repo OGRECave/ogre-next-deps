@@ -1,5 +1,6 @@
 # provide configuration options to choose which of the dependencies to build
 option(OGREDEPS_BUILD_ZLIB "Build zlib dependency" TRUE)
+option(OGREDEPS_BUILD_ZZIPLIB "Build zziplib dependency" TRUE)
 option(OGREDEPS_INSTALL_DEV "Install development headers and libraries" TRUE)
 set(OGREDEPS_LIB_DIRECTORY "lib${LIB_SUFFIX}" CACHE STRING "Install path for libraries, e.g. 'lib64' on some 64-bit Linux distros.")
 mark_as_advanced(OGREDEPS_LIB_DIRECTORY)
@@ -40,18 +41,24 @@ macro(install_dep LIBRARY INCLUDE_DIR)
   # always install runtime (i.e. DLL)
   install(TARGETS ${LIBRARY}
     RUNTIME DESTINATION "bin${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
+    LIBRARY DESTINATION "${OGREDEPS_BINARY_DIR}/notwanted" CONFIGURATIONS Release
+    ARCHIVE DESTINATION "${OGREDEPS_BINARY_DIR}/notwanted" CONFIGURATIONS Release
   )
   install(TARGETS ${LIBRARY}
     RUNTIME DESTINATION "bin${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
+    LIBRARY DESTINATION "${OGREDEPS_BINARY_DIR}/notwanted" CONFIGURATIONS Debug
+    ARCHIVE DESTINATION "${OGREDEPS_BINARY_DIR}/notwanted" CONFIGURATIONS Debug
   )
     
   if (OGREDEPS_INSTALL_DEV)
     # also install development parts
     install(TARGETS ${LIBRARY}
+      RUNTIME DESTINATION "bin${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
       LIBRARY DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
       ARCHIVE DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
     )
     install(TARGETS ${LIBRARY}
+      RUNTIME DESTINATION "bin${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
       LIBRARY DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
       ARCHIVE DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
     )
@@ -59,7 +66,12 @@ macro(install_dep LIBRARY INCLUDE_DIR)
   endif ()
 endmacro()
 
+
+# setup the individual dependencies
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)
+endif ()
+if (OGREDEPS_BUILD_ZZIPLIB)
+  add_subdirectory(zziplib)
 endif ()
 

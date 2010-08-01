@@ -1,0 +1,65 @@
+# provide configuration options to choose which of the dependencies to build
+option(OGREDEPS_BUILD_ZLIB "Build zlib dependency" TRUE)
+option(OGREDEPS_INSTALL_DEV "Install development headers and libraries" TRUE)
+set(OGREDEPS_LIB_DIRECTORY "lib${LIB_SUFFIX}" CACHE STRING "Install path for libraries, e.g. 'lib64' on some 64-bit Linux distros.")
+mark_as_advanced(OGREDEPS_LIB_DIRECTORY)
+
+# choose paths to build and install dependencies to
+if (NOT OGREDEPS_RUNTIME_OUTPUT)
+  set(OGREDEPS_RUNTIME_OUTPUT ${OGREDEPS_BINARY_DIR}/bin)
+endif ()
+if (WIN32)
+  set(OGREDEPS_RELEASE_PATH "/Release")
+  set(OGREDEPS_DEBUG_PATH "/Debug")
+else ()
+  set(OGREDEPS_RELEASE_PATH "")
+  set(OGREDEPS_DEBUG_PATH "")
+endif ()
+
+# by default, install to source directory
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  if (OGREDEPS_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(CMAKE_INSTALL_PREFIX "${OGREDEPS_SOURCE_DIR}" CACHE PATH "OGREDEPS install prefix" FORCE)
+  endif ()
+endif ()
+
+# enforce that CMAKE_BUILD_TYPE is set, otherwise install commands
+# will not work for Makefile based generators.
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: Debug, Release" FORCE)
+endif ()
+
+# configure and install dependency LIBRARY
+# INCLUDE_DIR specifies where header files need to be installed
+# Any additional parameters are treated as a list of header files
+# to install.
+macro(install_dep LIBRARY INCLUDE_DIR)
+  set_target_properties(${LIBRARY} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${OGREDEPS_RUNTIME_OUTPUT}
+  )
+  # always install runtime (i.e. DLL)
+  install(TARGETS ${LIBRARY}
+    RUNTIME DESTINATION "bin${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
+  )
+  install(TARGETS ${LIBRARY}
+    RUNTIME DESTINATION "bin${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
+  )
+    
+  if (OGREDEPS_INSTALL_DEV)
+    # also install development parts
+    install(TARGETS ${LIBRARY}
+      LIBRARY DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
+      ARCHIVE DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
+    )
+    install(TARGETS ${LIBRARY}
+      LIBRARY DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
+      ARCHIVE DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
+    )
+    install(FILES ${ARGN} DESTINATION ${INCLUDE_DIR})
+  endif ()
+endmacro()
+
+if (OGREDEPS_BUILD_ZLIB)
+  add_subdirectory(zlib)
+endif ()
+

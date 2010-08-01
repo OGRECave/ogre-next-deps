@@ -1,4 +1,5 @@
 # provide configuration options to choose which of the dependencies to build
+option(OGREDEPS_BUILD_OIS "Build OIS dependency" TRUE)
 option(OGREDEPS_BUILD_ZLIB "Build zlib dependency" TRUE)
 option(OGREDEPS_BUILD_ZZIPLIB "Build zziplib dependency" TRUE)
 option(OGREDEPS_INSTALL_DEV "Install development headers and libraries" TRUE)
@@ -68,6 +69,9 @@ endmacro()
 
 
 # setup the individual dependencies
+if (OGREDEPS_BUILD_OIS)
+  add_subdirectory(ois)
+endif ()
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)
 endif ()

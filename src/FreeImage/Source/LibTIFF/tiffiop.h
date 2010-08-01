@@ -101,7 +101,7 @@ typedef	void (*TIFFTileMethod)(TIFF*, uint32*, uint32*);
 
 struct tiff {
 	char*		tif_name;	/* name of open file */
-	int		tif_fd;		/* open file descriptor */
+	intptr_t	tif_fd;		/* open file descriptor */
 	int		tif_mode;	/* open mode (O_*) */
 	uint32		tif_flags;
 #define	TIFF_FILLORDER		0x00003	/* natural bit fill order for machine */

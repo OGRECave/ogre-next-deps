@@ -24,9 +24,18 @@ endif ()
 # postfix debug libraries with a _d
 set(CMAKE_DEBUG_POSTFIX "_d")
 
+# determine if we are compiling for a 32bit or 64bit system
+include(CheckTypeSize)
+CHECK_TYPE_SIZE("void*" OGREDEPS_PTR_SIZE BUILTIN_TYPES_ONLY)
+if (OGREDEPS_PTR_SIZE EQUAL 8)
+  set(OGREDEPS_PLATFORM_X64 TRUE)
+else ()
+  set(OGREDEPS_PLATFORM_X64 FALSE)
+endif ()
+
 # Add -fPIC flag to x64 GCC builds
 if (CMAKE_COMPILER_IS_GNUCXX AND NOT MINGW)
-  if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE)
+  if (OGREDEPS_PLATFORM_X64 AND NOT APPLE)
     add_definitions(-fPIC)
   endif ()
 endif ()

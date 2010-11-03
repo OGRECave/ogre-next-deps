@@ -64,7 +64,6 @@ extern void *lfind(const void *, const void *, size_t *, size_t,
 #define TIFF_INT64_T  signed long long
 #define TIFF_UINT64_T unsigned long long
 
-#include <stdint.h>
 #include "tiffio.h"
 #include "tif_dir.h"
 

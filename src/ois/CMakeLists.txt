@@ -51,8 +51,8 @@ if (WIN32)
     src/win32/extras/WiiMote/wiimote.cpp
   )
   # need DirectX includes and libraries
-  include_directories($ENV{DXSDK_DIR}include)
-  set(OIS_PLATFORM_LIBS dinput8 dxguid)
+  include_directories(${DirectX_INCLUDE_DIRS})
+  set(OIS_PLATFORM_LIBS ${DirectX_DINPUT8_LIBRARY} ${DirectX_DXGUID_LIBRARY})
 elseif (APPLE)
   set(OIS_PLATFORM_HEADERS
     includes/mac/MacHelpers.h

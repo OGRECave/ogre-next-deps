@@ -96,6 +96,12 @@ include_directories(includes)
 add_definitions(-DOIS_NONCLIENT_BUILD -DOIS_DYNAMIC_LIB)
 
 add_library(OIS SHARED ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})
+
+if (MINGW)
+	  # remove lib prefix from DLL outputs
+	  set_target_properties(OIS PROPERTIES PREFIX "")
+endif ()
+
 target_link_libraries(OIS ${OIS_PLATFORM_LIBS})
 install_dep(OIS include/OIS ${OIS_HEADERS})
 if (OGREDEPS_INSTALL_DEV)

@@ -8,6 +8,9 @@
 /* @(#) $Id: gzio.c,v 1.5 2005/08/27 17:22:42 drolon Exp $ */
 
 #include <stdio.h>
+#ifndef _WIN32
+#include <errno.h>
+#endif
 
 #include "zutil.h"
 

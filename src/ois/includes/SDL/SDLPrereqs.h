@@ -20,22 +20,19 @@ restrictions:
 
     3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef OIS_OISALL_H
-#define OIS_OISALL_H
+#ifndef OIS_SDLPrereqs_H
+#define OIS_SDLPrereqs_H
 
 #include "OISPrereqs.h"
-#include "OISObject.h"
-#include "OISMouse.h"
-#include "OISKeyboard.h"
-#include "OISJoyStick.h"
-#include "OISMultiTouch.h"
-#include "OISInputManager.h"
-#include "OISFactoryCreator.h"
-#include "OISException.h"
-#include "OISEvents.h"
 
-#include "OISEffect.h"
-#include "OISInterface.h"
-#include "OISForceFeedback.h"
+#ifdef OIS_APPLE_PLATFORM
+#  include <SDL/SDL.h>
+#else
+#  include <SDL.h>
+#endif
+
+#define OIS_SDL_KEY_BUFF   16
+#define OIS_SDL_MOUSE_BUFF 50
+#define OIS_SDL_JOY_BUFF   80
 
 #endif

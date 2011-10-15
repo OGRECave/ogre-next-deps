@@ -20,68 +20,60 @@ restrictions:
 
     3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef _WIN32_KEYBOARD_H_EADER_
-#define _WIN32_KEYBOARD_H_EADER_
+#ifndef _OIS_SDLKEYBOARD_H
+#define _OIS_SDLKEYBOARD_H
 
 #include "OISKeyboard.h"
-#include "win32/Win32Prereqs.h"
+#include "SDL/SDLPrereqs.h"
 
 namespace OIS
 {
-	class Win32Keyboard : public Keyboard
+	class SDLKeyboard : public Keyboard
 	{
 	public:
 		/**
 		@remarks
 			Constructor
-		@param pDI
-			Valid DirectInput8 Interface
 		@param buffered
 			True for buffered input mode
-		@param coopSettings
-			A combination of DI Flags (see DX Help for info on input device settings)
 		*/
-		Win32Keyboard(InputManager* creator, IDirectInput8* pDI, bool buffered, DWORD coopSettings);
-		virtual ~Win32Keyboard();
+		SDLKeyboard( bool buffered );
+		virtual ~SDLKeyboard();
 
 		/** @copydoc Keyboard::isKeyDown */
-		virtual bool isKeyDown(KeyCode key) const;
-		
+		virtual bool isKeyDown( KeyCode key );
+
 		/** @copydoc Keyboard::getAsString */
-		virtual const std::string& getAsString(KeyCode kc);
+		virtual const std::string& getAsString( KeyCode kc );
 
 		/** @copydoc Keyboard::copyKeyStates */
-		virtual void copyKeyStates(char keys[256]) const;
+		virtual void copyKeyStates( char keys[256] );
 
 		/** @copydoc Object::setBuffered */
 		virtual void setBuffered(bool buffered);
-		
+
 		/** @copydoc Object::capture */
 		virtual void capture();
 
 		/** @copydoc Object::queryInterface */
 		virtual Interface* queryInterface(Interface::IType type) {return 0;}
-		
+
 		/** @copydoc Object::_initialize */
 		virtual void _initialize();
-	protected:
-		void _readBuffered();
-		void _read();
 
-		IDirectInput8* mDirectInput;
-		IDirectInputDevice8* mKeyboard;
-		DWORD coopSetting;
+		/** @copydoc Object::setTextTranslation */
+		virtual void setTextTranslation( TextTranslationMode mode );
+
+	protected:
+		SDLKeyboard() {}
+
+		typedef std::map<SDLKey, KeyCode> KeyMap;
+        KeyMap mKeyMap;
 
 		unsigned char KeyBuffer[256];
-		
-		//! Internal method for translating KeyCodes to Text
-		int _translateText( KeyCode kc );
+		Uint8* mSDLBuff;
 
-		//! Stored dead key from last translation
-		WCHAR deadKey;
-
-		//! used for getAsString
 		std::string mGetString;
 	};
 }
-#endif //_WIN32_KEYBOARD_H_EADER_
+#endif

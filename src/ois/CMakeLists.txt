@@ -13,6 +13,7 @@ set(OIS_HEADERS
   includes/OISJoyStick.h
   includes/OISKeyboard.h
   includes/OISMouse.h
+  includes/OISMultiTouch.h
   includes/OISObject.h
   includes/OISPrereqs.h
 )
@@ -58,6 +59,7 @@ elseif (APPLE)
     includes/mac/MacHelpers.h
     includes/mac/MacHIDManager.h
     includes/mac/MacInputManager.h
+    includes/mac/MacJoyStick.h
     includes/mac/MacKeyboard.h
     includes/mac/MacMouse.h
     includes/mac/MacPrereqs.h
@@ -67,6 +69,7 @@ elseif (APPLE)
     src/mac/MacHelpers.cpp
     src/mac/MacHIDManager.cpp
     src/mac/MacInputManager.cpp
+    src/mac/MacJoyStick.cpp
     src/mac/MacKeyboard.cpp
     src/mac/MacMouse.cpp
   )

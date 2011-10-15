@@ -33,17 +33,17 @@ namespace OIS
 	class LinuxKeyboard : public Keyboard
 	{
 	public:
-		LinuxKeyboard(InputManager* creator, bool buffered, bool grab, bool useXRepeat );
+		LinuxKeyboard(InputManager* creator, bool buffered, bool grab);
 		virtual ~LinuxKeyboard();
 
 		/** @copydoc Keyboard::isKeyDown */
-		virtual bool isKeyDown( KeyCode key );
+		virtual bool isKeyDown( KeyCode key ) const;
 
 		/** @copydoc Keyboard::getAsString */
 		virtual const std::string& getAsString( KeyCode kc );
 
 		/** @copydoc Keyboard::copyKeyStates */
-		virtual void copyKeyStates( char keys[256] );
+		virtual void copyKeyStates( char keys[256] ) const;
 
 		/** @copydoc Object::setBuffered */
 		virtual void setBuffered(bool buffered);
@@ -58,6 +58,23 @@ namespace OIS
 		virtual void _initialize();
 
 	protected:
+		inline bool _isKeyRepeat(XEvent &event)
+		{
+			//When a key is repeated, there will be two events: released, followed by another immediate pressed. So check to see if another pressed is present	
+			if(!XPending(display))
+				return false;
+
+			XEvent e;
+			XPeekEvent(display, &e);
+			if(e.type == KeyPress && e.xkey.keycode == event.xkey.keycode && (e.xkey.time - event.xkey.time) < 2)
+			{
+				XNextEvent(display, &e);
+				return true;
+			}
+
+			return false;
+		}
+
 		bool _injectKeyDown( KeySym key, int text );
 		bool _injectKeyUp( KeySym key );
 
@@ -73,9 +90,6 @@ namespace OIS
 		Display *display;
 		bool grabKeyboard;
 		bool keyFocusLost;
-
-		bool xAutoRepeat;
-		bool oldXAutoRepeat;
 
 		std::string mGetString;
 	};

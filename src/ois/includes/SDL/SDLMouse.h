@@ -20,19 +20,19 @@ restrictions:
 
 	3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef _WIN32_MOUSE_H_EADER_
-#define _WIN32_MOUSE_H_EADER_
+#ifndef _OIS_SDLMOUSE_H
+#define _OIS_SDLMOUSE_H
 
 #include "OISMouse.h"
-#include "win32/Win32Prereqs.h"
+#include "SDL/SDLPrereqs.h"
 
 namespace OIS
 {
-	class Win32Mouse : public Mouse
+	class SDLMouse : public Mouse
 	{
 	public:
-		Win32Mouse( InputManager* creator, IDirectInput8* pDI, bool buffered, DWORD coopSettings );
-		virtual ~Win32Mouse();
+		SDLMouse( bool buffered );
+		virtual ~SDLMouse();
 		
 		/** @copydoc Object::setBuffered */
 		virtual void setBuffered(bool buffered);
@@ -46,14 +46,14 @@ namespace OIS
 		/** @copydoc Object::_initialize */
 		virtual void _initialize();
 
-	protected:
-		bool _doMouseClick( int mouseButton, DIDEVICEOBJECTDATA& di );
+		void _setGrab(bool grabbed);
+		void _setVisible(bool visible);
 
-		IDirectInput8* mDirectInput;
-		IDirectInputDevice8* mMouse;
-		DWORD coopSetting;
-		HWND mHwnd;
+	protected:
+		SDLMouse() {}
+
+		bool mGrabbed;
+		bool mRegainFocus;
 	};
 }
-
-#endif //_WIN32_MOUSE_H_EADER_
+#endif

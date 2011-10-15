@@ -129,7 +129,7 @@ void MacKeyboard::_initialize()
 }
 
 //-------------------------------------------------------------------//
-bool MacKeyboard::isKeyDown( KeyCode key )
+bool MacKeyboard::isKeyDown( KeyCode key ) const
 {
 	return (bool)KeyBuffer[key];
 }
@@ -320,7 +320,7 @@ void MacKeyboard::injectEvent( KeyCode kc, unsigned int time, MacEventType type,
 
 
 //-------------------------------------------------------------------//
-void MacKeyboard::copyKeyStates( char keys[256] )
+void MacKeyboard::copyKeyStates( char keys[256] ) const
 {
 	memcpy( keys, KeyBuffer, 256 );
 }

@@ -244,7 +244,6 @@ set(FreeImage_SOURCES
 	Source/LibPNG/pngset.c
     Source/LibPNG/pngstruct.h
 	Source/LibPNG/pngtrans.c
-    Source/LibPNG/pngvalid.c
 	Source/LibPNG/pngvcrd.c
 	Source/LibPNG/pngwio.c
 	Source/LibPNG/pngwrite.c
@@ -253,6 +252,7 @@ set(FreeImage_SOURCES
 	Source/LibRawLite/internal/dcraw_common.cpp
 	Source/LibRawLite/internal/dcraw_fileio.cpp
 	Source/LibRawLite/internal/defines.h
+    Source/LibRawLite/internal/demosaic_packs.cpp
 	Source/LibRawLite/internal/libraw_internal_funcs.h
 	Source/LibRawLite/internal/var_defines.h
 	Source/LibRawLite/libraw/libraw.h
@@ -333,6 +333,10 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/Iex/IexThrowErrnoExc.cpp
 	Source/OpenEXR/Iex/IexThrowErrnoExc.h
 	Source/OpenEXR/IlmBaseConfig.h
+    Source/OpenEXR/IlmImf/b44ExpLogTable.cpp
+    Source/OpenEXR/IlmImf/b44ExpLogTable.h
+    Source/OpenEXR/IlmImf/ImfAcesFile.cpp
+    Source/OpenEXR/IlmImf/ImfAcesFile.h
 	Source/OpenEXR/IlmImf/ImfArray.h
 	Source/OpenEXR/IlmImf/ImfAttribute.cpp
 	Source/OpenEXR/IlmImf/ImfAttribute.h
@@ -394,6 +398,8 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/IlmImf/ImfMatrixAttribute.h
 	Source/OpenEXR/IlmImf/ImfMisc.cpp
 	Source/OpenEXR/IlmImf/ImfMisc.h
+    Source/OpenEXR/IlmImf/ImfMultiView.cpp
+    Source/OpenEXR/IlmImf/ImfMultiView.h
 	Source/OpenEXR/IlmImf/ImfName.h
 	Source/OpenEXR/IlmImf/ImfOpaqueAttribute.cpp
 	Source/OpenEXR/IlmImf/ImfOpaqueAttribute.h
@@ -427,6 +433,8 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/IlmImf/ImfStdIO.h
 	Source/OpenEXR/IlmImf/ImfStringAttribute.cpp
 	Source/OpenEXR/IlmImf/ImfStringAttribute.h
+    Source/OpenEXR/IlmImf/ImfStringVectorAttribute.cpp
+    Source/OpenEXR/IlmImf/ImfStringVectorAttribute.h
 	Source/OpenEXR/IlmImf/ImfTestFile.cpp
 	Source/OpenEXR/IlmImf/ImfTestFile.h
 	Source/OpenEXR/IlmImf/ImfThreading.cpp
@@ -457,7 +465,6 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/IlmImf/ImfXdr.h
 	Source/OpenEXR/IlmImf/ImfZipCompressor.cpp
 	Source/OpenEXR/IlmImf/ImfZipCompressor.h
-	Source/OpenEXR/IlmImf/b44ExpLogTable.h
 	Source/OpenEXR/IlmThread/IlmThread.cpp
 	Source/OpenEXR/IlmThread/IlmThread.h
 	Source/OpenEXR/IlmThread/IlmThreadMutex.cpp

@@ -66,6 +66,7 @@ set(freetype_SOURCES
 	src/base/fttype1.c
 	src/base/ftwinfnt.c
 	src/bdf/bdf.c
+    src/bzip2/ftbzip2.c
 	src/cache/ftcache.c
 	src/cff/cff.c
 	src/cid/type1cid.c

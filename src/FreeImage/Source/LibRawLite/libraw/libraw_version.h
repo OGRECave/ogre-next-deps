@@ -1,32 +1,36 @@
 /* -*- C++ -*-
  * File: libraw_version.h
- * Copyright 2008-2009 LibRaw LLC (info@libraw.org)
+ * Copyright 2008-2010 LibRaw LLC (info@libraw.org)
  * Created: Mon Sept  8, 2008 
  *
- * LibRaw (Lite) version info
+ * LibRaw C++ interface
  *
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+LibRaw is free software; you can redistribute it and/or modify
+it under the terms of the one of three licenses as you choose:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+1. GNU LESSER GENERAL PUBLIC LICENSE version 2.1
+(See the file LICENSE.LGPL provided in LibRaw distribution archive for details).
+
+2. COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0
+(See the file LICENSE.CDDL provided in LibRaw distribution archive for details).
+
+3. LibRaw Software License 27032010
+  (See the file LICENSE.LibRaw.pdf provided in LibRaw distribution archive for details).
+
  */
 
 #ifndef __VERSION_H
 #define __VERSION_H
 
 #define LIBRAW_MAJOR_VERSION  0
-#define LIBRAW_MINOR_VERSION  7
-#define LIBRAW_PATCH_VERSION  2
-#define LIBRAW_VERSION_TAIL   Release(Lite)
+#define LIBRAW_MINOR_VERSION  13
+#define LIBRAW_PATCH_VERSION  7
+#define LIBRAW_VERSION_TAIL   Release
+
+#define LIBRAW_SHLIB_CURRENT  	2
+#define LIBRAW_SHLIB_REVISION 	5
+#define LIBRAW_SHLIB_AGE     	0
 
 #define _LIBRAW_VERSION_MAKE(a,b,c,d) #a"."#b"."#c"-"#d
 #define LIBRAW_VERSION_MAKE(a,b,c,d) _LIBRAW_VERSION_MAKE(a,b,c,d)

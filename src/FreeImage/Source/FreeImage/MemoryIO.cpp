@@ -64,11 +64,14 @@ FreeImage_OpenMemory(BYTE *data, DWORD size_in_bytes) {
 
 void DLL_CALLCONV
 FreeImage_CloseMemory(FIMEMORY *stream) {
-	FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(stream->data);
-	if(mem_header->delete_me) 
-		free(mem_header->data);
-	free(mem_header);
-	free(stream);
+	if(stream && stream->data) {
+		FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(stream->data);
+		if(mem_header->delete_me) {
+			free(mem_header->data);
+		}
+		free(mem_header);
+		free(stream);
+	}
 }
 
 // =====================================================================

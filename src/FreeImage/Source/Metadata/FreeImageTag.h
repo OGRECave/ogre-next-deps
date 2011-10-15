@@ -263,7 +263,7 @@ Describes the tag format descriptor
 @return Returns the width of a single element, in bytes
 @see FREE_IMAGE_MDTYPE
 */
-int FreeImage_TagDataWidth(WORD type);
+int FreeImage_TagDataWidth(FREE_IMAGE_MDTYPE type);
 
 // --------------------------------------------------------------------------
 
@@ -409,6 +409,9 @@ public:
 
 /// Name of the XMP field
 static char *g_TagLib_XMPFieldName = "XMLPacket";
+
+/// Name of the Exif raw field
+static char *g_TagLib_ExifRawFieldName = "ExifRaw";
 
 // --------------------------------------------------------------------------
 // Metadata routines

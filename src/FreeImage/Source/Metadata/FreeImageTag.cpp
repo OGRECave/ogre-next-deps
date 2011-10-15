@@ -229,20 +229,25 @@ FreeImage_SetTagLength(FITAG *tag, DWORD length) {
 
 BOOL DLL_CALLCONV 
 FreeImage_SetTagValue(FITAG *tag, const void *value) {
-	if(tag) {
+	if(tag && value) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
 		// first, check the tag
-		if(tag_header->count * FreeImage_TagDataWidth(tag_header->type) != tag_header->length) {
+		if(tag_header->count * FreeImage_TagDataWidth((FREE_IMAGE_MDTYPE)tag_header->type) != tag_header->length) {
 			// invalid data count ?
 			return FALSE;
 		}
 
-		if(tag_header->value) free(tag_header->value);
+		if(tag_header->value) {
+			free(tag_header->value);
+		}
 
 		switch(tag_header->type) {
 			case FIDT_ASCII:
 			{
 				tag_header->value = (char*)malloc((tag_header->length + 1) * sizeof(char));
+				if(!tag_header->value) {
+					return FALSE;
+				}
 				char *src_data = (char*)value;
 				char *dst_data = (char*)tag_header->value;
 				for(DWORD i = 0; i < tag_header->length; i++) {
@@ -254,6 +259,9 @@ FreeImage_SetTagValue(FITAG *tag, const void *value) {
 
 			default:
 				tag_header->value = malloc(tag_header->length * sizeof(BYTE));
+				if(!tag_header->value) {
+					return FALSE;
+				}
 				memcpy(tag_header->value, value, tag_header->length);
 				break;
 		}
@@ -268,10 +276,11 @@ FreeImage_SetTagValue(FITAG *tag, const void *value) {
 // --------------------------------------------------------------------------
 
 int 
-FreeImage_TagDataWidth(WORD type) {
-	static int format_bytes[] = { 0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8, 4, 4 };
+FreeImage_TagDataWidth(FREE_IMAGE_MDTYPE type) {
+	static const int format_bytes[] = { 0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8, 4, 4 };
 
-	return (type < 15) ? format_bytes[type] : 0;
+	  return (type < (sizeof(format_bytes)/sizeof(format_bytes[0]))) ?
+		  format_bytes[type] : 0;
 }
 
 

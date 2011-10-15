@@ -105,17 +105,25 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
 
+static BOOL DLL_CALLCONV
+SupportsNoPixels() {
+	return TRUE;
+}
+
 // ----------------------------------------------------------
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	int width;
-	int height;
-	int line;
-	int pitch;
-	int bpp = 24;
+	FIBITMAP *dib = NULL;
+	unsigned width;
+	unsigned height;
+	const unsigned bpp = 24;
 	int scan_line_add   = 1;
 	int start_scan_line = 0;
+	
+	BYTE *y1 = NULL, *y2 = NULL, *cbcr = NULL;
+
+	BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	// to make absolute seeks possible we store the current position in the file
 	
@@ -144,63 +152,76 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			break;
 	}
 
-	// calculate line and pitch based on the selected bitmap size
+	try {
+		// allocate the dib and write out the header
+		dib = FreeImage_AllocateHeader(header_only, width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+		if(!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 
-	line = CalculateLine(width, bpp);
-	pitch = CalculatePitch(line);
-
-	// allocate the dib and write out the header
-
-	FIBITMAP *dib = FreeImage_Allocate(width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-	
-	// check if the PCD is bottom-up
-
-	if (VerticalOrientation(io, handle)) {
-		scan_line_add = -1;
-		start_scan_line = height - 1;		
-	}
-
-	// temporary stuff to load PCD
-
-	BYTE *y1   = new BYTE[width];
-	BYTE *y2   = new BYTE[width];
-	BYTE *cbcr = new BYTE[width];
-	BYTE *yl[] = { y1, y2 };
-
-	// seek to the part where the bitmap data begins
-
-	io->seek_proc(handle, offset_in_file, SEEK_SET);
-	io->seek_proc(handle, seek, SEEK_CUR);
-
-	// read the data
-
-	for (int y = 0; y < height / 2; ++y) {
-		io->read_proc(y1, width, 1, handle);
-		io->read_proc(y2, width, 1, handle);
-		io->read_proc(cbcr, width, 1, handle);
-
-		for (int i = 0; i < 2; ++i) {
-			BYTE *img = FreeImage_GetScanLine(dib, start_scan_line);
-			for (int x = 0; x < width; ++x) {
-				int r, g, b;
-
-				YUV2RGB(yl[i][x], cbcr[x / 2], cbcr[(width / 2) + (x / 2)], r, g, b);
-
-				img[FI_RGBA_BLUE]  = (BYTE)b;
-				img[FI_RGBA_GREEN] = (BYTE)g;
-				img[FI_RGBA_RED]   = (BYTE)r;
-				img += 3;
-			}
-
-			start_scan_line += scan_line_add;
+		if(header_only) {
+			return dib;
 		}
+
+		// check if the PCD is bottom-up
+
+		if (VerticalOrientation(io, handle)) {
+			scan_line_add = -1;
+			start_scan_line = height - 1;		
+		}
+
+		// temporary stuff to load PCD
+
+		BYTE *y1 = (BYTE*)malloc(width * sizeof(BYTE));
+		BYTE *y2 = (BYTE*)malloc(width * sizeof(BYTE));
+		BYTE *cbcr = (BYTE*)malloc(width * sizeof(BYTE));
+		if(!y1 || !y2 || !cbcr) throw FI_MSG_ERROR_MEMORY;
+
+		BYTE *yl[] = { y1, y2 };
+
+		// seek to the part where the bitmap data begins
+
+		io->seek_proc(handle, offset_in_file, SEEK_SET);
+		io->seek_proc(handle, seek, SEEK_CUR);
+
+		// read the data
+
+		for (unsigned y = 0; y < height / 2; y++) {
+			io->read_proc(y1, width, 1, handle);
+			io->read_proc(y2, width, 1, handle);
+			io->read_proc(cbcr, width, 1, handle);
+
+			for (int i = 0; i < 2; i++) {
+				BYTE *bits = FreeImage_GetScanLine(dib, start_scan_line);
+				for (unsigned x = 0; x < width; x++) {
+					int r, g, b;
+
+					YUV2RGB(yl[i][x], cbcr[x / 2], cbcr[(width / 2) + (x / 2)], r, g, b);
+
+					bits[FI_RGBA_BLUE]  = (BYTE)b;
+					bits[FI_RGBA_GREEN] = (BYTE)g;
+					bits[FI_RGBA_RED]   = (BYTE)r;
+					bits += 3;
+				}
+
+				start_scan_line += scan_line_add;
+			}
+		}
+
+		free(cbcr);
+		free(y2);
+		free(y1);
+
+		return dib;
+
+	} catch(const char *text) {
+		if(dib) FreeImage_Unload(dib);
+		if(cbcr) free(cbcr);
+		if(y2) free(y2);
+		if(y1) free(y1);
+
+		FreeImage_OutputMessageProc(s_format_id, text);
+
+		return NULL;
 	}
-
-	delete [] cbcr;
-	delete [] y2;
-	delete [] y1;
-
-	return dib;
 }
 
 // ==========================================================
@@ -226,4 +247,5 @@ InitPCD(Plugin *plugin, int format_id) {
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

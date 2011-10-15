@@ -493,7 +493,7 @@ Works with any bitmap type.
 FIBITMAP * DLL_CALLCONV 
 FreeImage_Copy(FIBITMAP *src, int left, int top, int right, int bottom) {
 
-	if(!src) 
+	if(!FreeImage_HasPixels(src)) 
 		return NULL;
 
 	// normalize the rectangle
@@ -639,7 +639,7 @@ BOOL DLL_CALLCONV
 FreeImage_Paste(FIBITMAP *dst, FIBITMAP *src, int left, int top, int alpha) {
 	BOOL bResult = FALSE;
 
-	if(!src || !dst) return FALSE;
+	if(!FreeImage_HasPixels(src) || !FreeImage_HasPixels(dst)) return FALSE;
 
 	// check the size of src image
 	if((left < 0) || (top < 0)) {

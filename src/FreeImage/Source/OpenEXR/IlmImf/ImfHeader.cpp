@@ -60,6 +60,7 @@
 #include <ImfPreviewImageAttribute.h>
 #include <ImfRationalAttribute.h>
 #include <ImfStringAttribute.h>
+#include <ImfStringVectorAttribute.h>
 #include <ImfTileDescriptionAttribute.h>
 #include <ImfTimeCodeAttribute.h>
 #include <ImfVecAttribute.h>
@@ -72,6 +73,7 @@
 
 namespace Imf {
 
+using namespace std;
 using Imath::Box2i;
 using Imath::V2i;
 using Imath::V2f;
@@ -105,6 +107,56 @@ initialize (Header &header,
     header.insert ("lineOrder", LineOrderAttribute (lineOrder));
     header.insert ("compression", CompressionAttribute (compression));
     header.insert ("channels", ChannelListAttribute ());
+}
+
+
+bool
+usesLongNames (const Header &header)
+{
+    //
+    // If an OpenEXR file contains any attribute names, attribute type names
+    // or channel names longer than 31 characters, then the file cannot be
+    // read by older versions of the IlmImf library (up to OpenEXR 1.6.1).
+    // Before writing the file header, we check if the header contains
+    // any names longer than 31 characters; if it does, then we set the
+    // LONG_NAMES_FLAG in the file version number.  Older versions of the
+    // IlmImf library will refuse to read files that have the LONG_NAMES_FLAG
+    // set.  Without the flag, older versions of the library would mis-
+    // interpret the file as broken.
+    //
+
+    for (Header::ConstIterator i = header.begin();
+         i != header.end();
+         ++i)
+    {
+        if (strlen (i.name()) >= 32 || strlen (i.attribute().typeName()) >= 32)
+            return true;
+    }
+
+    const ChannelList &channels = header.channels();
+
+    for (ChannelList::ConstIterator i = channels.begin();
+         i != channels.end();
+         ++i)
+    {
+        if (strlen (i.name()) >= 32)
+            return true;
+    }
+
+    return false;
+}
+
+template <size_t N>
+void checkIsNullTerminated (const char (&str)[N], const char *what)
+{
+	for (int i = 0; i < N; ++i) {
+		if (str[i] == '\0')
+			return;
+	}
+	std::stringstream s;
+	s << "Invalid " << what << ": it is more than " << (N - 1) 
+		<< " characters long.";
+	throw Iex::InputExc(s);
 }
 
 } // namespace
@@ -269,6 +321,13 @@ Header::insert (const char name[], const Attribute &attribute)
 }
 
 
+void
+Header::insert (const string &name, const Attribute &attribute)
+{
+    insert (name.c_str(), attribute);
+}
+
+
 Attribute &		
 Header::operator [] (const char name[])
 {
@@ -290,6 +349,20 @@ Header::operator [] (const char name[]) const
 	THROW (Iex::ArgExc, "Cannot find image attribute \"" << name << "\".");
 
     return *i->second;
+}
+
+
+Attribute &		
+Header::operator [] (const string &name)
+{
+    return this->operator[] (name.c_str());
+}
+
+
+const Attribute &	
+Header::operator [] (const string &name) const
+{
+    return this->operator[] (name.c_str());
 }
 
 
@@ -335,6 +408,20 @@ Header::find (const char name[]) const
 }
 
 
+Header::Iterator
+Header::find (const string &name)
+{
+    return find (name.c_str());
+}
+
+
+Header::ConstIterator
+Header::find (const string &name) const
+{
+    return find (name.c_str());
+}
+
+
 Imath::Box2i &	
 Header::displayWindow ()
 {
@@ -349,6 +436,7 @@ Header::displayWindow () const
     return static_cast <const Box2iAttribute &>
 	((*this)["displayWindow"]).value();
 }
+
 
 Imath::Box2i &	
 Header::dataWindow ()
@@ -579,8 +667,8 @@ Header::sanityCheck (bool isTiled) const
 
     float pixelAspectRatio = this->pixelAspectRatio();
 
-    const float MIN_PIXEL_ASPECT_RATIO = 1e-6;
-    const float MAX_PIXEL_ASPECT_RATIO = 1e+6;
+    const float MIN_PIXEL_ASPECT_RATIO = 1e-6f;
+    const float MAX_PIXEL_ASPECT_RATIO = 1e+6f;
 
     if (pixelAspectRatio < MIN_PIXEL_ASPECT_RATIO ||
 	pixelAspectRatio > MAX_PIXEL_ASPECT_RATIO)
@@ -801,7 +889,14 @@ Header::writeTo (OStream &os, bool isTiled) const
 
     Xdr::write <StreamIO> (os, MAGIC);
 
-    int version = isTiled ? makeTiled (EXR_VERSION) : EXR_VERSION;
+    int version = EXR_VERSION;
+
+    if (isTiled)
+        version |= TILED_FLAG;
+
+    if (usesLongNames (*this))
+        version |= LONG_NAMES_FLAG;
+
     Xdr::write <StreamIO> (os, version);
 
     //
@@ -893,20 +988,23 @@ Header::readFrom (IStream &is, int &version)
 	// A zero-length attribute name indicates the end of the header.
 	//
 
-	char name[100];
-	Xdr::read <StreamIO> (is, sizeof (name), name);
+	char name[Name::SIZE];
+	Xdr::read <StreamIO> (is, Name::MAX_LENGTH, name);
 
 	if (name[0] == 0)
 	    break;
+
+	checkIsNullTerminated (name, "attribute name");
 
 	//
 	// Read the attribute type and the size of the attribute value.
 	//
 
-	char typeName[100];
+	char typeName[Name::SIZE];
 	int size;
 
-	Xdr::read <StreamIO> (is, sizeof (typeName), typeName);
+	Xdr::read <StreamIO> (is, Name::MAX_LENGTH, typeName);
+	checkIsNullTerminated (typeName, "attribute type name");
 	Xdr::read <StreamIO> (is, size);
 
 	AttributeMap::iterator i = _map.find (name);
@@ -983,15 +1081,20 @@ staticInitialize ()
 	IntAttribute::registerAttributeType();
 	KeyCodeAttribute::registerAttributeType();
 	LineOrderAttribute::registerAttributeType();
+	M33dAttribute::registerAttributeType();
 	M33fAttribute::registerAttributeType();
+	M44dAttribute::registerAttributeType();
 	M44fAttribute::registerAttributeType();
 	PreviewImageAttribute::registerAttributeType();
 	RationalAttribute::registerAttributeType();
 	StringAttribute::registerAttributeType();
+        StringVectorAttribute::registerAttributeType();
 	TileDescriptionAttribute::registerAttributeType();
 	TimeCodeAttribute::registerAttributeType();
+	V2dAttribute::registerAttributeType();
 	V2fAttribute::registerAttributeType();
 	V2iAttribute::registerAttributeType();
+	V3dAttribute::registerAttributeType();
 	V3fAttribute::registerAttributeType();
 	V3iAttribute::registerAttributeType();
 

@@ -62,11 +62,13 @@
 //	string of bytes is compressed with zlib.
 //
 //-----------------------------------------------------------------------------
+//#define ZLIB_WINAPI 
 
 #include <ImfPxr24Compressor.h>
 #include <ImfHeader.h>
 #include <ImfChannelList.h>
 #include <ImfMisc.h>
+#include <ImfCheckedArithmetic.h>
 #include <ImathFun.h>
 #include <Iex.h>
 #include <half.h>
@@ -175,8 +177,8 @@ tooMuchData ()
 
 
 Pxr24Compressor::Pxr24Compressor (const Header &hdr,
-				  int maxScanLineSize,
-				  int numScanLines)
+				  size_t maxScanLineSize,
+				  size_t numScanLines)
 :
     Compressor (hdr),
     _maxScanLineSize (maxScanLineSize),
@@ -185,10 +187,16 @@ Pxr24Compressor::Pxr24Compressor (const Header &hdr,
     _outBuffer (0),
     _channels (hdr.channels())
 {
-    int maxInBytes = maxScanLineSize * numScanLines;
+    size_t maxInBytes =
+        uiMult (maxScanLineSize, numScanLines);
+
+    size_t maxOutBytes =
+        uiAdd (uiAdd (maxInBytes,
+                      size_t (ceil (maxInBytes * 0.01))),
+               size_t (100));
 
     _tmpBuffer = new unsigned char [maxInBytes];
-    _outBuffer = new char [int (ceil (maxInBytes * 1.01)) + 100];
+    _outBuffer = new char [maxOutBytes];
 
     const Box2i &dataWindow = hdr.dataWindow();
 

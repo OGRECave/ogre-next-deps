@@ -443,7 +443,9 @@ LoadDXT_Helper (FreeImageIO *io, fi_handle handle, int page, int flags, void *da
 	typedef typename DECODER::INFO INFO;
 	typedef typename INFO::Block Block;
 
-	Block *input_buffer = new Block[(width + 3) / 4];
+	Block *input_buffer = new(std::nothrow) Block[(width + 3) / 4];
+	if(!input_buffer) return;
+
 	int widthRest = (int) width & 3;
 	int heightRest = (int) height & 3;
 	int inputLine = (width + 3) / 4;
@@ -571,7 +573,7 @@ SupportsExportDepth(int depth) {
 
 static BOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
-	return (type == FIT_BITMAP) ? TRUE : FALSE;
+	return FALSE;
 }
 
 // ----------------------------------------------------------

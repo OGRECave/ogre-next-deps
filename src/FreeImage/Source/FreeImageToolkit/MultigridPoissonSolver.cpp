@@ -454,7 +454,7 @@ static BOOL fmg_mglin(FIBITMAP *U, int n, int ncycle) {
 // --------------------------------------------------------------------------
 
 /**
-Poisson solver based on a multigrig algorithm. 
+Poisson solver based on a multigrid algorithm. 
 This routine solves a Poisson equation, remap result pixels to [0..1] and returns the solution. 
 NB: The input image is first stored inside a square image whose size is (2^j + 1)x(2^j + 1) for some integer j, 
 where j is such that 2^j is the nearest larger dimension corresponding to MAX(image width, image height). 
@@ -464,7 +464,7 @@ where j is such that 2^j is the nearest larger dimension corresponding to MAX(im
 */
 FIBITMAP* DLL_CALLCONV 
 FreeImage_MultigridPoissonSolver(FIBITMAP *Laplacian, int ncycle) {
-	if(!Laplacian) return NULL;
+	if(!FreeImage_HasPixels(Laplacian)) return NULL;
 
 	int width = FreeImage_GetWidth(Laplacian);
 	int height = FreeImage_GetHeight(Laplacian);
@@ -473,8 +473,11 @@ FreeImage_MultigridPoissonSolver(FIBITMAP *Laplacian, int ncycle) {
 	int n = MAX(width, height);
 	int size = 0;
 	while((n >>= 1) > 0) size++;
+	if((1 << size) < MAX(width, height)) {
+		size++;
+	}
 	// size must be of the form 2^j + 1 for some integer j
-	size = 1 + (1 << (size + 1));
+	size = 1 + (1 << size);
 
 	// allocate a temporary square image I
 	FIBITMAP *I = FreeImage_AllocateT(FIT_FLOAT, size, size);

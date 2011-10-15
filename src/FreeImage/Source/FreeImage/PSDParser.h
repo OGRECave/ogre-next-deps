@@ -2,7 +2,8 @@
 // Photoshop Loader
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - HervÃ© Drolon (drolon@infonie.fr)
+// - Mihail Naydenov (mnaydenov@users.sourceforge.net)
 //
 // Based on LGPL code created and published by http://sourceforge.net/projects/elynx/
 //
@@ -48,7 +49,7 @@ public:
 	short _Channels;	//! Numer of channels including any alpha channels, supported range is 1 to 24.
 	int   _Height;		//! The height of the image in pixels. Supported range is 1 to 30,000.
 	int   _Width;		//! The width of the image in pixels. Supported range is 1 to 30,000.
-	short _BitsPerPixel;//! The number of bits per channel. Supported values are 1, 8, and 16.
+	short _BitsPerChannel;//! The number of bits per channel. Supported values are 1, 8, and 16.
 	short _ColourMode;	//! Colour mode of the file, Bitmap=0, Grayscale=1, Indexed=2, RGB=3, CMYK=4, Multichannel=7, Duotone=8, Lab=9. 
 
 public:
@@ -66,7 +67,7 @@ Table 2-13 Color mode data section
 Only indexed color and duotone have color mode data. For all other modes,
 this section is just 4 bytes: the length field, which is set to zero.
 For indexed color images, the length will be equal to 768, and the color data
-will contain the color table for the image, in non–interleaved order.
+will contain the color table for the image, in non-interleaved order.
 For duotone images, the color data will contain the duotone specification,
 the format of which is not documented. Other applications that read
 Photoshop files can treat a duotone image as a grayscale image, and just
@@ -89,7 +90,7 @@ public:
 };
 
 /**
-Table 2–1: Image resource block
+Table 2-1: Image resource block
 NB: Resource data is padded to make size even
 */
 class psdImageResource {
@@ -175,7 +176,7 @@ public:
 };
 
 /**
-Table 2–5: Thumbnail resource header
+Table 2-5: Thumbnail resource header
 Adobe Photoshop 5.0 and later stores thumbnail information for preview
 display in an image resource block. These resource blocks consist of an initial
 28 byte header, followed by a JFIF thumbnail in RGB (red, green, blue) order
@@ -194,15 +195,20 @@ public:
 	int _CompressedSize;	//! Size after compression. Used for consistentcy check. 
 	short _BitPerPixel;		//! = 24. Bits per pixel.
 	short _Planes;			//! = 1. Number of planes.
-	BYTE * _plData;			//! JFIF data in RGB format. Note: For resource ID 1033 the data is in BGR format.
+	FIBITMAP * _dib;		//! JFIF data as uncompressed dib. Note: For resource ID 1033 the data is in BGR format.
 	
 public:
 	psdThumbnail();
 	~psdThumbnail();
+	FIBITMAP* getDib() { return _dib; }
 	/**
 	@return Returns the number of bytes read
 	*/
-	int Read(FreeImageIO *io, fi_handle handle, int iTotalData, bool isBGR);
+	int Read(FreeImageIO *io, fi_handle handle, int iResourceSize, bool isBGR);
+
+private:
+	psdThumbnail(const psdThumbnail&);
+	psdThumbnail& operator=(const psdThumbnail&);
 };
 
 class psdICCProfile {
@@ -212,6 +218,7 @@ public:
 public:
 	psdICCProfile();
 	~psdICCProfile();
+	void clear();
 	/**
 	@return Returns the number of bytes read
 	*/
@@ -240,18 +247,24 @@ private:
 	bool _bThumbnailFilled;
 	bool _bCopyright;
 
+	int _fi_flags;
+	int _fi_format_id;
+	
 private:
-	bool ReadImageResource(FreeImageIO *io, fi_handle handle);
 	/**	Actually ignore it */
 	bool ReadLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle);
 	FIBITMAP* ReadImageData(FreeImageIO *io, fi_handle handle);
-	FIBITMAP* ProcessBuffer(BYTE * iprData);
 
 public:
 	psdParser();
 	~psdParser();
-	FIBITMAP* Load(FreeImageIO *io, fi_handle handle, int s_format_id);
-
+	FIBITMAP* Load(FreeImageIO *io, fi_handle handle, int s_format_id, int flags=0);
+	/** Also used by the TIFF plugin */
+	bool ReadImageResources(FreeImageIO *io, fi_handle handle, LONG length=0);
+	/** Used by the TIFF plugin */
+	FIBITMAP* GetThumbnail() {
+		return _thumbnail.getDib();
+	}
 };
 
 #endif // PSDPARSER_H

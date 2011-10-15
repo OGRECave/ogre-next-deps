@@ -1,4 +1,4 @@
-/* $Id: tif_strip.c,v 1.28 2009/11/07 19:18:27 drolon Exp $ */
+/* $Id: tif_strip.c,v 1.37 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -124,9 +124,9 @@ TIFFVStripSize(TIFF* tif, uint32 nrows)
 		uint16 ycbcrsubsampling[2];
 		tsize_t w, scanline, samplingarea;
 
-		TIFFGetField( tif, TIFFTAG_YCBCRSUBSAMPLING,
-			      ycbcrsubsampling + 0,
-			      ycbcrsubsampling + 1 );
+		TIFFGetFieldDefaulted(tif, TIFFTAG_YCBCRSUBSAMPLING,
+				      ycbcrsubsampling + 0,
+				      ycbcrsubsampling + 1);
 
 		samplingarea = ycbcrsubsampling[0]*ycbcrsubsampling[1];
 		if (samplingarea == 0) {
@@ -234,27 +234,23 @@ TIFFScanlineSize(TIFF* tif)
 		    && !isUpSampled(tif)) {
 			uint16 ycbcrsubsampling[2];
 
-			TIFFGetField(tif, TIFFTAG_YCBCRSUBSAMPLING,
-				     ycbcrsubsampling + 0,
-				     ycbcrsubsampling + 1);
+			TIFFGetFieldDefaulted(tif, TIFFTAG_YCBCRSUBSAMPLING,
+					      ycbcrsubsampling + 0,
+					      ycbcrsubsampling + 1);
 
-			if (ycbcrsubsampling[0] == 0) {
+			if (ycbcrsubsampling[0]*ycbcrsubsampling[1] == 0) {
 				TIFFErrorExt(tif->tif_clientdata, tif->tif_name,
 					     "Invalid YCbCr subsampling");
 				return 0;
 			}
 
-			scanline = TIFFroundup(td->td_imagewidth,
+			/* number of sample clumps per line */
+			scanline = TIFFhowmany(td->td_imagewidth,
 					       ycbcrsubsampling[0]);
-			scanline = TIFFhowmany8(multiply(tif, scanline,
-							 td->td_bitspersample,
-							 "TIFFScanlineSize"));
-			return ((tsize_t)
-				summarize(tif, scanline,
-					  multiply(tif, 2,
-						scanline / ycbcrsubsampling[0],
-						"TIFFVStripSize"),
-					  "TIFFVStripSize"));
+			/* number of samples per line */
+			scanline = multiply(tif, scanline,
+					    ycbcrsubsampling[0]*ycbcrsubsampling[1] + 2,
+					    "TIFFScanlineSize");
 		} else {
 			scanline = multiply(tif, td->td_imagewidth,
 					    td->td_samplesperpixel,
@@ -308,9 +304,9 @@ TIFFNewScanlineSize(TIFF* tif)
 		    && !isUpSampled(tif)) {
 			uint16 ycbcrsubsampling[2];
 
-			TIFFGetField(tif, TIFFTAG_YCBCRSUBSAMPLING,
-				     ycbcrsubsampling + 0,
-				     ycbcrsubsampling + 1);
+			TIFFGetFieldDefaulted(tif, TIFFTAG_YCBCRSUBSAMPLING,
+					      ycbcrsubsampling + 0,
+					      ycbcrsubsampling + 1);
 
 			if (ycbcrsubsampling[0]*ycbcrsubsampling[1] == 0) {
 				TIFFErrorExt(tif->tif_clientdata, tif->tif_name,
@@ -361,3 +357,10 @@ TIFFRasterScanlineSize(TIFF* tif)
 }
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

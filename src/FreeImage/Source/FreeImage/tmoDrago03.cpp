@@ -233,7 +233,7 @@ REC709GammaCorrection(FIBITMAP *dib, const float gammaval) {
 		float *pixel = (float*)bits;
 		for(unsigned x = 0; x < width; x++) {
 			for(int i = 0; i < 3; i++) {
-				*pixel = (*pixel <= start) ? *pixel * slope : (float)(1.099 * pow(*pixel, fgamma) - 0.099);
+				*pixel = (*pixel <= start) ? *pixel * slope : (1.099F * pow(*pixel, fgamma) - 0.099F);
 				pixel++;
 			}
 		}
@@ -258,7 +258,7 @@ FIBITMAP* DLL_CALLCONV
 FreeImage_TmoDrago03(FIBITMAP *src, double gamma, double exposure) {
 	float maxLum, minLum, avgLum;
 
-	if(!src) return NULL;
+	if(!FreeImage_HasPixels(src)) return NULL;
 
 	// working RGBF variable
 	FIBITMAP *dib = NULL;

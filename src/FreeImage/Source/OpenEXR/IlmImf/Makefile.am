@@ -56,7 +56,11 @@ libIlmImf_la_SOURCES = ImfAttribute.cpp ImfBoxAttribute.cpp ImfCRgbaFile.cpp \
 		       ImfTiledOutputFile.h ImfTiledRgbaFile.h \
 		       ImfRgbaYca.cpp ImfRgbaYca.h \
 		       ImfPxr24Compressor.cpp ImfPxr24Compressor.h \
-		       ImfTestFile.cpp ImfTestFile.h ImfThreading.h
+ 		       ImfTestFile.cpp ImfTestFile.h ImfThreading.h \
+                       ImfStringVectorAttribute.cpp ImfStringVectorAttribute.h \
+                       ImfMultiView.cpp ImfMultiView.h \
+		       ImfAcesFile.cpp ImfAcesFile.h \
+		       ImfCheckedArithmetic.h
 
 libIlmImf_la_LDFLAGS = @ILMBASE_LDFLAGS@ -version-info @LIBTOOL_VERSION@ \
 			-no-undefined
@@ -95,11 +99,14 @@ libIlmImfinclude_HEADERS = ImfAttribute.h ImfBoxAttribute.h \
 		           ImfTiledOutputFile.h ImfTiledRgbaFile.h \
 			   ImfRgbaYca.h \
 			   ImfTestFile.h ImfThreading.h \
-			   ImfB44Compressor.h
+			   ImfB44Compressor.h ImfStringVectorAttribute.h \
+			   ImfMultiView.h \
+			   ImfAcesFile.h
 
 noinst_HEADERS = ImfCompressor.h ImfRleCompressor.h ImfZipCompressor.h \
 		 ImfPizCompressor.h ImfMisc.h ImfAutoArray.h ImfTiledMisc.h \
-		 ImfTileOffsets.h ImfScanLineInputFile.h ImfPxr24Compressor.h
+		 ImfTileOffsets.h ImfScanLineInputFile.h ImfPxr24Compressor.h \
+		 ImfCheckedArithmetic.h
 
 EXTRA_DIST = $(noinst_HEADERS) b44ExpLogTable.cpp b44ExpLogTable.h
 

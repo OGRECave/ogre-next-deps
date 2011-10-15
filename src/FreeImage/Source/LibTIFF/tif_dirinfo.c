@@ -1,4 +1,4 @@
-/* $Id: tif_dirinfo.c,v 1.29 2009/11/07 19:18:27 drolon Exp $ */
+/* $Id: tif_dirinfo.c,v 1.38 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -217,10 +217,10 @@ tiffFieldInfo[] = {
       0,	0,	"YCbCrSubsampling" },
     { TIFFTAG_YCBCRPOSITIONING,	 1, 1,	TIFF_SHORT,	FIELD_YCBCRPOSITIONING,
       0,	0,	"YCbCrPositioning" },
-    { TIFFTAG_REFERENCEBLACKWHITE, 6, 6, TIFF_RATIONAL,	FIELD_CUSTOM,
+    { TIFFTAG_REFERENCEBLACKWHITE, 6, 6, TIFF_RATIONAL,	FIELD_REFBLACKWHITE,
       1,	0,	"ReferenceBlackWhite" },
 /* XXX temporarily accept LONG for backwards compatibility */
-    { TIFFTAG_REFERENCEBLACKWHITE, 6, 6, TIFF_LONG,	FIELD_CUSTOM,
+    { TIFFTAG_REFERENCEBLACKWHITE, 6, 6, TIFF_LONG,	FIELD_REFBLACKWHITE,
       1,	0,	"ReferenceBlackWhite" },
     { TIFFTAG_XMLPACKET,	-3,-3,	TIFF_BYTE,	FIELD_CUSTOM,
       0,	1,	"XMLPacket" },
@@ -808,8 +808,6 @@ _TIFFFieldWithTag(TIFF* tif, ttag_t tag)
 		TIFFErrorExt(tif->tif_clientdata, "TIFFFieldWithTag",
 			     "Internal error, unknown tag 0x%x",
 			     (unsigned int) tag);
-		assert(fip != NULL);
-		/*NOTREACHED*/
 	}
 	return (fip);
 }
@@ -822,8 +820,6 @@ _TIFFFieldWithName(TIFF* tif, const char *field_name)
 	if (!fip) {
 		TIFFErrorExt(tif->tif_clientdata, "TIFFFieldWithName",
 			     "Internal error, unknown tag %s", field_name);
-		assert(fip != NULL);
-		/*NOTREACHED*/
 	}
 	return (fip);
 }
@@ -879,3 +875,10 @@ _TIFFCreateAnonFieldInfo(TIFF *tif, ttag_t tag, TIFFDataType field_type)
 }
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

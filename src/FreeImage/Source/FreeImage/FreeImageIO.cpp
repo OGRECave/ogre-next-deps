@@ -23,7 +23,9 @@
 #include "Utilities.h"
 #include "FreeImageIO.h"
 
-// ----------------------------------------------------------
+// =====================================================================
+// File IO functions
+// =====================================================================
 
 unsigned DLL_CALLCONV 
 _ReadProc(void *buffer, unsigned size, unsigned count, fi_handle handle) {

@@ -34,7 +34,7 @@ return Returns a 24-bit tone mapped image if successful, returns NULL otherwise
 */ 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ToneMapping(FIBITMAP *dib, FREE_IMAGE_TMO tmo, double first_param, double second_param) {
-	if(dib) {
+	if(FreeImage_HasPixels(dib)) {
 		switch(tmo) {
 			// Adaptive logarithmic mapping (F. Drago, 2003)
 			case FITMO_DRAGO03:

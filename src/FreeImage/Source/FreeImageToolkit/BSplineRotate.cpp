@@ -652,6 +652,8 @@ FreeImage_RotateEx(FIBITMAP *dib, double angle, double x_shift, double y_shift, 
 	BYTE *src_bits, *dst_bits;
 	FIBITMAP *src8 = NULL, *dst8 = NULL, *dst = NULL;
 
+	if(!FreeImage_HasPixels(dib)) return NULL;
+
 	try {
 
 		bpp = FreeImage_GetBPP(dib);

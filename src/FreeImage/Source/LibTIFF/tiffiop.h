@@ -1,4 +1,4 @@
-/* $Id: tiffiop.h,v 1.28 2009/11/07 19:18:27 drolon Exp $ */
+/* $Id: tiffiop.h,v 1.37 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -59,10 +59,13 @@ extern void *lfind(const void *, const void *, size_t *, size_t,
 
 /*
   Libtiff itself does not require a 64-bit type, but bundled TIFF
-  utilities may use it.
+  utilities may use it.  
 */
-#define TIFF_INT64_T  signed long long
+
+#if !defined(__xlC__) && !defined(__xlc__) // Already defined there (#2301)
+#define TIFF_INT64_T signed long long
 #define TIFF_UINT64_T unsigned long long
+#endif
 
 #include "tiffio.h"
 #include "tif_dir.h"
@@ -101,7 +104,7 @@ typedef	void (*TIFFTileMethod)(TIFF*, uint32*, uint32*);
 
 struct tiff {
 	char*		tif_name;	/* name of open file */
-	intptr_t	tif_fd;		/* open file descriptor */
+	int		tif_fd;		/* open file descriptor */
 	int		tif_mode;	/* open mode (O_*) */
 	uint32		tif_flags;
 #define	TIFF_FILLORDER		0x00003	/* natural bit fill order for machine */
@@ -236,9 +239,14 @@ struct tiff {
 #endif
 
 /* NB: the uint32 casts are to silence certain ANSI-C compilers */
-#define TIFFhowmany(x, y) ((((uint32)(x))+(((uint32)(y))-1))/((uint32)(y)))
+#define TIFFhowmany(x, y) (((uint32)x < (0xffffffff - (uint32)(y-1))) ?	\
+			   ((((uint32)(x))+(((uint32)(y))-1))/((uint32)(y))) : \
+			   0U)
 #define TIFFhowmany8(x) (((x)&0x07)?((uint32)(x)>>3)+1:(uint32)(x)>>3)
 #define	TIFFroundup(x, y) (TIFFhowmany(x,y)*(y))
+
+/* Safe multiply which returns zero if there is an integer overflow */
+#define TIFFSafeMultiply(t,v,m) ((((t)m != (t)0) && (((t)((v*m)/m)) == (t)v)) ? (t)(v*m) : (t)0)
 
 #define TIFFmax(A,B) ((A)>(B)?(A):(B))
 #define TIFFmin(A,B) ((A)<(B)?(A):(B))
@@ -336,3 +344,10 @@ extern	TIFFCodec _TIFFBuiltinCODECS[];
 #endif /* _TIFFIOP_ */
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

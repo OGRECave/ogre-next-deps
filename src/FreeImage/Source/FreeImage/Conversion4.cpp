@@ -140,7 +140,7 @@ FreeImage_ConvertLine32To4(BYTE *target, BYTE *source, int width_in_pixels) {
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertTo4Bits(FIBITMAP *dib) {
-	if(!dib) return NULL;
+	if(!FreeImage_HasPixels(dib)) return NULL;
 
 	const int bpp = FreeImage_GetBPP(dib);
 

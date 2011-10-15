@@ -71,11 +71,16 @@ static TagInfo
     {  0x011A, (char *) "XResolution", (char *) "Image resolution in width direction"},
     {  0x011B, (char *) "YResolution", (char *) "Image resolution in height direction"},
     {  0x011C, (char *) "PlanarConfiguration", (char *) "Image data arrangement"},
+	{  0x011D, (char *) "PageName", (char *) "Name of the page"},
+	{  0x011E, (char *) "XPosition", (char *) "X position of the image"},
+	{  0x011F, (char *) "YPosition", (char *) "Y position of the image"},
     {  0x0128, (char *) "ResolutionUnit", (char *) "Unit of X and Y resolution"},
+	{  0x0129, (char *) "PageNumber", (char *) "Page number"},
     {  0x012D, (char *) "TransferFunction", (char *) "Transfer function"},
     {  0x0131, (char *) "Software", (char *) "Software used"},
     {  0x0132, (char *) "DateTime", (char *) "File change date and time"},
     {  0x013B, (char *) "Artist", (char *) "Person who created the image"},
+	{  0x013C, (char *) "HostComputer", (char *) "Host computer used to generate the image"},
     {  0x013E, (char *) "WhitePoint", (char *) "White point chromaticity"},
     {  0x013F, (char *) "PrimaryChromaticities", (char *) "Chromaticities of primaries"},
     {  0x0156, (char *) "TransferRange", (char *) NULL},
@@ -150,10 +155,14 @@ static TagInfo
     {  0xA40B, (char *) "DeviceSettingDescription", (char *) "Device settings description"},
     {  0xA40C, (char *) "SubjectDistanceRange", (char *) "Subject distance range"},
     {  0xA420, (char *) "ImageUniqueID", (char *) "Unique image ID"},
-	// These tags are not part of the Exiv v2.2 specifications but are often loaded by applications as Exif data
-	{  0x013C, (char *) "HostComputer", (char *) "Host computer used to generate the image"},
+	// These tags are not part of the Exiv v2.3 specifications but are often loaded by applications as Exif data
 	{  0x4746, (char *) "Rating", (char *) "Rating tag used by Windows"},
 	{  0x4749, (char *) "RatingPercent", (char *) "Rating tag used by Windows, value in percent"},
+	{  0x9C9B, (char *) "XPTitle", (char *) "Title tag used by Windows, encoded in UCS2"},
+	{  0x9C9C, (char *) "XPComment", (char *) "Comment tag used by Windows, encoded in UCS2"},
+	{  0x9C9D, (char *) "XPAuthor", (char *) "Author tag used by Windows, encoded in UCS2"},
+	{  0x9C9E, (char *) "XPKeywords", (char *) "Keywords tag used by Windows, encoded in UCS2"},
+	{  0x9C9F, (char *) "XPSubject", (char *) "Subject tag used by Windows, encoded in UCS2"},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
@@ -345,6 +354,7 @@ static TagInfo
     {  0xC400 + 8, (char *) "ShotInfo:SlowShutter", (char *) NULL},
     {  0xC400 + 9, (char *) "ShotInfo:SequenceNumber", (char *) NULL},
     {  0xC400 + 10, (char *) "ShotInfo:OpticalZoomCode", (char *) NULL},
+	{  0xC400 + 12, (char *) "ShotInfo:CameraTemperature", (char *) NULL},
     {  0xC400 + 13, (char *) "ShotInfo:FlashGuideNumber", (char *) NULL},
     {  0xC400 + 14, (char *) "ShotInfo:AFPointsInFocus", (char *) NULL},
     {  0xC400 + 15, (char *) "ShotInfo:FlashExposureComp", (char *) NULL},
@@ -363,20 +373,20 @@ static TagInfo
     {  0xC400 + 29, (char *) "ShotInfo:SelfTimer2", (char *) NULL},
     {  0xC400 + 33, (char *) "ShotInfo:FlashOutput", (char *) NULL},
 
-	// Fields under tag 0x0012 (we add 0xC120 to make unique tag id)
-    {  0xC120 + 0, (char *) "AFInfo:NumAFPoints", (char *) NULL},
-    {  0xC120 + 1, (char *) "AFInfo:ValidAFPoints", (char *) NULL},
-    {  0xC120 + 2, (char *) "AFInfo:CanonImageWidth", (char *) NULL},
-    {  0xC120 + 3, (char *) "AFInfo:CanonImageHeight", (char *) NULL},
-    {  0xC120 + 4, (char *) "AFInfo:AFImageWidth", (char *) NULL},
-    {  0xC120 + 5, (char *) "AFInfo:AFImageHeight", (char *) NULL},
-    {  0xC120 + 6, (char *) "AFInfo:AFAreaWidth", (char *) NULL},
-    {  0xC120 + 7, (char *) "AFInfo:AFAreaHeight", (char *) NULL},
-    {  0xC120 + 8, (char *) "AFInfo:AFAreaXPositions", (char *) NULL},
-    {  0xC120 + 9, (char *) "AFInfo:AFAreaYPositions", (char *) NULL},
-    {  0xC120 + 10, (char *) "AFInfo:AFPointsInFocus", (char *) NULL},
-    {  0xC120 + 11, (char *) "AFInfo:PrimaryAFPoint?", (char *) NULL},
-    {  0xC120 + 12, (char *) "AFInfo:PrimaryAFPoint", (char *) NULL},
+	// Fields under tag 0x0012 (we add 0x1200 to make unique tag id)
+    {  0x1200 + 0, (char *) "AFInfo:NumAFPoints", (char *) NULL},
+    {  0x1200 + 1, (char *) "AFInfo:ValidAFPoints", (char *) NULL},
+    {  0x1200 + 2, (char *) "AFInfo:CanonImageWidth", (char *) NULL},
+    {  0x1200 + 3, (char *) "AFInfo:CanonImageHeight", (char *) NULL},
+    {  0x1200 + 4, (char *) "AFInfo:AFImageWidth", (char *) NULL},
+    {  0x1200 + 5, (char *) "AFInfo:AFImageHeight", (char *) NULL},
+    {  0x1200 + 6, (char *) "AFInfo:AFAreaWidth", (char *) NULL},
+    {  0x1200 + 7, (char *) "AFInfo:AFAreaHeight", (char *) NULL},
+    {  0x1200 + 8, (char *) "AFInfo:AFAreaXPositions", (char *) NULL},
+    {  0x1200 + 9, (char *) "AFInfo:AFAreaYPositions", (char *) NULL},
+    {  0x1200 + 10, (char *) "AFInfo:AFPointsInFocus", (char *) NULL},
+    {  0x1200 + 11, (char *) "AFInfo:PrimaryAFPoint?", (char *) NULL},
+    {  0x1200 + 12, (char *) "AFInfo:PrimaryAFPoint", (char *) NULL},
 
 	// Fields under tag 0x00A0 (we add 0xCA00 to make unique tag id)
     {  0xCA00 + 1, (char *) "ProcessingInfo:ToneCurve", (char *) NULL},
@@ -409,7 +419,7 @@ static TagInfo
   };
 
 /**
-Casio maker note
+Casio type 1 maker note
 */
 static TagInfo
   exif_casio_type1_tag_table[] =
@@ -425,15 +435,19 @@ static TagInfo
     {  0x000B, (char *) "Sharpness", (char *) NULL},
     {  0x000C, (char *) "Contrast", (char *) NULL},
     {  0x000D, (char *) "Saturation", (char *) NULL},
-    {  0x0014, (char *) "CCDSensitivity", (char *) NULL},
+    {  0x0014, (char *) "ISO", (char *) NULL},
+	{  0x0015, (char *) "FirmwareDate", (char *) NULL},
     {  0x0016, (char *) "Enhancement", (char *) NULL},
-    {  0x0017, (char *) "Filter", (char *) NULL},
+    {  0x0017, (char *) "ColorFilter", (char *) NULL},
     {  0x0018, (char *) "AFPoint", (char *) NULL},
     {  0x0019, (char *) "FlashIntensity", (char *) NULL},
     {  0x0E00, (char *) "PrintIM", (char *) NULL},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
+/**
+Casio type 2 maker note
+*/
 static TagInfo
   exif_casio_type2_tag_table[] =
   {
@@ -457,20 +471,22 @@ static TagInfo
     {  0x2021, (char *) "AFPointPosition", (char *) NULL},
     {  0x2022, (char *) "ObjectDistance", (char *) NULL},
     {  0x2034, (char *) "FlashDistance", (char *) NULL},
+	{  0x2076, (char *) "SpecialEffectMode", (char *) NULL},
     {  0x3000, (char *) "RecordMode", (char *) NULL},
-    {  0x3001, (char *) "SelfTimer", (char *) NULL},
+    {  0x3001, (char *) "ReleaseMode", (char *) NULL},
     {  0x3002, (char *) "Quality", (char *) NULL},
     {  0x3003, (char *) "FocusMode", (char *) NULL},
-    {  0x3006, (char *) "TimeZone", (char *) NULL},
+    {  0x3006, (char *) "HometownCity", (char *) NULL},
     {  0x3007, (char *) "BestShotMode", (char *) NULL},
     {  0x3008, (char *) "AutoISO", (char *) NULL},
+    {  0x3009, (char *) "AFMode", (char *) NULL},
     {  0x3011, (char *) "Sharpness", (char *) NULL},
     {  0x3012, (char *) "Contrast", (char *) NULL},
     {  0x3013, (char *) "Saturation", (char *) NULL},
-    {  0x3014, (char *) "CCDISOSensitivity", (char *) NULL},
+    {  0x3014, (char *) "ISO", (char *) NULL},
     {  0x3015, (char *) "ColorMode", (char *) NULL},
     {  0x3016, (char *) "Enhancement", (char *) NULL},
-    {  0x3017, (char *) "Filter", (char *) NULL},
+    {  0x3017, (char *) "ColorFilter", (char *) NULL},
     {  0x301C, (char *) "SequenceNumber", (char *) NULL},
     {  0x301D, (char *) "BracketSequence", (char *) NULL},
     {  0x3020, (char *) "ImageStabilization", (char *) NULL},
@@ -478,6 +494,9 @@ static TagInfo
     {  0x302B, (char *) "PortraitRefiner", (char *) NULL},
     {  0x3030, (char *) "SpecialEffectLevel", (char *) NULL},
     {  0x3031, (char *) "SpecialEffectSetting", (char *) NULL},
+	{  0x3103, (char *) "DriveMode", (char *) NULL},
+	{  0x4001, (char *) "CaptureFrameRate", (char *) NULL},
+	{  0x4003, (char *) "VideoQuality", (char *) NULL},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
@@ -487,20 +506,25 @@ FujiFilm maker note
 static TagInfo
   exif_fujifilm_tag_table[] =
   {
-    {  0x0000, (char *) "MakernoteVersion", (char *) NULL},
+    {  0x0000, (char *) "Version", (char *) NULL},
     {  0x0010, (char *) "InternalSerialNumber", (char *) NULL},
     {  0x1000, (char *) "Quality", (char *) NULL},
     {  0x1001, (char *) "Sharpness", (char *) NULL},
     {  0x1002, (char *) "WhiteBalance", (char *) NULL},
-    {  0x1003, (char *) "Color", (char *) NULL},
-    {  0x1004, (char *) "Tone", (char *) NULL},
-    {  0x1010, (char *) "FlashMode", (char *) NULL},
-    {  0x1011, (char *) "FlashStrength", (char *) NULL},
+    {  0x1003, (char *) "Saturation", (char *) NULL},
+    {  0x1004, (char *) "Contrast", (char *) NULL},
+	{  0x1005, (char *) "ColorTemperature", (char *) NULL},
+	{  0x100A, (char *) "WhiteBalanceFineTune", (char *) NULL},
+	{  0x100B, (char *) "NoiseReduction", (char *) NULL},
+    {  0x1010, (char *) "FujiFlashMode", (char *) NULL},
+    {  0x1011, (char *) "FlashExposureComp", (char *) NULL},
     {  0x1020, (char *) "Macro", (char *) NULL},
     {  0x1021, (char *) "FocusMode", (char *) NULL},
     {  0x1023, (char *) "FocusPixel", (char *) NULL},
-    {  0x1030, (char *) "SlowSynchro", (char *) NULL},
+    {  0x1030, (char *) "SlowSync", (char *) NULL},
     {  0x1031, (char *) "PictureMode", (char *) NULL},
+	{  0x1033, (char *) "EXRAuto", (char *) NULL},
+	{  0x1034, (char *) "EXRMode", (char *) NULL},
     {  0x1100, (char *) "AutoBracketting", (char *) NULL},
     {  0x1101, (char *) "SequenceNumber", (char *) NULL},
     {  0x1210, (char *) "ColorMode", (char *) NULL},
@@ -508,6 +532,19 @@ static TagInfo
     {  0x1301, (char *) "FocusWarning", (char *) NULL},
     {  0x1302, (char *) "ExposureWarning", (char *) NULL},
     {  0x1400, (char *) "DynamicRange", (char *) NULL},
+	{  0x1401, (char *) "FilmMode", (char *) NULL},
+	{  0x1402, (char *) "DynamicRangeSetting", (char *) NULL},
+	{  0x1403, (char *) "DevelopmentDynamicRange", (char *) NULL},
+	{  0x1404, (char *) "MinFocalLength", (char *) NULL},
+	{  0x1405, (char *) "MaxFocalLength", (char *) NULL},
+	{  0x1406, (char *) "MaxApertureAtMinFocal", (char *) NULL},
+	{  0x1407, (char *) "MaxApertureAtMaxFocal", (char *) NULL},
+	{  0x4100, (char *) "FacesDetected", (char *) NULL},
+	{  0x4103, (char *) "FacePositions", (char *) NULL},
+	{  0x8000, (char *) "FileSource", (char *) NULL},
+	{  0x8002, (char *) "OrderNumber", (char *) NULL},
+	{  0x8003, (char *) "FrameNumber", (char *) NULL},
+	{  0xB211, (char *) "Parallax", (char *) NULL},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
@@ -526,7 +563,7 @@ static TagInfo
 Olympus Type 1 / Epson / Agfa maker note
 */
 static TagInfo
-  exif_olympus_type1__tag_table[] =
+  exif_olympus_type1_tag_table[] =
   {
     {  0x0000, (char *) "MakerNoteVersion", (char *) NULL},
     {  0x0001, (char *) "MinoltaCameraSettingsOld", (char *) NULL},
@@ -536,7 +573,7 @@ static TagInfo
     {  0x0088, (char *) "PreviewImageStart", (char *) NULL},
     {  0x0089, (char *) "PreviewImageLength", (char *) NULL},
     {  0x0100, (char *) "ThumbnailImage", (char *) NULL},
-    {  0x0101, (char *) "ColorMode", (char *) NULL},
+    {  0x0104, (char *) "BodyFirmwareVersion", (char *) NULL},
     {  0x0200, (char *) "SpecialMode", (char *) NULL},
     {  0x0201, (char *) "Quality", (char *) NULL},
     {  0x0202, (char *) "Macro", (char *) NULL},
@@ -552,8 +589,13 @@ static TagInfo
     {  0x020D, (char *) "EpsonSoftware", (char *) NULL},
     {  0x0280, (char *) "PreviewImage", (char *) NULL},
     {  0x0300, (char *) "PreCaptureFrames", (char *) NULL},
+	{  0x0301, (char *) "WhiteBoard", (char *) NULL},
     {  0x0302, (char *) "OneTouchWB", (char *) NULL}, 
+	{  0x0303, (char *) "WhiteBalanceBracket", (char *) NULL}, 
+	{  0x0304, (char *) "WhiteBalanceBias", (char *) NULL}, 
+	{  0x0403, (char *) "SceneMode", (char *) NULL}, 
     {  0x0404, (char *) "SerialNumber", (char *) NULL}, 
+	{  0x0405, (char *) "Firmware", (char *) NULL}, 
     {  0x0E00, (char *) "PrintIM", (char *) "PrintIM Tags"}, 
 	{  0x0F00, (char *) "DataDump", (char *) NULL},
 	{  0x0F01, (char *) "DataDump2", (char *) NULL},
@@ -566,6 +608,8 @@ static TagInfo
 	{  0x1006, (char *) "ExposureCompensation", (char *) NULL},
 	{  0x1007, (char *) "SensorTemperature", (char *) NULL},
 	{  0x1008, (char *) "LensTemperature", (char *) NULL},
+	{  0x1009, (char *) "LightCondition", (char *) NULL},
+	{  0x100A, (char *) "FocusRange", (char *) NULL},
 	{  0x100B, (char *) "FocusMode", (char *) NULL},
 	{  0x100C, (char *) "ManualFocusDistance", (char *) NULL},
 	{  0x100D, (char *) "ZoomStepCount", (char *) NULL},
@@ -577,8 +621,11 @@ static TagInfo
 	{  0x1015, (char *) "WBMode", (char *) NULL},
 	{  0x1017, (char *) "RedBalance", (char *) NULL},
 	{  0x1018, (char *) "BlueBalance", (char *) NULL},
+	{  0x1019, (char *) "ColorMatrixNumber", (char *) NULL},
 	{  0x101A, (char *) "SerialNumber", (char *) NULL},
 	{  0x1023, (char *) "FlashExposureComp", (char *) NULL},
+	{  0x1024, (char *) "InternalFlashTable", (char *) NULL},
+	{  0x1025, (char *) "ExternalFlashGValue", (char *) NULL},
 	{  0x1026, (char *) "ExternalFlashBounce", (char *) NULL},
 	{  0x1027, (char *) "ExternalFlashZoom", (char *) NULL},
 	{  0x1028, (char *) "ExternalFlashMode", (char *) NULL},
@@ -589,20 +636,36 @@ static TagInfo
 	{  0x102D, (char *) "CoringFilter", (char *) NULL},
 	{  0x102E, (char *) "OlympusImageWidth", (char *) NULL},
 	{  0x102F, (char *) "OlympusImageHeight", (char *) NULL},
+	{  0x1030, (char *) "SceneDetect", (char *) NULL},
+	{  0x1031, (char *) "SceneArea?", (char *) NULL},
+	{  0x1033, (char *) "SceneDetectData?", (char *) NULL},
 	{  0x1034, (char *) "CompressionRatio", (char *) NULL},
 	{  0x1035, (char *) "PreviewImageValid", (char *) NULL},
 	{  0x1036, (char *) "PreviewImageStart", (char *) NULL},
 	{  0x1037, (char *) "PreviewImageLength", (char *) NULL},
+	{  0x1038, (char *) "AFResult", (char *) NULL},
 	{  0x1039, (char *) "CCDScanMode", (char *) NULL},
 	{  0x103A, (char *) "NoiseReduction", (char *) NULL},
 	{  0x103B, (char *) "InfinityLensStep", (char *) NULL},
 	{  0x103C, (char *) "NearLensStep", (char *) NULL},
+	{  0x103D, (char *) "LightValueCenter", (char *) NULL},
+	{  0x103E, (char *) "LightValuePeriphery", (char *) NULL},
 	{  0x2010, (char *) "Equipment", (char *) "Olympus Equipment Tags"},
 	{  0x2020, (char *) "CameraSettings", (char *) "Olympus CameraSettings Tags"},
 	{  0x2030, (char *) "RawDevelopment", (char *) "Olympus RawDevelopment Tags"},
 	{  0x2040, (char *) "ImageProcessing", (char *) "Olympus ImageProcessing Tags"},
 	{  0x2050, (char *) "FocusInfo", (char *) "Olympus FocusInfo Tags"},
+	{  0x2100, (char *) "Olympus2100", (char *) "Olympus FE Tags"},
+	{  0x2200, (char *) "Olympus2200", (char *) "Olympus FE Tags"},
+	{  0x2300, (char *) "Olympus2300", (char *) "Olympus FE Tags"},
+	{  0x2400, (char *) "Olympus2400", (char *) "Olympus FE Tags"},
+	{  0x2500, (char *) "Olympus2500", (char *) "Olympus FE Tags"},
+	{  0x2600, (char *) "Olympus2600", (char *) "Olympus FE Tags"},
+	{  0x2700, (char *) "Olympus2700", (char *) "Olympus FE Tags"},
+	{  0x2800, (char *) "Olympus2800", (char *) "Olympus FE Tags"},
+	{  0x2900, (char *) "Olympus2900", (char *) "Olympus FE Tags"},
 	{  0x3000, (char *) "RawInfo", (char *) "Olympus RawInfo Tags"},
+	{  0x4000, (char *) "MainInfo", (char *) "Olympus MainInfo Tags"},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
@@ -666,30 +729,35 @@ static TagInfo
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
+/**
+Nikon type 2 maker note
+*/
 static TagInfo
   exif_nikon_type2_tag_table[] =
   {
-    {  0x0001, (char *) "FirmwareVersion", (char *) NULL},
-    {  0x0002, (char *) "ISOSetting", (char *) NULL},
+    {  0x0001, (char *) "MakerNoteVersion", (char *) NULL},
+    {  0x0002, (char *) "ISO", (char *) NULL},
     {  0x0003, (char *) "ColorMode", (char *) NULL},
     {  0x0004, (char *) "Quality", (char *) NULL},
     {  0x0005, (char *) "WhiteBalance", (char *) NULL},
-    {  0x0006, (char *) "ImageSharpening", (char *) NULL},
+    {  0x0006, (char *) "Sharpness", (char *) NULL},
     {  0x0007, (char *) "FocusMode", (char *) NULL},
     {  0x0008, (char *) "FlashSetting", (char *) NULL},
-    {  0x0009, (char *) "AutoFlashMode", (char *) NULL},
-    {  0x000B, (char *) "WhiteBias", (char *) NULL},
+    {  0x0009, (char *) "FlashType", (char *) NULL},
+    {  0x000B, (char *) "WhiteBalanceFineTune", (char *) NULL},
     {  0x000F, (char *) "ISOSelection", (char *) NULL},
     {  0x0010, (char *) "DataDump", (char *) NULL},
     {  0x0080, (char *) "ImageAdjustment", (char *) NULL},
-    {  0x0082, (char *) "LensAdapter", (char *) NULL},
-    {  0x0085, (char *) "FocusDistance", (char *) NULL},
+    {  0x0082, (char *) "AuxiliaryLens", (char *) NULL},
+    {  0x0085, (char *) "ManualFocusDistance", (char *) NULL},
     {  0x0086, (char *) "DigitalZoom", (char *) NULL},
-    {  0x0088, (char *) "AFFocusPosition", (char *) NULL},
+    {  0x0088, (char *) "AFInfo", (char *) NULL},
     {  0x0089, (char *) "ShootingMode", (char *) NULL},
     {  0x008D, (char *) "ColorMode", (char *) NULL},
     {  0x008F, (char *) "SceneMode", (char *) NULL},
     {  0x0092, (char *) "HueAdjustment", (char *) NULL},
+    {  0x0094, (char *) "Saturation", (char *) NULL},
+    {  0x0095, (char *) "NoiseReduction", (char *) NULL},
     {  0x0E00, (char *) "PrintIM", (char *) NULL},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
@@ -701,32 +769,44 @@ see http://www.timelesswanderings.net/equipment/D100/NEF.html
 static TagInfo
   exif_nikon_type3_tag_table[] =
   {
-    {  0x0001, (char *) "FirmwareVersion", (char *) NULL},
+    {  0x0001, (char *) "MakerNoteVersion", (char *) NULL},
     {  0x0002, (char *) "ISO", (char *) NULL},
     {  0x0003, (char *) "ColorMode", (char *) NULL},
     {  0x0004, (char *) "Quality", (char *) NULL},
     {  0x0005, (char *) "WhiteBalance", (char *) NULL},
-    {  0x0006, (char *) "Sharpening", (char *) NULL},
+    {  0x0006, (char *) "Sharpness", (char *) NULL},
     {  0x0007, (char *) "FocusMode", (char *) NULL},
     {  0x0008, (char *) "FlashSetting", (char *) NULL},
-    {  0x0009, (char *) "FlashMode", (char *) NULL},
+    {  0x0009, (char *) "FlashType", (char *) NULL},
     {  0x000B, (char *) "WhiteBalanceFineTune", (char *) NULL},
-    {  0x000C, (char *) "WhiteBalanceRBCoefficients", (char *) NULL},
+    {  0x000C, (char *) "WB_RBLevels", (char *) NULL},
     {  0x000D, (char *) "ProgramShift", (char *) NULL},
     {  0x000E, (char *) "ExposureDifference", (char *) NULL},
     {  0x000F, (char *) "ISOSelection", (char *) NULL},
-    {  0x0011, (char *) "NikonPreview", (char *) NULL},
+	{  0x0010, (char *) "DataDump", (char *) NULL},
+    {  0x0011, (char *) "PreviewIFD", (char *) NULL},
     {  0x0012, (char *) "FlashExposureComp", (char *) NULL},
     {  0x0013, (char *) "ISOSetting", (char *) NULL},
+	{  0x0014, (char *) "ColorBalanceA", (char *) NULL},
     {  0x0016, (char *) "ImageBoundary", (char *) NULL},
+	{  0x0017, (char *) "FlashExposureComp", (char *) NULL},
     {  0x0018, (char *) "FlashExposureBracketValue", (char *) NULL},
     {  0x0019, (char *) "ExposureBracketValue", (char *) NULL},
     {  0x001A, (char *) "ImageProcessing", (char *) NULL},
     {  0x001B, (char *) "CropHiSpeed", (char *) NULL},
+	{  0x001C, (char *) "ExposureTuning", (char *) NULL},
     {  0x001D, (char *) "SerialNumber", (char *) NULL},
     {  0x001E, (char *) "ColorSpace", (char *) NULL},
-    {  0x0080, (char *) "ImageAdjustment", (char *) NULL},
-	{  0x0081, (char *) "ToneCompensation", (char *) NULL},
+	{  0x001F, (char *) "VRInfo", (char *) NULL},
+	{  0x0020, (char *) "ImageAuthentication", (char *) NULL},
+	{  0x0022, (char *) "ActiveD-Lighting", (char *) NULL},
+	{  0x0023, (char *) "PictureControl", (char *) NULL},
+	{  0x0024, (char *) "WorldTime", (char *) NULL},
+	{  0x0025, (char *) "ISOInfo", (char *) NULL},
+	{  0x002A, (char *) "VignetteControl", (char *) NULL},
+	{  0x002B, (char *) "DistortInfo", (char *) NULL},
+	{  0x0080, (char *) "ImageAdjustment", (char *) NULL},
+	{  0x0081, (char *) "ToneComp", (char *) NULL},
 	{  0x0082, (char *) "AuxiliaryLens", (char *) NULL},
 	{  0x0083, (char *) "LensType", (char *) NULL},
     {  0x0084, (char *) "Lens", (char *) NULL},
@@ -735,27 +815,31 @@ static TagInfo
     {  0x0087, (char *) "FlashMode", (char *) NULL},
     {  0x0088, (char *) "AFInfo", (char *) NULL},
     {  0x0089, (char *) "ShootingMode", (char *) NULL},
-    {  0x008A, (char *) "AutoBracketRelease", (char *) NULL},
     {  0x008B, (char *) "LensFStops", (char *) NULL},
-    {  0x008C, (char *) "NEFCurve1", (char *) NULL},
+    {  0x008C, (char *) "ContrastCurve", (char *) NULL},
     {  0x008D, (char *) "ColorHue", (char *) NULL},
     {  0x008F, (char *) "SceneMode", (char *) NULL},
     {  0x0090, (char *) "LightSource", (char *) NULL},
+	{  0x0091, (char *) "ShotInfo", (char *) NULL},
     {  0x0092, (char *) "HueAdjustment", (char *) NULL},
+	{  0x0093, (char *) "NEFCompression", (char *) NULL},
     {  0x0094, (char *) "Saturation", (char *) NULL},
     {  0x0095, (char *) "NoiseReduction", (char *) NULL},
-    {  0x0096, (char *) "NEFCurve2", (char *) NULL},
+    {  0x0096, (char *) "LinearizationTable", (char *) NULL},
+	{  0x0097, (char *) "ColorBalance", (char *) NULL},
+	{  0x0098, (char *) "LensData", (char *) NULL},
     {  0x0099, (char *) "RawImageCenter", (char *) NULL},
     {  0x009A, (char *) "SensorPixelSize", (char *) NULL},
     {  0x009C, (char *) "SceneAssist", (char *) NULL},
     {  0x009E, (char *) "RetouchHistory", (char *) NULL},
-    {  0x00A0, (char *) "SerialNumber2", (char *) NULL},
+    {  0x00A0, (char *) "SerialNumber", (char *) NULL},
     {  0x00A2, (char *) "ImageDataSize", (char *) NULL},
     {  0x00A5, (char *) "ImageCount", (char *) NULL},
     {  0x00A6, (char *) "DeletedImageCount", (char *) NULL},
     {  0x00A7, (char *) "ShutterCount", (char *) NULL},
+	{  0x00A8, (char *) "FlashInfo", (char *) NULL},
     {  0x00A9, (char *) "ImageOptimization", (char *) NULL},
-    {  0x00AA, (char *) "Saturation2", (char *) NULL},
+    {  0x00AA, (char *) "Saturation", (char *) NULL},
     {  0x00AB, (char *) "VariProgram", (char *) NULL},
     {  0x00AC, (char *) "ImageStabilization", (char *) NULL},
     {  0x00AD, (char *) "AFResponse", (char *) NULL},
@@ -774,11 +858,12 @@ static TagInfo
     {  0x0E10, (char *) "NikonScanIFD", (char *) NULL},
     {  0x0E1D, (char *) "NikonICCProfile", (char *) NULL},
     {  0x0E1E, (char *) "NikonCaptureOutput", (char *) NULL},
+	{  0x0E22, (char *) "NEFBitDepth", (char *) NULL},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
 /**
-Panasonic maker note
+Panasonic / Leica maker note
 */
 static TagInfo
   exif_panasonic_tag_table[] =
@@ -787,29 +872,72 @@ static TagInfo
     {  0x0002, (char *) "FirmwareVersion", (char *) NULL},
     {  0x0003, (char *) "WhiteBalance", (char *) NULL},
     {  0x0007, (char *) "FocusMode", (char *) NULL},
-    {  0x000F, (char *) "SpotMode", (char *) NULL},
-    {  0x001A, (char *) "ImageStabilizer", (char *) NULL},
+    {  0x000F, (char *) "AFAreaMode", (char *) NULL},
+    {  0x001A, (char *) "ImageStabilization", (char *) NULL},
     {  0x001C, (char *) "MacroMode", (char *) NULL},
     {  0x001F, (char *) "ShootingMode", (char *) NULL},
     {  0x0020, (char *) "Audio", (char *) NULL},
     {  0x0021, (char *) "DataDump", (char *) NULL},
+	{  0x0022, (char *) "EasyMode", (char *) NULL},
     {  0x0023, (char *) "WhiteBalanceBias", (char *) NULL},
     {  0x0024, (char *) "FlashBias", (char *) NULL},
     {  0x0025, (char *) "InternalSerialNumber", (char *) NULL},
+	{  0x0026, (char *) "PanasonicExifVersion", (char *) NULL},
     {  0x0028, (char *) "ColorEffect", (char *) NULL},
+	{  0x0029, (char *) "TimeSincePowerOn", (char *) NULL},
     {  0x002A, (char *) "BurstMode", (char *) NULL},
     {  0x002B, (char *) "SequenceNumber", (char *) NULL},
-    {  0x002C, (char *) "Contrast", (char *) NULL},
+    {  0x002C, (char *) "ContrastMode", (char *) NULL},
     {  0x002D, (char *) "NoiseReduction", (char *) NULL},
     {  0x002E, (char *) "SelfTimer", (char *) NULL},
     {  0x0030, (char *) "Rotation", (char *) NULL},
+	{  0x0031, (char *) "AFAssistLamp", (char *) NULL},
     {  0x0032, (char *) "ColorMode", (char *) NULL},
+	{  0x0033, (char *) "BabyAge", (char *) NULL},
+	{  0x0034, (char *) "OpticalZoomMode", (char *) NULL},
+	{  0x0035, (char *) "ConversionLens", (char *) NULL},
+	{  0x0036, (char *) "TravelDay", (char *) NULL},
+	{  0x0039, (char *) "Contrast", (char *) NULL},
+	{  0x003A, (char *) "WorldTimeLocation", (char *) NULL},
+	{  0x003B, (char *) "TextStamp", (char *) NULL},
+	{  0x003C, (char *) "ProgramISO", (char *) NULL},
+	{  0x003D, (char *) "AdvancedSceneMode", (char *) NULL},
+	{  0x003F, (char *) "FacesDetected", (char *) NULL},
+	{  0x0040, (char *) "Saturation", (char *) NULL},
+	{  0x0041, (char *) "Sharpness", (char *) NULL},
+	{  0x0042, (char *) "FilmMode", (char *) NULL},
+	{  0x0046, (char *) "WBAdjustAB", (char *) NULL},
+	{  0x0047, (char *) "WBAdjustGM", (char *) NULL},
+	{  0x004B, (char *) "PanasonicImageWidth", (char *) NULL},
+	{  0x004C, (char *) "PanasonicImageHeight", (char *) NULL},
+	{  0x004D, (char *) "AFPointPosition", (char *) NULL},
+	{  0x004E, (char *) "FaceDetInfo", (char *) NULL},
+	{  0x0051, (char *) "LensType", (char *) NULL},
+	{  0x0052, (char *) "LensSerialNumber", (char *) NULL},
+	{  0x0053, (char *) "AccessoryType", (char *) NULL},
+	{  0x0059, (char *) "Transform", (char *) NULL},
+	{  0x005D, (char *) "IntelligentExposure", (char *) NULL},
+	{  0x0061, (char *) "FaceRecInfo", (char *) NULL},
+	{  0x0062, (char *) "FlashWarning", (char *) NULL},
+	{  0x0063, (char *) "RecognizedFaceFlags?", (char *) NULL},
+	{  0x0069, (char *) "Country", (char *) NULL},
+	{  0x006B, (char *) "State", (char *) NULL},
+	{  0x006D, (char *) "City", (char *) NULL},
+	{  0x006F, (char *) "Landmark", (char *) NULL},
+	{  0x0070, (char *) "IntelligentResolution", (char *) NULL},
     {  0x0E00, (char *) "PrintIM", (char *) NULL},
+	{  0x8000, (char *) "MakerNoteVersion", (char *) NULL},
+	{  0x8001, (char *) "SceneMode", (char *) NULL},
+	{  0x8004, (char *) "WBRedLevel", (char *) NULL},
+	{  0x8005, (char *) "WBGreenLevel", (char *) NULL},
+	{  0x8006, (char *) "WBBlueLevel", (char *) NULL},
+	{  0x8007, (char *) "FlashFired", (char *) NULL},
+	{  0x8012, (char *) "Transform", (char *) NULL},
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
 /**
-Pentax (Asahi) maker note
+Pentax (Asahi) maker note type 1
 */
 static TagInfo
   exif_asahi_tag_table[] =
@@ -831,6 +959,9 @@ static TagInfo
     {  0x0000, (char *) NULL, (char *) NULL}
   };
 
+/**
+Pentax maker note type 2
+*/
 static TagInfo
   exif_pentax_tag_table[] =
   {
@@ -877,8 +1008,10 @@ static TagInfo
     {  0x0032, (char *) "ImageProcessing", (char *) NULL},
     {  0x0033, (char *) "PictureMode", (char *) NULL},
     {  0x0034, (char *) "DriveMode", (char *) NULL},
+	{  0x0035, (char *) "SensorSize", (char *) NULL},
     {  0x0037, (char *) "ColorSpace", (char *) NULL},
     {  0x0039, (char *) "RawImageSize", (char *) NULL},
+	{  0x003C, (char *) "AFPointsInFocus", (char *) NULL},
     {  0x003E, (char *) "PreviewImageBorders", (char *) NULL},
     {  0x003F, (char *) "LensType", (char *) NULL},
     {  0x0040, (char *) "SensitivityAdjust", (char *) NULL},
@@ -1088,7 +1221,7 @@ TagLib::TagLib() {
 	addMetadataModel(TagLib::EXIF_MAKERNOTE_NIKONTYPE1, exif_nikon_type1_tag_table);
 	addMetadataModel(TagLib::EXIF_MAKERNOTE_NIKONTYPE2, exif_nikon_type2_tag_table);
 	addMetadataModel(TagLib::EXIF_MAKERNOTE_NIKONTYPE3, exif_nikon_type3_tag_table);
-	addMetadataModel(TagLib::EXIF_MAKERNOTE_OLYMPUSTYPE1, exif_olympus_type1__tag_table);
+	addMetadataModel(TagLib::EXIF_MAKERNOTE_OLYMPUSTYPE1, exif_olympus_type1_tag_table);
 	addMetadataModel(TagLib::EXIF_MAKERNOTE_PANASONIC, exif_panasonic_tag_table);
 	addMetadataModel(TagLib::EXIF_MAKERNOTE_ASAHI, exif_asahi_tag_table);
 	addMetadataModel(TagLib::EXIF_MAKERNOTE_PENTAX, exif_pentax_tag_table);
@@ -1106,11 +1239,12 @@ TagLib::TagLib() {
 
 BOOL TagLib::addMetadataModel(MDMODEL md_model, TagInfo *tag_table) {
 	// check that the model doesn't already exist
-	TAGINFO *info_map = (TAGINFO*)_table_map[md_model];
+	if((_table_map.find(md_model) == _table_map.end()) && (tag_table != NULL)) {
 
-	if((info_map == NULL) && (tag_table != NULL)) {
 		// add the tag description table
-		TAGINFO *info_map = new TAGINFO();
+		TAGINFO *info_map = new(std::nothrow) TAGINFO();
+		if(!info_map) return FALSE;
+
 		for(int i = 0; ; i++) {
 			if((tag_table[i].tag == 0) && (tag_table[i].fieldname == NULL))
 				break;
@@ -1143,12 +1277,14 @@ TagLib::instance() {
 
 const TagInfo* 
 TagLib::getTagInfo(MDMODEL md_model, WORD tagID) {
-	TAGINFO *info_map = (TAGINFO*)_table_map[md_model];
 
-	if(info_map != NULL) {
-		return (*info_map)[tagID];
+	if(_table_map.find(md_model) != _table_map.end()) {
+
+		TAGINFO *info_map = (TAGINFO*)_table_map[md_model];
+		if(info_map->find(tagID) != info_map->end()) {
+			return (*info_map)[tagID];
+		}
 	}
-
 	return NULL;
 }
 
@@ -1180,8 +1316,10 @@ TagLib::getTagDescription(MDMODEL md_model, WORD tagID) {
 }
 
 int TagLib::getTagID(MDMODEL md_model, const char *key) {
-	TAGINFO *info_map = (TAGINFO*)_table_map[md_model];
-	if(info_map != NULL) {
+
+	if(_table_map.find(md_model) != _table_map.end()) {
+
+		TAGINFO *info_map = (TAGINFO*)_table_map[md_model];
 		for(TAGINFO::iterator i = info_map->begin(); i != info_map->end(); i++) {
 			const TagInfo *info = (*i).second;
 			if(info && (strcmp(info->fieldname, key) == 0)) {
@@ -1189,7 +1327,6 @@ int TagLib::getTagID(MDMODEL md_model, const char *key) {
 			}
 		}
 	}
-
 	return -1;
 }
 

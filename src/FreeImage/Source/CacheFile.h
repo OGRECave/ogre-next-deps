@@ -61,7 +61,7 @@ class CacheFile {
 	typedef std::map<int, PageCacheIt>::iterator PageMapIt;
 
 public :
-	CacheFile(const char *filename, BOOL keep_in_memory);
+	CacheFile(const std::string filename, BOOL keep_in_memory);
 	~CacheFile();
 
 	BOOL open();

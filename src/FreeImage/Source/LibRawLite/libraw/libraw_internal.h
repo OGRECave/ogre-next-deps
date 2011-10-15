@@ -1,23 +1,22 @@
 /* -*- C++ -*-
  * File: libraw_internal.h
- * Copyright 2008-2009 LibRaw LLC (info@libraw.org)
+ * Copyright 2008-2010 LibRaw LLC (info@libraw.org)
  * Created: Sat Mar  8 , 2008
  *
- * LibRaw (Lite) internal data structures (not visible outside)
- *
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+ * LibRaw internal data structures (not visible outside)
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+LibRaw is free software; you can redistribute it and/or modify
+it under the terms of the one of three licenses as you choose:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+1. GNU LESSER GENERAL PUBLIC LICENSE version 2.1
+   (See file LICENSE.LGPL provided in LibRaw distribution archive for details).
+
+2. COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0
+   (See file LICENSE.CDDL provided in LibRaw distribution archive for details).
+
+3. LibRaw Software License 27032010
+   (See file LICENSE.LibRaw.pdf provided in LibRaw distribution archive for details).
+
  */
 
 #ifndef _LIBRAW_INTERNAL_TYPES_H
@@ -45,7 +44,7 @@
 class LibRaw_TLS
 {
 public:
-    struct 
+    struct
     {
          unsigned bitbuf;
          int vbits, reset;
@@ -56,12 +55,6 @@ public:
          int vbits;
 
     }ph1_bits;
-    int make_decoder_leaf;
-    struct
-    {
-        struct decode *dstart[18], *dindex;
-        const int *s;
-    }radc_token;
     struct
     {
          unsigned pad[128], p;
@@ -90,9 +83,6 @@ class LibRaw_constants
 };
 #endif /* __cplusplus */
 
-#ifdef WIN32
-typedef long off_t;
-#endif
 
 typedef struct
 {
@@ -100,10 +90,11 @@ typedef struct
     struct
 #endif
     LibRaw_abstract_datastream *input;
+    FILE        *output;
     int         input_internal;
     char        *meta_data;
-    off_t       profile_offset;
-    off_t       toffset;
+    INT64       profile_offset;
+    INT64       toffset;
 
 } internal_data_t;
 
@@ -111,10 +102,10 @@ typedef struct
 {
     unsigned    mix_green;
     unsigned    raw_color;
-    unsigned    use_gamma;
     unsigned    zero_is_bad;
     ushort      shrink;
     ushort      fuji_width;
+    ushort      fwidth,fheight;
 } internal_output_params_t;
 
 #define LIBRAW_HISTOGRAM_SIZE 0x2000
@@ -137,8 +128,9 @@ typedef struct
     short       order; 
     ushort      sraw_mul[4],cr2_slice[3];
     unsigned    kodak_cbpp;
-    off_t       strip_offset, data_offset;
-    off_t       meta_offset;
+    INT64       strip_offset, data_offset;
+    INT64       meta_offset;
+    unsigned    data_size;
     unsigned     meta_length;
     unsigned    thumb_misc;
     unsigned    fuji_layout;
@@ -170,14 +162,13 @@ struct decode
 
 struct tiff_ifd_t 
 {
-    int t_width, t_height, bps, comp, phint, offset, t_flip, samples, bytes;
+    int t_width, t_height, bps, comp, phint, offset, t_flip, samples, bytes,tile_maxbytes;
 };
 
 
 struct jhead {
   int bits, high, wide, clrs, sraw, psv, restart, vpred[6];
-  struct decode *huff[6];
-  ushort *row;
+    ushort *huff[6], *free[4], *row;
 };
 struct tiff_tag {
   ushort tag, type;

@@ -59,12 +59,12 @@
 //	Conversions from half to float are lossless; all half numbers
 //	are exactly representable as floats.
 //
-//	Conversions from float to half may not preserve the float's
-//	value exactly.  If a float is not representable as a half, the
-//	float value is rounded to the nearest representable half.  If
-//	a float value is exactly in the middle between the two closest
+//	Conversions from float to half may not preserve a float's value
+//	exactly.  If a float is not representable as a half, then the
+//	float value is rounded to the nearest representable half.  If a
+//	float value is exactly in the middle between the two closest
 //	representable half values, then the float value is rounded to
-//	the half with the greater magnitude.
+//	the closest half whose least significant bit is zero.
 //
 //	Overflows during float-to-half conversions cause arithmetic
 //	exceptions.  An overflow occurs when the float value to be
@@ -87,7 +87,19 @@
 
 #include <iostream>
 
-class half
+#if defined(OPENEXR_DLL)
+    #if defined(HALF_EXPORTS)
+	#define HALF_EXPORT __declspec(dllexport)
+    #else
+	#define HALF_EXPORT __declspec(dllimport)
+    #endif
+    #define HALF_EXPORT_CONST
+#else
+    #define HALF_EXPORT
+    #define HALF_EXPORT_CONST const
+#endif
+
+class HALF_EXPORT half
 {
   public:
 
@@ -215,46 +227,26 @@ class half
 
     unsigned short	_h;
 
-    //---------------------------------------------------
-    // Windows dynamic libraries don't like static
-    // member variables.
-    //---------------------------------------------------
-#ifndef OPENEXR_DLL
-    static const uif	        _toFloat[1 << 16];
-    static const unsigned short _eLut[1 << 9];
-#endif
+    static HALF_EXPORT_CONST uif		_toFloat[1 << 16];
+    static HALF_EXPORT_CONST unsigned short _eLut[1 << 9];
 };
-
-#if defined(OPENEXR_DLL)
-    //--------------------------------------
-    // Lookup tables defined for Windows DLL
-    //--------------------------------------
-    #if defined(HALF_EXPORTS)
-        extern __declspec(dllexport) half::uif		_toFloat[1 << 16];
-        extern __declspec(dllexport) unsigned short	_eLut[1 << 9];
-    #else
-        extern __declspec(dllimport) half::uif		_toFloat[1 << 16];
-        extern __declspec(dllimport) unsigned short	_eLut[1 << 9];
-    #endif
-#endif
-
 
 //-----------
 // Stream I/O
 //-----------
 
-std::ostream &		operator << (std::ostream &os, half  h);
-std::istream &		operator >> (std::istream &is, half &h);
+HALF_EXPORT std::ostream &		operator << (std::ostream &os, half  h);
+HALF_EXPORT std::istream &		operator >> (std::istream &is, half &h);
 
 
 //----------
 // Debugging
 //----------
 
-void			printBits   (std::ostream &os, half  h);
-void			printBits   (std::ostream &os, float f);
-void			printBits   (char  c[19], half  h);
-void			printBits   (char  c[35], float f);
+HALF_EXPORT void			printBits   (std::ostream &os, half  h);
+HALF_EXPORT void			printBits   (std::ostream &os, float f);
+HALF_EXPORT void			printBits   (char  c[19], half  h);
+HALF_EXPORT void			printBits   (char  c[35], float f);
 
 
 //-------------------------------------------------------------------------
@@ -770,7 +762,5 @@ half::setBits (unsigned short bits)
 {
     _h = bits;
 }
-
-#undef HALF_EXPORT_CONST
 
 #endif

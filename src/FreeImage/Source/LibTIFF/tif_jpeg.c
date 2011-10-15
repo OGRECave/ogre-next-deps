@@ -1,4 +1,4 @@
-/* $Id: tif_jpeg.c,v 1.28 2009/11/07 19:18:27 drolon Exp $ */
+/* $Id: tif_jpeg.c,v 1.37 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1994-1997 Sam Leffler
@@ -988,8 +988,15 @@ JPEGDecodeRaw(TIFF* tif, tidata_t buf, tsize_t cc, tsample_t s)
 	tsize_t nrows;
 	(void) s;
 
-	/* data is expected to be read in multiples of a scanline */
-	if ( (nrows = sp->cinfo.d.image_height) ) {
+    nrows = cc / sp->bytesperline;
+    if (cc % sp->bytesperline)
+		TIFFWarningExt(tif->tif_clientdata, tif->tif_name, "fractional scanline not read");
+
+    if( nrows > (int) sp->cinfo.d.image_height )
+        nrows = sp->cinfo.d.image_height;
+
+    /* data is expected to be read in multiples of a scanline */
+    if (nrows) {
 		/* Cb,Cr both have sampling factors 1, so this is correct */
 		JDIMENSION clumps_per_line = sp->cinfo.d.comp_info[1].downsampled_width;            
 		int samples_per_clump = sp->samplesperclump;
@@ -1064,7 +1071,7 @@ JPEGDecodeRaw(TIFF* tif, tidata_t buf, tsize_t cc, tsample_t s)
 					}
 				}
 				else
-				{         // 12-bit
+				{         /* 12-bit  */
 					int value_pairs = (sp->cinfo.d.output_width
 					    * sp->cinfo.d.num_components) / 2;
 					int iPair;
@@ -1087,8 +1094,7 @@ JPEGDecodeRaw(TIFF* tif, tidata_t buf, tsize_t cc, tsample_t s)
 			 * TODO: resolve this */
 			buf += sp->bytesperline;
 			cc -= sp->bytesperline;
-			nrows -= sp->v_sampling;
-		} while (nrows > 0);
+		} while (--nrows > 0);
 
 #ifdef JPEG_LIB_MK1
 		_TIFFfree(tmpbuf);
@@ -1269,12 +1275,16 @@ JPEGSetupEncode(TIFF* tif)
 
 	/* Create a JPEGTables field if appropriate */
 	if (sp->jpegtablesmode & (JPEGTABLESMODE_QUANT|JPEGTABLESMODE_HUFF)) {
-		if (!prepare_JPEGTables(tif))
-			return (0);
-		/* Mark the field present */
-		/* Can't use TIFFSetField since BEENWRITING is already set! */
-		TIFFSetFieldBit(tif, FIELD_JPEGTABLES);
-		tif->tif_flags |= TIFF_DIRTYDIRECT;
+                if( sp->jpegtables == NULL
+                    || memcmp(sp->jpegtables,"\0\0\0\0\0\0\0\0\0",8) == 0 )
+                {
+                        if (!prepare_JPEGTables(tif))
+                                return (0);
+                        /* Mark the field present */
+                        /* Can't use TIFFSetField since BEENWRITING is already set! */
+                        tif->tif_flags |= TIFF_DIRTYDIRECT;
+                        TIFFSetFieldBit(tif, FIELD_JPEGTABLES);
+                }
 	} else {
 		/* We do not support application-supplied JPEGTables, */
 		/* so mark the field not present */
@@ -1348,8 +1358,15 @@ JPEGPreEncode(TIFF* tif, tsample_t s)
 			sp->cinfo.c.comp_info[0].h_samp_factor = sp->h_sampling;
 			sp->cinfo.c.comp_info[0].v_samp_factor = sp->v_sampling;
 		} else {
-			sp->cinfo.c.in_color_space = JCS_UNKNOWN;
-			if (!TIFFjpeg_set_colorspace(sp, JCS_UNKNOWN))
+			if ((td->td_photometric == PHOTOMETRIC_MINISWHITE || td->td_photometric == PHOTOMETRIC_MINISBLACK) && td->td_samplesperpixel == 1)
+				sp->cinfo.c.in_color_space = JCS_GRAYSCALE;
+			else if (td->td_photometric == PHOTOMETRIC_RGB)
+				sp->cinfo.c.in_color_space = JCS_RGB;
+			else if (td->td_photometric == PHOTOMETRIC_SEPARATED && td->td_samplesperpixel == 4)
+				sp->cinfo.c.in_color_space = JCS_CMYK;
+			else
+				sp->cinfo.c.in_color_space = JCS_UNKNOWN;
+			if (!TIFFjpeg_set_colorspace(sp, sp->cinfo.c.in_color_space))
 				return (0);
 			/* jpeg_set_colorspace set all sampling factors to 1 */
 		}
@@ -1370,9 +1387,9 @@ JPEGPreEncode(TIFF* tif, tsample_t s)
 	sp->cinfo.c.write_JFIF_header = FALSE;
 	sp->cinfo.c.write_Adobe_marker = FALSE;
 	/* set up table handling correctly */
+        if (!TIFFjpeg_set_quality(sp, sp->jpegquality, FALSE))
+                return (0);
 	if (! (sp->jpegtablesmode & JPEGTABLESMODE_QUANT)) {
-		if (!TIFFjpeg_set_quality(sp, sp->jpegquality, FALSE))
-			return (0);
 		unsuppress_quant_table(sp, 0);
 		unsuppress_quant_table(sp, 1);
 	}
@@ -1519,7 +1536,7 @@ JPEGEncodeRaw(TIFF* tif, tidata_t buf, tsize_t cc, tsample_t s)
 			sp->scancount = 0;
 		}
 		tif->tif_row += sp->v_sampling;
-		buf += sp->bytesperline;
+		buf += bytesperclumpline;
 		nrows -= sp->v_sampling;
 	}
 	return (1);
@@ -1613,7 +1630,11 @@ JPEGResetUpsampled( TIFF* tif )
 	 * Must recalculate cached tile size in case sampling state changed.
 	 * Should we really be doing this now if image size isn't set? 
 	 */
-	tif->tif_tilesize = isTiled(tif) ? TIFFTileSize(tif) : (tsize_t) -1;
+        if( tif->tif_tilesize > 0 )
+            tif->tif_tilesize = isTiled(tif) ? TIFFTileSize(tif) : (tsize_t) -1;
+
+        if(tif->tif_scanlinesize > 0 )
+            tif->tif_scanlinesize = TIFFScanlineSize(tif); 
 }
 
 static int
@@ -1741,13 +1762,21 @@ JPEGFixupTestSubsampling( TIFF * tif )
 			return;
     }
     else
-	{
+    {
         if( !TIFFFillStrip( tif, 0 ) )
             return;
     }
 
     TIFFSetField( tif, TIFFTAG_YCBCRSUBSAMPLING, 
                   (uint16) sp->h_sampling, (uint16) sp->v_sampling );
+
+    /*
+    ** We want to clear the loaded strip so the application has time
+    ** to set JPEGCOLORMODE or other behavior modifiers.  This essentially
+    ** undoes the JPEGPreDecode triggers by TIFFFileStrip().  (#1936)
+    */
+    tif->tif_curstrip = -1;
+
 #endif /* CHECK_JPEG_YCBCR_SUBSAMPLING */
 }
 
@@ -2014,7 +2043,14 @@ TIFFInitJPEG(TIFF* tif, int scheme)
         if( tif->tif_diroff == 0 )
         {
 #define SIZE_OF_JPEGTABLES 2000
+/*
+The following line assumes incorrectly that all JPEG-in-TIFF files will have
+a JPEGTABLES tag generated and causes null-filled JPEGTABLES tags to be written
+when the JPEG data is placed with TIFFWriteRawStrip.  The field bit should be 
+set, anyway, later when actual JPEGTABLES header is generated, so removing it 
+here hopefully is harmless.
             TIFFSetFieldBit(tif, FIELD_JPEGTABLES);
+*/
             sp->jpegtables_length = SIZE_OF_JPEGTABLES;
             sp->jpegtables = (void *) _TIFFmalloc(sp->jpegtables_length);
 	    _TIFFmemset(sp->jpegtables, 0, SIZE_OF_JPEGTABLES);
@@ -2033,3 +2069,10 @@ TIFFInitJPEG(TIFF* tif, int scheme)
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
 
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

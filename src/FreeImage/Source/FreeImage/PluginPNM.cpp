@@ -197,6 +197,11 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 	);
 }
 
+static BOOL DLL_CALLCONV
+SupportsNoPixels() {
+	return TRUE;
+}
+
 // ----------------------------------------------------------
 
 static FIBITMAP * DLL_CALLCONV
@@ -207,8 +212,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	RGBQUAD *pal;	// pointer to dib palette
 	int i;
 
-	if (!handle)
+	if (!handle) {
 		return NULL;
+	}
+
+	BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	try {
 		FREE_IMAGE_TYPE image_type = FIT_BITMAP;	// standard image: 1-, 8-, 24-bit
@@ -245,7 +253,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			case '1':
 			case '4':
 				// 1-bit
-				dib = FreeImage_Allocate(width, height, 1);
+				dib = FreeImage_AllocateHeader(header_only, width, height, 1);
 				break;
 
 			case '2':
@@ -253,10 +261,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if(maxval > 255) {
 					// 16-bit greyscale
 					image_type = FIT_UINT16;
-					dib = FreeImage_AllocateT(image_type, width, height);
+					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
 				} else {
 					// 8-bit greyscale
-					dib = FreeImage_Allocate(width, height, 8);
+					dib = FreeImage_AllocateHeader(header_only, width, height, 8);
 				}
 				break;
 
@@ -265,10 +273,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if(maxval > 255) {
 					// 48-bit RGB
 					image_type = FIT_RGB16;
-					dib = FreeImage_AllocateT(image_type, width, height);
+					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
 				} else {
 					// 24-bit RGB
-					dib = FreeImage_Allocate(width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib = FreeImage_AllocateHeader(header_only, width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 				}
 				break;
 		}
@@ -277,17 +285,42 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
+		// Build a greyscale palette if needed
+
+		if(image_type == FIT_BITMAP) {
+			switch(id_two)  {
+				case '1':
+				case '4':
+					pal = FreeImage_GetPalette(dib);
+					pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
+					pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+					break;
+
+				case '2':
+				case '5':
+					pal = FreeImage_GetPalette(dib);
+					for (i = 0; i < 256; i++) {
+						pal[i].rgbRed	=
+						pal[i].rgbGreen =
+						pal[i].rgbBlue	= (BYTE)i;
+					}
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		if(header_only) {
+			// header only mode
+			return dib;
+		}
+
 		// Read the image...
 
 		switch(id_two)  {
 			case '1':
 			case '4':
-				// write the palette data
-
-				pal = FreeImage_GetPalette(dib);
-				pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-				pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
-
 				// write the bitmap data
 
 				if (id_two == '1') {	// ASCII bitmap
@@ -320,16 +353,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			case '2':
 			case '5':
 				if(image_type == FIT_BITMAP) {
-					// Build a greyscale palette
-					
-					pal = FreeImage_GetPalette(dib);
-
-					for (i = 0; i < 256; i++) {
-						pal[i].rgbRed	=
-						pal[i].rgbGreen =
-						pal[i].rgbBlue	= (BYTE)i;
-					}
-
 					// write the bitmap data
 
 					if(id_two == '2') {		// ASCII greymap
@@ -489,7 +512,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					break;
 			}
 		}
-		return NULL;
 	}
 		
 	return NULL;
@@ -805,4 +827,5 @@ InitPNM(Plugin *plugin, int format_id) {
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

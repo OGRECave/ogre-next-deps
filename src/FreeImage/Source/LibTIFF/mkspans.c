@@ -1,4 +1,4 @@
-/* $Id: mkspans.c,v 1.13 2009/07/14 21:10:27 drolon Exp $ */
+/* $Id: mkspans.c,v 1.22 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -73,3 +73,10 @@ main()
 }
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

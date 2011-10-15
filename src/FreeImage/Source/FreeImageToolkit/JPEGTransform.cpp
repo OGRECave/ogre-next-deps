@@ -209,17 +209,13 @@ LosslessTransform(const FilenameIO *filenameIO, FREE_IMAGE_JPEG_OPERATION operat
 		// Any space needed by a transform option must be requested before
 		// jpeg_read_coefficients so that memory allocation will be done right
 
+		// Prepare transformation workspace
 		// Fails right away if perfect flag is TRUE and transformation is not perfect
-		if(transfoptions.perfect && 
-			!jtransform_perfect_transform(srcinfo.image_width, srcinfo.image_height, 
-			srcinfo.max_h_samp_factor * DCTSIZE, srcinfo.max_v_samp_factor * DCTSIZE, 
-			transfoptions.transform)) {
+		if( !jtransform_request_workspace(&srcinfo, &transfoptions) ) {
 			FreeImage_OutputMessageProc(FIF_JPEG, "Transformation is not perfect");
 			throw(1);
 		}
-		// Prepare transformation workspace
-		jtransform_request_workspace(&srcinfo, &transfoptions);
-		
+
 		// Read source file as DCT coefficients
 		src_coef_arrays = jpeg_read_coefficients(&srcinfo);
 		

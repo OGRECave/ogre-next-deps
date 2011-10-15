@@ -1,4 +1,4 @@
-/* $Header: /cvsroot/freeimage/FreeImage/Source/LibTIFF/tif_msdos.c,v 1.26 2009/11/07 19:18:27 drolon Exp $ */
+/* $Header: /cvsroot/freeimage/FreeImage/Source/LibTIFF/tif_msdos.c,v 1.35 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -184,3 +184,10 @@ msdosErrorHandler(const char* module, const char* fmt, va_list ap)
 	fprintf(stderr, ".\n");
 }
 TIFFErrorHandler _TIFFerrorHandler = msdosErrorHandler;
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

@@ -42,7 +42,6 @@ followed by a subsampling by 2.
 @see GaussianPyramid
 */
 static FIBITMAP* GaussianLevel5x5(FIBITMAP *dib) {
-	int x, y, width, height, pitch;
 	FIBITMAP *h_dib = NULL, *v_dib = NULL, *dst = NULL;
 	float *src_pixel, *dst_pixel;
 
@@ -50,21 +49,23 @@ static FIBITMAP* GaussianLevel5x5(FIBITMAP *dib) {
 		const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 		if(image_type != FIT_FLOAT) throw(1);
 
-		width = FreeImage_GetWidth(dib);
-		height = FreeImage_GetHeight(dib);
+		const unsigned width = FreeImage_GetWidth(dib);
+		const unsigned height = FreeImage_GetHeight(dib);
 
 		h_dib = FreeImage_AllocateT(image_type, width, height);
 		v_dib = FreeImage_AllocateT(image_type, width, height);
 		if(!h_dib || !v_dib) throw(1);
 
-		pitch = FreeImage_GetPitch(dib) / sizeof(float);
+		const unsigned pitch = FreeImage_GetPitch(dib) / sizeof(float);
 
 		// horizontal convolution dib -> h_dib
+
 		src_pixel = (float*)FreeImage_GetBits(dib);
 		dst_pixel = (float*)FreeImage_GetBits(h_dib);
-		for(y = 0; y < height; y++) {
+
+		for(unsigned y = 0; y < height; y++) {
 			// work on line y
-			for(x = 2; x < width - 2; x++) {
+			for(unsigned x = 2; x < width - 2; x++) {
 				dst_pixel[x] = src_pixel[x-2] + src_pixel[x+2] + 4 * (src_pixel[x-1] + src_pixel[x+1]) + 6 * src_pixel[x];
 				dst_pixel[x] /= 16;
 			}
@@ -78,13 +79,16 @@ static FIBITMAP* GaussianLevel5x5(FIBITMAP *dib) {
 			src_pixel += pitch;
 			dst_pixel += pitch;
 		}
+
 		// vertical convolution h_dib -> v_dib
+
 		src_pixel = (float*)FreeImage_GetBits(h_dib);
 		dst_pixel = (float*)FreeImage_GetBits(v_dib);
-		for(x = 0; x < width; x++) {		
+
+		for(unsigned x = 0; x < width; x++) {		
 			// work on column x
-			for(y = 2; y < height - 2; y++) {
-				const int index = y*pitch + x;
+			for(unsigned y = 2; y < height - 2; y++) {
+				const unsigned index = y*pitch + x;
 				dst_pixel[index] = src_pixel[index-2*pitch] + src_pixel[index+2*pitch] + 4 * (src_pixel[index-pitch] + src_pixel[index+pitch]) + 6 * src_pixel[index];
 				dst_pixel[index] /= 16;
 			}
@@ -152,35 +156,35 @@ and returns the average gradient.
 @see GradientPyramid
 */
 static FIBITMAP* GradientLevel(FIBITMAP *H, float *avgGrad, int k) {
-	int x, y, width, height, pitch;
 	FIBITMAP *G = NULL;
 
 	try {
 		const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(H);
 		if(image_type != FIT_FLOAT) throw(1);
 
-		width = FreeImage_GetWidth(H);
-		height = FreeImage_GetHeight(H);
+		const unsigned width = FreeImage_GetWidth(H);
+		const unsigned height = FreeImage_GetHeight(H);
 
 		G = FreeImage_AllocateT(image_type, width, height);
 		if(!G) throw(1);
 		
-		pitch = FreeImage_GetPitch(H) / sizeof(float);
+		const unsigned pitch = FreeImage_GetPitch(H) / sizeof(float);
 		
 		const float divider = (float)(1 << (k + 1));
 		float average = 0;
 		
 		float *src_pixel = (float*)FreeImage_GetBits(H);
 		float *dst_pixel = (float*)FreeImage_GetBits(G);
-		for(y = 0; y < height; y++) {
-			const int n = (y == 0 ? 0 : y-1);
-			const int s = (y+1 == height ? y : y+1);
-			for(x = 0; x < width; x++) {
-				const int w = (x == 0 ? 0 : x-1);
-				const int e = (x+1 == width ? x : x+1);		
+
+		for(unsigned y = 0; y < height; y++) {
+			const unsigned n = (y == 0 ? 0 : y-1);
+			const unsigned s = (y+1 == height ? y : y+1);
+			for(unsigned x = 0; x < width; x++) {
+				const unsigned w = (x == 0 ? 0 : x-1);
+				const unsigned e = (x+1 == width ? x : x+1);		
 				// central difference
-				float gx = (src_pixel[y*pitch+e] - src_pixel[y*pitch+w]) / divider; // [Hk(x+1, y) - Hk(x-1, y)] / 2**(k+1)
-				float gy = (src_pixel[s*pitch+x] - src_pixel[n*pitch+x]) / divider; // [Hk(x, y+1) - Hk(x, y-1)] / 2**(k+1)
+				const float gx = (src_pixel[y*pitch+e] - src_pixel[y*pitch+w]) / divider; // [Hk(x+1, y) - Hk(x-1, y)] / 2**(k+1)
+				const float gy = (src_pixel[s*pitch+x] - src_pixel[n*pitch+x]) / divider; // [Hk(x, y+1) - Hk(x, y-1)] / 2**(k+1)
 				// gradient
 				dst_pixel[x] = sqrt(gx*gx + gy*gy);
 				// average gradient
@@ -193,6 +197,7 @@ static FIBITMAP* GradientLevel(FIBITMAP *H, float *avgGrad, int k) {
 		*avgGrad = average / (width * height);
 
 		return G;
+
 	} catch(int) {
 		if(G) FreeImage_Unload(G);
 		return NULL;
@@ -236,7 +241,6 @@ Compute the gradient attenuation function PHI(x, y)
 @return Returns the attenuation matrix Phi if successful, returns NULL otherwise
 */
 static FIBITMAP* PhiMatrix(FIBITMAP **gradients, float *avgGrad, int nlevels, float alpha, float beta) {
-	int x, y, width, height, pitch;
 	float *src_pixel, *dst_pixel;
 	FIBITMAP **phi = NULL;
 
@@ -250,9 +254,9 @@ static FIBITMAP* PhiMatrix(FIBITMAP **gradients, float *avgGrad, int nlevels, fl
 
 			FIBITMAP *Gk = gradients[k];
 
-			width = FreeImage_GetWidth(Gk);
-			height = FreeImage_GetHeight(Gk);
-			pitch = FreeImage_GetPitch(Gk) / sizeof(float);
+			const unsigned width = FreeImage_GetWidth(Gk);
+			const unsigned height = FreeImage_GetHeight(Gk);
+			const unsigned pitch = FreeImage_GetPitch(Gk) / sizeof(float);
 
 			// parameter alpha is 0.1 times the average gradient magnitude
 			// also, note the factor of 2**k in the denominator; 
@@ -266,8 +270,8 @@ static FIBITMAP* PhiMatrix(FIBITMAP **gradients, float *avgGrad, int nlevels, fl
 			
 			src_pixel = (float*)FreeImage_GetBits(Gk);
 			dst_pixel = (float*)FreeImage_GetBits(phi[k]);
-			for(y = 0; y < height; y++) {
-				for(x = 0; x < width; x++) {
+			for(unsigned y = 0; y < height; y++) {
+				for(unsigned x = 0; x < width; x++) {
 					// compute (alpha / grad) * (grad / alpha) ** beta
 					const float v = src_pixel[x] / ALPHA;
 					const float value = (float)pow((float)v, (float)(beta-1));
@@ -285,8 +289,8 @@ static FIBITMAP* PhiMatrix(FIBITMAP **gradients, float *avgGrad, int nlevels, fl
 
 				src_pixel = (float*)FreeImage_GetBits(L);
 				dst_pixel = (float*)FreeImage_GetBits(phi[k]);
-				for(y = 0; y < height; y++) {
-					for(x = 0; x < width; x++) {
+				for(unsigned y = 0; y < height; y++) {
+					for(unsigned x = 0; x < width; x++) {
 						dst_pixel[x] *= src_pixel[x];
 					}
 					// next line
@@ -330,7 +334,6 @@ then compute the divergence div G from the attenuated gradient.
 @return Returns the divergence matrix if successful, returns NULL otherwise
 */
 static FIBITMAP* Divergence(FIBITMAP *H, FIBITMAP *PHI) {
-	int x, y, width, height, pitch;
 	FIBITMAP *Gx = NULL, *Gy = NULL, *divG = NULL;
 	float *phi, *h, *gx, *gy, *divg;
 
@@ -338,15 +341,15 @@ static FIBITMAP* Divergence(FIBITMAP *H, FIBITMAP *PHI) {
 		const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(H);
 		if(image_type != FIT_FLOAT) throw(1);
 
-		width = FreeImage_GetWidth(H);
-		height = FreeImage_GetHeight(H);
+		const unsigned width = FreeImage_GetWidth(H);
+		const unsigned height = FreeImage_GetHeight(H);
 
 		Gx = FreeImage_AllocateT(image_type, width, height);
 		if(!Gx) throw(1);
 		Gy = FreeImage_AllocateT(image_type, width, height);
 		if(!Gy) throw(1);
 		
-		pitch = FreeImage_GetPitch(H) / sizeof(float);
+		const unsigned pitch = FreeImage_GetPitch(H) / sizeof(float);
 		
 		// perform gradient attenuation
 
@@ -355,12 +358,12 @@ static FIBITMAP* Divergence(FIBITMAP *H, FIBITMAP *PHI) {
 		gx  = (float*)FreeImage_GetBits(Gx);
 		gy  = (float*)FreeImage_GetBits(Gy);
 
-		for(y = 0; y < height; y++) {
-			const int s = (y+1 == height ? y : y+1);
-			for(x = 0; x < width; x++) {				
-				const int e = (x+1 == width ? x : x+1);
+		for(unsigned y = 0; y < height; y++) {
+			const unsigned s = (y+1 == height ? y : y+1);
+			for(unsigned x = 0; x < width; x++) {				
+				const unsigned e = (x+1 == width ? x : x+1);
 				// forward difference
-				const int index = y*pitch+x;
+				const unsigned index = y*pitch + x;
 				const float phi_xy = phi[index];
 				const float h_xy   = h[index];
 				gx[x] = (h[y*pitch+e] - h_xy) * phi_xy; // [H(x+1, y) - H(x, y)] * PHI(x, y)
@@ -380,11 +383,11 @@ static FIBITMAP* Divergence(FIBITMAP *H, FIBITMAP *PHI) {
 		gy  = (float*)FreeImage_GetBits(Gy);
 		divg = (float*)FreeImage_GetBits(divG);
 
-		for(y = 0; y < height; y++) {
-			for(x = 0; x < width; x++) {				
+		for(unsigned y = 0; y < height; y++) {
+			for(unsigned x = 0; x < width; x++) {				
 				// backward difference approximation
 				// divG = Gx(x, y) - Gx(x-1, y) + Gy(x, y) - Gy(x, y-1)
-				const int index = y*pitch+x;
+				const unsigned index = y*pitch + x;
 				divg[index] = gx[index] + gy[index];
 				if(x > 0) divg[index] -= gx[index-1];
 				if(y > 0) divg[index] -= gy[index-pitch];
@@ -413,7 +416,6 @@ normalize to range 0..100 and take the logarithm.
 @return Returns the normalized luminance H if successful, returns NULL otherwise
 */
 static FIBITMAP* LogLuminance(FIBITMAP *Y) {
-	int x, y, width, height, pitch;
 	FIBITMAP *H = NULL;
 
 	try {
@@ -421,17 +423,17 @@ static FIBITMAP* LogLuminance(FIBITMAP *Y) {
 		FIBITMAP *H = FreeImage_Clone(Y);
 		if(!H) throw(1);
 
-		width  = FreeImage_GetWidth(H);
-		height = FreeImage_GetHeight(H);
-		pitch  = FreeImage_GetPitch(H);
+		const unsigned width  = FreeImage_GetWidth(H);
+		const unsigned height = FreeImage_GetHeight(H);
+		const unsigned pitch  = FreeImage_GetPitch(H);
 
 		// find max & min luminance values
 		float maxLum = -1e20F, minLum = 1e20F;
 
 		BYTE *bits = (BYTE*)FreeImage_GetBits(H);
-		for(y = 0; y < height; y++) {
+		for(unsigned y = 0; y < height; y++) {
 			const float *pixel = (float*)bits;
-			for(x = 0; x < width; x++) {
+			for(unsigned x = 0; x < width; x++) {
 				const float value = pixel[x];
 				maxLum = (maxLum < value) ? value : maxLum;	// max Luminance in the scene
 				minLum = (minLum < value) ? minLum : value;	// min Luminance in the scene
@@ -444,9 +446,9 @@ static FIBITMAP* LogLuminance(FIBITMAP *Y) {
 		// normalize to range 0..100 and take the logarithm
 		const float scale = 100.F / (maxLum - minLum);
 		bits = (BYTE*)FreeImage_GetBits(H);
-		for(y = 0; y < height; y++) {
+		for(unsigned y = 0; y < height; y++) {
 			float *pixel = (float*)bits;
-			for(x = 0; x < width; x++) {
+			for(unsigned x = 0; x < width; x++) {
 				const float value = (pixel[x] - minLum) * scale;
 				pixel[x] = log(value + EPSILON);
 			}
@@ -467,15 +469,14 @@ Given a normalized luminance, perform exponentiation and recover the log compres
 @param Y Input/Output luminance image
 */
 static void ExpLuminance(FIBITMAP *Y) {
-	int x, y;
-	int width = FreeImage_GetWidth(Y);
-	int height = FreeImage_GetHeight(Y);
-	int pitch = FreeImage_GetPitch(Y);
+	const unsigned width = FreeImage_GetWidth(Y);
+	const unsigned height = FreeImage_GetHeight(Y);
+	const unsigned pitch = FreeImage_GetPitch(Y);
 
 	BYTE *bits = (BYTE*)FreeImage_GetBits(Y);
-	for(y = 0; y < height; y++) {
+	for(unsigned y = 0; y < height; y++) {
 		float *pixel = (float*)bits;
-		for(x = 0; x < width; x++) {
+		for(unsigned x = 0; x < width; x++) {
 			pixel[x] = exp(pixel[x]) - EPSILON;
 		}
 		bits += pitch;
@@ -492,7 +493,7 @@ Gradient Domain HDR tone mapping operator
 @return returns the tone mapped luminance
 */
 static FIBITMAP* tmoFattal02(FIBITMAP *Y, float alpha, float beta) {
-	const int MIN_PYRAMID_SIZE = 32;	// minimun size (width or height) of the coarsest level of the pyramid
+	const unsigned MIN_PYRAMID_SIZE = 32;	// minimun size (width or height) of the coarsest level of the pyramid
 
 	FIBITMAP *H = NULL;
 	FIBITMAP **pyramid = NULL;
@@ -511,9 +512,9 @@ static FIBITMAP* tmoFattal02(FIBITMAP *Y, float alpha, float beta) {
 		if(!H) throw(1);
 		
 		// get the number of levels for the pyramid
-		int width = FreeImage_GetWidth(H);
-		int height = FreeImage_GetHeight(H);
-		int minsize = MIN(width, height);
+		const unsigned width = FreeImage_GetWidth(H);
+		const unsigned height = FreeImage_GetHeight(H);
+		unsigned minsize = MIN(width, height);
 		while(minsize >= MIN_PYRAMID_SIZE) {
 			nlevels++;
 			minsize /= 2;
@@ -617,8 +618,9 @@ FreeImage_TmoFattal02(FIBITMAP *dib, double color_saturation, double attenuation
 	FIBITMAP *Yout = NULL;
 	FIBITMAP *dst = NULL;
 
+	if(!FreeImage_HasPixels(dib)) return NULL;
+
 	try {
-		int x, y;
 
 		// convert to RGBF
 		src = FreeImage_ConvertToRGBF(dib);
@@ -638,22 +640,22 @@ FreeImage_TmoFattal02(FIBITMAP *dib, double color_saturation, double attenuation
 
 		// compress the dynamic range
 
-		int width = FreeImage_GetWidth(src);
-		int height = FreeImage_GetHeight(src);
+		const unsigned width = FreeImage_GetWidth(src);
+		const unsigned height = FreeImage_GetHeight(src);
 
-		int rgb_pitch = FreeImage_GetPitch(src);
-		int y_pitch = FreeImage_GetPitch(Yin);
+		const unsigned rgb_pitch = FreeImage_GetPitch(src);
+		const unsigned y_pitch = FreeImage_GetPitch(Yin);
 
 		BYTE *bits      = (BYTE*)FreeImage_GetBits(src);
 		BYTE *bits_yin  = (BYTE*)FreeImage_GetBits(Yin);
 		BYTE *bits_yout = (BYTE*)FreeImage_GetBits(Yout);
 
-		for(y = 0; y < height; y++) {
+		for(unsigned y = 0; y < height; y++) {
 			float *Lin = (float*)bits_yin;
 			float *Lout = (float*)bits_yout;
 			float *color = (float*)bits;
-			for(x = 0; x < width; x++) {
-				for(int c = 0; c < 3; c++) {
+			for(unsigned x = 0; x < width; x++) {
+				for(unsigned c = 0; c < 3; c++) {
 					*color = (Lin[x] > 0) ? pow(*color/Lin[x], s) * Lout[x] : 0;
 					color++;
 				}

@@ -32,7 +32,6 @@
 #ifndef OPENJPEG_H
 #define OPENJPEG_H
 
-#define OPENJPEG_VERSION "1.3.0"
 
 /* 
 ==========================================================
@@ -40,7 +39,7 @@
 ==========================================================
 */
 
-#if defined(OPJ_STATIC) || !(defined(WIN32) || defined(__WIN32__))
+#if defined(OPJ_STATIC) || !defined(_WIN32)
 #define OPJ_API
 #define OPJ_CALLCONV
 #else
@@ -53,37 +52,16 @@ that uses this DLL. This way any other project whose source files include this f
 OPJ_API functions as being imported from a DLL, wheras this DLL sees symbols
 defined with this macro as being exported.
 */
-#ifdef OPJ_EXPORTS
+#if defined(OPJ_EXPORTS) || defined(DLL_EXPORT)
 #define OPJ_API __declspec(dllexport)
 #else
 #define OPJ_API __declspec(dllimport)
 #endif /* OPJ_EXPORTS */
-#endif /* !OPJ_STATIC || !WIN32 */
+#endif /* !OPJ_STATIC || !_WIN32 */
 
-#ifndef __cplusplus
-#if defined(HAVE_STDBOOL_H)
-/*
-The C language implementation does correctly provide the standard header
-file "stdbool.h".
- */
-#include <stdbool.h>
-#else
-/*
-The C language implementation does not provide the standard header file
-"stdbool.h" as required by ISO/IEC 9899:1999.  Try to compensate for this
-braindamage below.
-*/
-#if !defined(bool)
-#define	bool	int
-#endif
-#if !defined(true)
-#define true	1
-#endif
-#if !defined(false)
-#define	false	0
-#endif
-#endif
-#endif /* __cplusplus */
+typedef int opj_bool;
+#define OPJ_TRUE 1
+#define OPJ_FALSE 0
 
 /* 
 ==========================================================
@@ -147,7 +125,8 @@ typedef enum PROG_ORDER {
 Supported image color spaces
 */
 typedef enum COLOR_SPACE {
-	CLRSPC_UNKNOWN = -1,	/**< place-holder */
+	CLRSPC_UNKNOWN = -1,	/**< not supported by the library */
+	CLRSPC_UNSPECIFIED = 0, /**< not specified in the codestream */ 
 	CLRSPC_SRGB = 1,		/**< sRGB */
 	CLRSPC_GRAY = 2,		/**< grayscale */
 	CLRSPC_SYCC = 3			/**< YUV */
@@ -243,7 +222,7 @@ Compression parameters
 */
 typedef struct opj_cparameters {
 	/** size of tile: tile_size_on = false (not in argument) or = true (in argument) */
-	bool tile_size_on;
+	opj_bool tile_size_on;
 	/** XTOsiz */
 	int cp_tx0;
 	/** YTOsiz */
@@ -325,7 +304,7 @@ typedef struct opj_cparameters {
 	/**@name JPWL encoding parameters */
 	/*@{*/
 	/** enables writing of EPC in MH, thus activating JPWL */
-	bool jpwl_epc_on;
+	opj_bool jpwl_epc_on;
 	/** error protection method for MH (0,1,16,32,37-128) */
 	int jpwl_hprot_MH;
 	/** tile number of header protection specification (>=0) */
@@ -403,7 +382,7 @@ typedef struct opj_dparameters {
 	/**@name JPWL decoding parameters */
 	/*@{*/
 	/** activates the JPWL correction capabilities */
-	bool jpwl_correct;
+	opj_bool jpwl_correct;
 	/** expected number of components */
 	int jpwl_exp_comps;
 	/** maximum number of tiles */
@@ -426,7 +405,7 @@ typedef struct opj_dparameters {
 #define opj_common_fields \
 	opj_event_mgr_t *event_mgr;	/**< pointer to the event manager */\
 	void * client_data;			/**< Available for use by application */\
-	bool is_decompressor;		/**< So common code can tell which is which */\
+	opj_bool is_decompressor;	/**< So common code can tell which is which */\
 	OPJ_CODEC_FORMAT codec_format;	/**< selected codec */\
 	void *j2k_handle;			/**< pointer to the J2K codec */\
 	void *jp2_handle;			/**< pointer to the JP2 codec */\
@@ -554,6 +533,10 @@ typedef struct opj_image {
 	OPJ_COLOR_SPACE color_space;
 	/** image components */
 	opj_image_comp_t *comps;
+	/** 'restricted' ICC profile */
+	unsigned char *icc_profile_buf;
+	/** size of ICC profile */
+	int icc_profile_len;
 } opj_image_t;
 
 /**
@@ -888,7 +871,7 @@ Encode an image into a JPEG-2000 codestream
 @param index Depreacted -> Set to NULL. To extract index, used opj_encode_wci()
 @return Returns true if successful, returns false otherwise
 */
-OPJ_API bool OPJ_CALLCONV opj_encode(opj_cinfo_t *cinfo, opj_cio_t *cio, opj_image_t *image, char *index);
+OPJ_API opj_bool OPJ_CALLCONV opj_encode(opj_cinfo_t *cinfo, opj_cio_t *cio, opj_image_t *image, char *index);
 /**
 Encode an image into a JPEG-2000 codestream and extract the codestream information
 @param cinfo compressor handle
@@ -897,7 +880,7 @@ Encode an image into a JPEG-2000 codestream and extract the codestream informati
 @param cstr_info Codestream information structure if needed afterwards, NULL otherwise
 @return Returns true if successful, returns false otherwise
 */
-OPJ_API bool OPJ_CALLCONV opj_encode_with_info(opj_cinfo_t *cinfo, opj_cio_t *cio, opj_image_t *image, opj_codestream_info_t *cstr_info);
+OPJ_API opj_bool OPJ_CALLCONV opj_encode_with_info(opj_cinfo_t *cinfo, opj_cio_t *cio, opj_image_t *image, opj_codestream_info_t *cstr_info);
 /**
 Destroy Codestream information after compression or decompression
 @param cstr_info Codestream information structure

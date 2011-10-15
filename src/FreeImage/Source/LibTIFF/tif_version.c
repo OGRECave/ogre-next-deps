@@ -1,4 +1,4 @@
-/* $Header: /cvsroot/freeimage/FreeImage/Source/LibTIFF/tif_version.c,v 1.28 2009/11/07 19:18:27 drolon Exp $ */
+/* $Header: /cvsroot/freeimage/FreeImage/Source/LibTIFF/tif_version.c,v 1.37 2011/04/10 17:14:09 drolon Exp $ */
 /*
  * Copyright (c) 1992-1997 Sam Leffler
  * Copyright (c) 1992-1997 Silicon Graphics, Inc.
@@ -31,3 +31,10 @@ TIFFGetVersion(void)
 {
 	return (TIFFVersion);
 }
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

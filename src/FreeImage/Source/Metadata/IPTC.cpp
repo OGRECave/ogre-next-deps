@@ -46,6 +46,10 @@ read_iptc_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
 
 	WORD tag_id;
 
+	if(!dataptr || (datalen == 0)) {
+		return FALSE;
+	}
+
 	// create a tag
 
 	FITAG *tag = FreeImage_CreateTag();

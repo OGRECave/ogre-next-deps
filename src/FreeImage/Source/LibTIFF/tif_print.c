@@ -1,4 +1,4 @@
-/* $Id: tif_print.c,v 1.28 2009/11/07 19:18:27 drolon Exp $ */
+/* $Id: tif_print.c,v 1.37 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -132,10 +132,6 @@ _TIFFPrettyPrintField(TIFF* tif, FILE* fd, ttag_t tag,
 					break;
 			}
 			return 1;
-		case TIFFTAG_DOTRANGE:
-			fprintf(fd, "  Dot Range: %u-%u\n",
-				((uint16*)raw_data)[0], ((uint16*)raw_data)[1]);
-			return 1;
 		case TIFFTAG_WHITEPOINT:
 			fprintf(fd, "  White Point: %g-%g\n",
 				((float *)raw_data)[0], ((float *)raw_data)[1]);			return 1;
@@ -144,7 +140,7 @@ _TIFFPrettyPrintField(TIFF* tif, FILE* fd, ttag_t tag,
 			uint16 i;
 
 			fprintf(fd, "  Reference Black/White:\n");
-			for (i = 0; i < td->td_samplesperpixel; i++)
+			for (i = 0; i < 3; i++)
 			fprintf(fd, "    %2d: %5g %5g\n", i,
 				((float *)raw_data)[2*i+0],
 				((float *)raw_data)[2*i+1]);
@@ -637,3 +633,10 @@ _TIFFprintAsciiTag(FILE* fd, const char* name, const char* value)
 }
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

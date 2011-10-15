@@ -2,22 +2,18 @@
  * File: libraw_internal_funcs.h
  * Copyright 2008-2009 LibRaw LLC (info@libraw.org)
  * Created: Sat Mar  14, 2008
- *
- * LibRaw-Lite internal data structures (not visible outside)
- *
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+LibRaw is free software; you can redistribute it and/or modify
+it under the terms of the one of three licenses as you choose:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+1. GNU LESSER GENERAL PUBLIC LICENSE version 2.1
+   (See file LICENSE.LGPL provided in LibRaw distribution archive for details).
+
+2. COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0
+   (See file LICENSE.CDDL provided in LibRaw distribution archive for details).
+
+3. LibRaw Software License 27032010
+   (See file LICENSE.LibRaw.pdf provided in LibRaw distribution archive for details).
 
  */
 
@@ -43,32 +39,36 @@
     void        canon_600_coeff();
     void        canon_600_load_raw();
     int         canon_s2is();
-    void        canon_a5_load_raw();
     void        parse_ciff (int offset, int length);
     void        ciff_block_1030();
 
 // LJPEG decoder
-    unsigned    getbits (int nbits);
-    void        init_decoder();
-    uchar *     make_decoder (const uchar *source, int level);
+    unsigned    getbithuff (int nbits, ushort *huff);
+    ushort*     make_decoder_ref (const uchar **source);
+    ushort*     make_decoder (const uchar *source);
     int         ljpeg_start (struct jhead *jh, int info_only);
-    int         ljpeg_diff (struct decode *dindex);
-    ushort *    ljpeg_row (int jrow, struct jhead *jh);
+    void        ljpeg_end(struct jhead *jh);
+    int         ljpeg_diff (ushort *huff); 
+    int         ljpeg_diff_new (LibRaw_bit_buffer& bits, LibRaw_byte_buffer* buf,ushort *huff);
+    int         ljpeg_diff_pef (LibRaw_bit_buffer& bits, LibRaw_byte_buffer* buf,ushort *huff);
+//    ushort *    ljpeg_row (int jrow, struct jhead *jh);
+    ushort *    ljpeg_row_new (int jrow, struct jhead *jh, LibRaw_bit_buffer& bits,LibRaw_byte_buffer* bytes);
+
+    unsigned    ph1_bithuff (int nbits, ushort *huff);
 
 // Canon DSLRs
-    void        crw_init_tables (unsigned table);
+void        crw_init_tables (unsigned table, ushort *huff[2]);
     int         canon_has_lowbits();
     void        canon_compressed_load_raw();
     void        lossless_jpeg_load_raw();
     void        canon_sraw_load_raw();
-    void        canon_black(double *);
 // Adobe DNG
     void        adobe_copy_pixel (int row, int col, ushort **rp);
     void        adobe_dng_load_raw_lj();
     void        adobe_dng_load_raw_nc();
 
 // Pentax
-    void        pentax_k10_load_raw();
+    void        pentax_load_raw();
     void        pentax_tree();
 
 // Nikon (and Minolta Z2)
@@ -79,7 +79,6 @@
     int         nikon_e2100();
     void        nikon_3700();
     int         minolta_z2();
-    void        nikon_e900_load_raw();
     void        nikon_e2100_load_raw();
 
 // Fuji
@@ -104,7 +103,8 @@
     void        leaf_hdr_load_raw();
     void        sinar_4shot_load_raw();
     void        imacon_full_load_raw();
-    void        packed_12_load_raw();
+    void        packed_load_raw();
+    float	find_green(int,int,int,int);
     void        unpacked_load_raw();
     void        parse_sinar_ia();
     void        parse_phase_one (int base);
@@ -113,11 +113,9 @@
     void        nokia_load_raw();
     unsigned    pana_bits (int nbits);
     void        panasonic_load_raw();
-    void        olympus_e300_load_raw();
-    void        olympus_e410_load_raw();
+    void        olympus_load_raw();
     void        olympus_cseries_load_raw();
     void        minolta_rd175_load_raw();
-    void        casio_qv5700_load_raw();
     void        quicktake_100_load_raw();
     const int*  make_decoder_int (const int *source, int level);
     int         radc_token (int tree);
@@ -178,7 +176,8 @@
     void        linear_table (unsigned len);
     void        parse_kodak_ifd (int base);
     int         parse_tiff_ifd (int base);
-    void        parse_tiff (int base);
+    int         parse_tiff (int base);
+    void        apply_tiff(void);
     void        parse_gps (int base);
     void        romm_coeff (float romm_cam[3][3]);
     void        parse_mos (int offset);
@@ -193,6 +192,46 @@
 // Tiff writer
     void        tiff_set (ushort *ntag, ushort tag, ushort type, int count, int val);
     void        tiff_head (struct tiff_hdr *th, int full);
+
+// splitted AHD code
+#define TS 256
+    void        ahd_interpolate_green_h_and_v(int top, int left, ushort (*out_rgb)[TS][TS][3]);
+    void ahd_interpolate_r_and_b_in_rgb_and_convert_to_cielab(int top, int left, ushort (*inout_rgb)[TS][3], short (*out_lab)[TS][3], const float (&xyz_cam)[3][4]);
+    void ahd_interpolate_r_and_b_and_convert_to_cielab(int top, int left, ushort (*inout_rgb)[TS][TS][3], short (*out_lab)[TS][TS][3], const float (&xyz_cam)[3][4]);
+    void ahd_interpolate_build_homogeneity_map(int top, int left, short (*lab)[TS][TS][3], char (*out_homogeneity_map)[TS][2]);
+    void ahd_interpolate_combine_homogeneous_pixels(int top, int left, ushort (*rgb)[TS][TS][3], char (*homogeneity_map)[TS][2]);
+
+#undef TS
+
+// LibRaw demosaic packs  functions
+// AMaZe
+    int         LinEqSolve(int,  float*, float*, float*);
+// DCB
+    void        dcb_pp();
+    void        dcb_copy_to_buffer(float (*image2)[3]);
+    void        dcb_restore_from_buffer(float (*image2)[3]);
+    void        dcb_color();
+    void        dcb_color_full();
+    void        dcb_map();
+    void        dcb_correction();
+    void        dcb_correction2();
+    void        dcb_refinement();
+    void        rgb_to_lch(double (*image3)[3]);
+    void        lch_to_rgb(double (*image3)[3]);
+    void        fbdd_correction();
+    void        fbdd_correction2(double (*image3)[3]);
+    void        fbdd_green();
+    void  	dcb_ver(float (*image3)[3]);
+    void 	dcb_hor(float (*image2)[3]);
+    void 	dcb_color2(float (*image2)[3]);
+    void 	dcb_color3(float (*image3)[3]);
+    void 	dcb_decide(float (*image2)[3], float (*image3)[3]);
+    void 	dcb_nyquist();
+// VCD/modified dcraw
+    void        refinement();
+    void        ahd_partial_interpolate(int threshold_value);
+    void        es_median_filter();
+    void        median_filter_new();
 #endif
 
 #endif

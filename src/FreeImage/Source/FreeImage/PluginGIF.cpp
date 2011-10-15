@@ -182,7 +182,7 @@ StringTable::StringTable()
 	// Maximum number of entries in the map is MAX_LZW_CODE * 256 
 	// (aka 2**12 * 2**8 => a 20 bits key)
 	// This Map could be optmized to only handle MAX_LZW_CODE * 2**(m_bpp)
-	m_strmap = (int*)new int[1<<20];
+	m_strmap = new(std::nothrow) int[1<<20];
 }
 
 StringTable::~StringTable()
@@ -219,11 +219,11 @@ void StringTable::Initialize(int minCodeSize)
 BYTE *StringTable::FillInputBuffer(int len)
 {
 	if( m_buffer == NULL ) {
-		m_buffer = new BYTE[len];
+		m_buffer = new(std::nothrow) BYTE[len];
 		m_bufferRealSize = len;
 	} else if( len > m_bufferRealSize ) {
 		delete [] m_buffer;
-		m_buffer = new BYTE[len];
+		m_buffer = new(std::nothrow) BYTE[len];
 		m_bufferRealSize = len;
 	}
 	m_bufferSize = len;
@@ -524,7 +524,7 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 
 static void *DLL_CALLCONV 
 Open(FreeImageIO *io, fi_handle handle, BOOL read) {
-	GIFinfo *info = new GIFinfo;
+	GIFinfo *info = new(std::nothrow) GIFinfo;
 	if( info == NULL ) {
 		return NULL;
 	}
@@ -904,7 +904,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		//LZW Minimum Code Size
 		io->read_proc(&b, 1, 1, handle);
-		StringTable *stringtable = new StringTable;
+		StringTable *stringtable = new(std::nothrow) StringTable;
 		stringtable->Initialize(b);
 
 		//Image Data Sub-blocks
@@ -1305,7 +1305,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		//LZW Minimum Code Size
 		b = (BYTE)(bpp == 1 ? 2 : bpp);
 		io->write_proc(&b, 1, 1, handle);
-		StringTable *stringtable = new StringTable;
+		StringTable *stringtable = new(std::nothrow) StringTable;
 		stringtable->Initialize(b);
 		stringtable->CompressStart(bpp, width);
 
@@ -1348,7 +1348,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			b = (BYTE)(w - (sizeof(buf) - size));
 			if( b > 0 ) {
 				io->write_proc(&b, 1, 1, handle);
-				io->write_proc(last, b, 1, handle);
+				io->write_proc(last + w - b, b, 1, handle);
 			}
 		} else {
 			//last sub-block less than full size

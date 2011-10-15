@@ -28,9 +28,9 @@
 
 // ----------------------------------------------------------
 
-CacheFile::CacheFile(const char *filename, BOOL keep_in_memory) :
+CacheFile::CacheFile(const std::string filename, BOOL keep_in_memory) :
 m_file(NULL),
-m_filename(),
+m_filename(filename),
 m_free_pages(),
 m_page_cache_mem(),
 m_page_cache_disk(),
@@ -38,9 +38,6 @@ m_page_map(),
 m_page_count(0),
 m_current_block(NULL),
 m_keep_in_memory(keep_in_memory) {
-	if (filename) {
-		m_filename = filename;
-	}
 }
 
 CacheFile::~CacheFile() {

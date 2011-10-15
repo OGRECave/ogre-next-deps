@@ -28,7 +28,7 @@
 // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.67
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -57,12 +57,18 @@ clearError ()
 
 
 bool
-checkError (istream &is)
+checkError (istream &is, streamsize expected = 0)
 {
     if (!is)
     {
 	if (errno)
 	    Iex::throwErrnoExc();
+
+	if (is.gcount() < expected) 
+	{
+		THROW (Iex::InputExc, "Early end of file: read " << is.gcount() 
+			<< " out of " << expected << " requested bytes.");
+	}
 	return false;
     }
 
@@ -122,7 +128,7 @@ StdIFStream::read (char c[/*n*/], int n)
 
     clearError();
     _is->read (c, n);
-    return checkError (*_is);
+    return checkError (*_is, n);
 }
 
 

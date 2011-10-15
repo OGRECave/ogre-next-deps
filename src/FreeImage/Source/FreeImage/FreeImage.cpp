@@ -95,8 +95,8 @@ FreeImage_GetCopyrightMessage() {
 BOOL DLL_CALLCONV
 FreeImage_IsLittleEndian() {
 	union {
-		long i;
-		char c[4];
+		DWORD i;
+		BYTE c[4];
 	} u;
 	u.i = 1;
 	return (u.c[0] != 0);

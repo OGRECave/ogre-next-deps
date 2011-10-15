@@ -420,7 +420,7 @@ FillBackgroundBitmap(FIBITMAP *dib, const RGBQUAD *color, int options) {
 BOOL DLL_CALLCONV
 FreeImage_FillBackground(FIBITMAP *dib, const void *color, int options) {
 
-	if (!dib) {
+	if (!FreeImage_HasPixels(dib)) {
 		return FALSE;
 	}
 	
@@ -776,9 +776,7 @@ FreeImage_AllocateEx(int width, int height, int bpp, const RGBQUAD *color, int o
 FIBITMAP * DLL_CALLCONV
 FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom, const void *color, int options) {
 
-	if (!src) {
-		return NULL;
-	}
+	if(!FreeImage_HasPixels(src)) return NULL;
 
 	// Just return a clone of the image, if left, top, right and bottom are
 	// all zero.
@@ -793,7 +791,7 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 	// bottom are smaller than or equal zero. The color pointer may be
 	// NULL in this case.
 	if ((left <= 0) && (right <= 0) && (top <= 0) && (bottom <= 0)) {
-		return FreeImage_Copy(src, -left, -top,	width - 1 + top, height - 1 + bottom);
+		return FreeImage_Copy(src, -left, -top,	width + right, height + bottom);
 	}
 
 	// From here, we need a valid color, since the image will be enlarged on
@@ -828,8 +826,8 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 		FIBITMAP *copy = FreeImage_Copy(src,
 			((left >= 0) ? 0 : -left),
 			((top >= 0) ? 0 : -top),
-			width - 1 - ((right >= 0) ? 0 : -top),
-			height - 1 - ((bottom >= 0) ? 0 : -bottom));
+			((width+right)>width)?width:(width+right),
+			((height+bottom)>height)?height:(height+bottom));
 		
 		if (!copy) {
 			FreeImage_Unload(dst);

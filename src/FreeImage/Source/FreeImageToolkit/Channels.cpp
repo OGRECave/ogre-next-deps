@@ -31,7 +31,7 @@
 FIBITMAP * DLL_CALLCONV 
 FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 
-	if(!src) return NULL;
+	if(!FreeImage_HasPixels(src)) return NULL;
 
 	FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(src);
 	unsigned bpp = FreeImage_GetBPP(src);
@@ -199,7 +199,7 @@ BOOL DLL_CALLCONV
 FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	int c;
 
-	if(!src || !dst) return FALSE;
+	if(!FreeImage_HasPixels(src) || !FreeImage_HasPixels(dst)) return FALSE;
 	
 	// src and dst images should have the same width and height
 	unsigned src_width  = FreeImage_GetWidth(src);
@@ -367,7 +367,7 @@ FreeImage_GetComplexChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	double *dst_bits = NULL;
 	FIBITMAP *dst = NULL;
 
-	if(!src) return NULL;
+	if(!FreeImage_HasPixels(src)) return NULL;
 
 	if(FreeImage_GetImageType(src) == FIT_COMPLEX) {
 		// allocate a dib of type FIT_DOUBLE
@@ -446,7 +446,7 @@ FreeImage_SetComplexChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANN
 	double *src_bits = NULL;
 	FICOMPLEX *dst_bits = NULL;
 
-	if(!src || !dst) return FALSE;
+	if(!FreeImage_HasPixels(src) || !FreeImage_HasPixels(dst)) return FALSE;
 
 	// src image should be of type FIT_DOUBLE, dst image should be of type FIT_COMPLEX
 	const FREE_IMAGE_TYPE src_type = FreeImage_GetImageType(src);

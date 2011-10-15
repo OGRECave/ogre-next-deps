@@ -864,7 +864,7 @@ RotateAny(FIBITMAP *src, double dAngle, const void *bkcolor) {
 
 FIBITMAP *DLL_CALLCONV 
 FreeImage_Rotate(FIBITMAP *dib, double angle, const void *bkcolor) {
-	if(!dib) return NULL;	
+	if(!FreeImage_HasPixels(dib)) return NULL;
 
 	if(0 == angle) {
 		return FreeImage_Clone(dib);

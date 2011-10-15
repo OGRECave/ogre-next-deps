@@ -1,23 +1,22 @@
 /* -*- C++ -*-
  * File: libraw_alloc.h
- * Copyright 2008-2009 LibRaw LLC (info@libraw.org)
+ * Copyright 2008-2010 LibRaw LLC (info@libraw.org)
  * Created: Sat Mar  22, 2008 
  *
- * LibRaw (Lite) allocator
+ * LibRaw C++ interface
+ *
+LibRaw is free software; you can redistribute it and/or modify
+it under the terms of the one of three licenses as you choose:
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+1. GNU LESSER GENERAL PUBLIC LICENSE version 2.1
+   (See file LICENSE.LGPL provided in LibRaw distribution archive for details).
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+2. COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0
+   (See file LICENSE.CDDL provided in LibRaw distribution archive for details).
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+3. LibRaw Software License 27032010
+   (See file LICENSE.LibRaw.pdf provided in LibRaw distribution archive for details).
+
  */
 
 #ifndef __LIBRAW_ALLOC_H
@@ -25,20 +24,17 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef WIN32
-#define bzero(p,sz) memset(p,0,sz)
-#endif
 
 #ifdef __cplusplus
 
 #define MSIZE 32
 
-class libraw_memmgr
+class DllDef libraw_memmgr
 {
   public:
     libraw_memmgr()
         {
-            bzero(mems,sizeof(mems));
+            memset(mems,0,sizeof(mems));
             calloc_cnt=0;
         }
     void *malloc(size_t sz)
@@ -53,10 +49,17 @@ class libraw_memmgr
             mem_ptr(ptr);
             return ptr;
         }
+    void *realloc(void *ptr,size_t newsz)
+        {
+            void *ret = ::realloc(ptr,newsz);
+            forget_ptr(ptr);
+            mem_ptr(ret);
+            return ret;
+        }
     void  free(void *ptr)
     {
-        ::free(ptr);
         forget_ptr(ptr);
+        ::free(ptr);
     }
     void cleanup(void)
     {

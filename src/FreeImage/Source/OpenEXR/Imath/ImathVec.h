@@ -39,7 +39,7 @@
 
 //----------------------------------------------------
 //
-//	2D and 3D point/vector class templates!
+//	2D, 3D and 4D point/vector class templates
 //
 //----------------------------------------------------
 
@@ -51,11 +51,18 @@
 
 #if (defined _WIN32 || defined _WIN64) && defined _MSC_VER
 // suppress exception specification warnings
+#pragma warning(push)
 #pragma warning(disable:4290)
 #endif
 
 
 namespace Imath {
+
+template <class T> class Vec2;
+template <class T> class Vec3;
+template <class T> class Vec4;
+
+enum InfException {INF_EXCEPTION};
 
 
 template <class T> class Vec2
@@ -244,11 +251,15 @@ template <class T> class Vec2
 
     //--------------------------------------------------------------
     // Base type -- in templates, which accept a parameter, V, which
-    // could be either a Vec2<T> or a Vec3<T>, you can refer to T as
-    // V::BaseType
+    // could be either a Vec2<T>, a Vec3<T>, or a Vec4<T> you can 
+    // refer to T as V::BaseType
     //--------------------------------------------------------------
 
     typedef T		BaseType;
+
+  private:
+
+    T			lengthTiny () const;
 };
 
 
@@ -283,6 +294,21 @@ template <class T> class Vec3
     template <class S> Vec3 (const Vec3<S> &v);
 
     const Vec3 &	operator = (const Vec3 &v);
+
+
+    //---------------------------------------------------------
+    // Vec4 to Vec3 conversion, divides x, y and z by w:
+    //
+    // The one-argument conversion function divides by w even
+    // if w is zero.  The result depends on how the environment
+    // handles floating-point exceptions.
+    //
+    // The two-argument version thows an InfPointExc exception
+    // if w is zero or if division by w would overflow.
+    //---------------------------------------------------------
+
+    template <class S> explicit Vec3 (const Vec4<S> &v);
+    template <class S> explicit Vec3 (const Vec4<S> &v, InfException);
 
 
     //----------------------
@@ -437,11 +463,197 @@ template <class T> class Vec3
 
     //--------------------------------------------------------------
     // Base type -- in templates, which accept a parameter, V, which
-    // could be either a Vec2<T> or a Vec3<T>, you can refer to T as
-    // V::BaseType
+    // could be either a Vec2<T>, a Vec3<T>, or a Vec4<T> you can 
+    // refer to T as V::BaseType
     //--------------------------------------------------------------
 
     typedef T		BaseType;
+
+  private:
+
+    T			lengthTiny () const;
+};
+
+
+
+template <class T> class Vec4
+{
+  public:
+
+    //-------------------
+    // Access to elements
+    //-------------------
+
+    T               x, y, z, w; 
+
+    T &             operator [] (int i);
+    const T &       operator [] (int i) const;
+
+
+    //-------------
+    // Constructors
+    //-------------
+
+    Vec4 ();			   // no initialization
+    explicit Vec4 (T a);           // (a a a a)
+    Vec4 (T a, T b, T c, T d);	   // (a b c d)
+
+
+    //---------------------------------
+    // Copy constructors and assignment
+    //---------------------------------
+
+    Vec4 (const Vec4 &v);
+    template <class S> Vec4 (const Vec4<S> &v);
+
+    const Vec4 &    operator = (const Vec4 &v);
+
+
+    //-------------------------------------
+    // Vec3 to Vec4 conversion, sets w to 1
+    //-------------------------------------
+
+    template <class S> explicit Vec4 (const Vec3<S> &v);
+
+
+    //---------
+    // Equality
+    //---------
+
+    template <class S>
+    bool            operator == (const Vec4<S> &v) const;
+
+    template <class S>
+    bool            operator != (const Vec4<S> &v) const;
+
+
+    //-----------------------------------------------------------------------
+    // Compare two vectors and test if they are "approximately equal":
+    //
+    // equalWithAbsError (v, e)
+    //
+    //	    Returns true if the coefficients of this and v are the same with
+    //	    an absolute error of no more than e, i.e., for all i
+    //
+    //      abs (this[i] - v[i]) <= e
+    //
+    // equalWithRelError (v, e)
+    //
+    //	    Returns true if the coefficients of this and v are the same with
+    //	    a relative error of no more than e, i.e., for all i
+    //
+    //      abs (this[i] - v[i]) <= e * abs (this[i])
+    //-----------------------------------------------------------------------
+
+    bool		equalWithAbsError (const Vec4<T> &v, T e) const;
+    bool		equalWithRelError (const Vec4<T> &v, T e) const;
+
+
+    //------------
+    // Dot product
+    //------------
+
+    T			dot (const Vec4 &v) const;
+    T			operator ^ (const Vec4 &v) const;
+
+
+    //-----------------------------------
+    // Cross product is not defined in 4D
+    //-----------------------------------
+
+    //------------------------
+    // Component-wise addition
+    //------------------------
+
+    const Vec4 &    operator += (const Vec4 &v);
+    Vec4            operator + (const Vec4 &v) const;
+
+
+    //---------------------------
+    // Component-wise subtraction
+    //---------------------------
+
+    const Vec4 &    operator -= (const Vec4 &v);
+    Vec4            operator - (const Vec4 &v) const;
+
+
+    //------------------------------------
+    // Component-wise multiplication by -1
+    //------------------------------------
+
+    Vec4            operator - () const;
+    const Vec4 &    negate ();
+
+
+    //------------------------------
+    // Component-wise multiplication
+    //------------------------------
+
+    const Vec4 &    operator *= (const Vec4 &v);
+    const Vec4 &    operator *= (T a);
+    Vec4            operator * (const Vec4 &v) const;
+    Vec4            operator * (T a) const;
+
+
+    //------------------------
+    // Component-wise division
+    //------------------------
+
+    const Vec4 &    operator /= (const Vec4 &v);
+    const Vec4 &    operator /= (T a);
+    Vec4            operator / (const Vec4 &v) const;
+    Vec4            operator / (T a) const;
+
+
+    //----------------------------------------------------------------
+    // Length and normalization:  If v.length() is 0.0, v.normalize()
+    // and v.normalized() produce a null vector; v.normalizeExc() and
+    // v.normalizedExc() throw a NullVecExc.
+    // v.normalizeNonNull() and v.normalizedNonNull() are slightly
+    // faster than the other normalization routines, but if v.length()
+    // is 0.0, the result is undefined.
+    //----------------------------------------------------------------
+
+    T               length () const;
+    T               length2 () const;
+
+    const Vec4 &    normalize ();           // modifies *this
+    const Vec4 &    normalizeExc () throw (Iex::MathExc);
+    const Vec4 &    normalizeNonNull ();
+
+    Vec4<T>         normalized () const;	// does not modify *this
+    Vec4<T>         normalizedExc () const throw (Iex::MathExc);
+    Vec4<T>         normalizedNonNull () const;
+
+
+    //--------------------------------------------------------
+    // Number of dimensions, i.e. number of elements in a Vec4
+    //--------------------------------------------------------
+
+    static unsigned int	dimensions() {return 4;}
+
+
+    //-------------------------------------------------
+    // Limitations of type T (see also class limits<T>)
+    //-------------------------------------------------
+
+    static T		baseTypeMin()		{return limits<T>::min();}
+    static T		baseTypeMax()		{return limits<T>::max();}
+    static T		baseTypeSmallest()	{return limits<T>::smallest();}
+    static T		baseTypeEpsilon()	{return limits<T>::epsilon();}
+
+
+    //--------------------------------------------------------------
+    // Base type -- in templates, which accept a parameter, V, which
+    // could be either a Vec2<T>, a Vec3<T>, or a Vec4<T> you can 
+    // refer to T as V::BaseType
+    //--------------------------------------------------------------
+
+    typedef T		BaseType;
+
+  private:
+
+    T			lengthTiny () const;
 };
 
 
@@ -455,6 +667,8 @@ std::ostream &	operator << (std::ostream &s, const Vec2<T> &v);
 template <class T>
 std::ostream &	operator << (std::ostream &s, const Vec3<T> &v);
 
+template <class T>
+std::ostream &	operator << (std::ostream &s, const Vec4<T> &v);
 
 //----------------------------------------------------
 // Reverse multiplication: S * Vec2<T> and S * Vec3<T>
@@ -462,6 +676,7 @@ std::ostream &	operator << (std::ostream &s, const Vec3<T> &v);
 
 template <class T> Vec2<T>	operator * (T a, const Vec2<T> &v);
 template <class T> Vec3<T>	operator * (T a, const Vec3<T> &v);
+template <class T> Vec4<T>	operator * (T a, const Vec4<T> &v);
 
 
 //-------------------------
@@ -476,11 +691,15 @@ typedef Vec3 <short>  V3s;
 typedef Vec3 <int>    V3i;
 typedef Vec3 <float>  V3f;
 typedef Vec3 <double> V3d;
+typedef Vec4 <short>  V4s;
+typedef Vec4 <int>    V4i;
+typedef Vec4 <float>  V4f;
+typedef Vec4 <double> V4d;
 
 
-//-------------------------------------------------------------------
-// Specializations for Vec2<short>, Vec2<int>, Vec3<short>, Vec3<int>
-//-------------------------------------------------------------------
+//-------------------------------------------
+// Specializations for VecN<short>, VecN<int>
+//-------------------------------------------
 
 // Vec2<short>
 
@@ -576,6 +795,53 @@ Vec3<int>::normalizedExc () const throw (Iex::MathExc);
 
 template <> Vec3<int>
 Vec3<int>::normalizedNonNull () const;
+
+// Vec4<short>
+
+template <> short
+Vec4<short>::length () const;
+
+template <> const Vec4<short> &
+Vec4<short>::normalize ();
+
+template <> const Vec4<short> &
+Vec4<short>::normalizeExc () throw (Iex::MathExc);
+
+template <> const Vec4<short> &
+Vec4<short>::normalizeNonNull ();
+
+template <> Vec4<short>
+Vec4<short>::normalized () const;
+
+template <> Vec4<short>
+Vec4<short>::normalizedExc () const throw (Iex::MathExc);
+
+template <> Vec4<short>
+Vec4<short>::normalizedNonNull () const;
+
+
+// Vec4<int>
+
+template <> int
+Vec4<int>::length () const;
+
+template <> const Vec4<int> &
+Vec4<int>::normalize ();
+
+template <> const Vec4<int> &
+Vec4<int>::normalizeExc () throw (Iex::MathExc);
+
+template <> const Vec4<int> &
+Vec4<int>::normalizeNonNull ();
+
+template <> Vec4<int>
+Vec4<int>::normalized () const;
+
+template <> Vec4<int>
+Vec4<int>::normalizedExc () const throw (Iex::MathExc);
+
+template <> Vec4<int>
+Vec4<int>::normalizedNonNull () const;
 
 
 //------------------------
@@ -874,10 +1140,42 @@ Vec2<T>::operator / (T a) const
 }
 
 template <class T>
+T
+Vec2<T>::lengthTiny () const
+{
+    T absX = (x >= 0)? x: -x;
+    T absY = (y >= 0)? y: -y;
+    
+    T max = absX;
+
+    if (max < absY)
+	max = absY;
+
+    if (max == 0)
+	return 0;
+
+    //
+    // Do not replace the divisions by max with multiplications by 1/max.
+    // Computing 1/max can overflow but the divisions below will always
+    // produce results less than or equal to 1.
+    //
+
+    absX /= max;
+    absY /= max;
+
+    return max * Math<T>::sqrt (absX * absX + absY * absY);
+}
+
+template <class T>
 inline T
 Vec2<T>::length () const
 {
-    return Math<T>::sqrt (dot (*this));
+    T length2 = dot (*this);
+
+    if (length2 < 2 * limits<T>::smallest())
+	return lengthTiny();
+
+    return Math<T>::sqrt (length2);
 }
 
 template <class T>
@@ -895,6 +1193,12 @@ Vec2<T>::normalize ()
 
     if (l != 0)
     {
+        //
+        // Do not replace the divisions by l with multiplications by 1/l.
+        // Computing 1/l can overflow but the divisions below will always
+        // produce results less than or equal to 1.
+        //
+
 	x /= l;
 	y /= l;
     }
@@ -1029,6 +1333,40 @@ Vec3<T>::operator = (const Vec3 &v)
     y = v.y;
     z = v.z;
     return *this;
+}
+
+template <class T>
+template <class S>
+inline
+Vec3<T>::Vec3 (const Vec4<S> &v)
+{
+    x = T (v.x / v.w);
+    y = T (v.y / v.w);
+    z = T (v.z / v.w);
+}
+
+template <class T>
+template <class S>
+Vec3<T>::Vec3 (const Vec4<S> &v, InfException)
+{
+    T vx = T (v.x);
+    T vy = T (v.y);
+    T vz = T (v.z);
+    T vw = T (v.w);
+
+    T absW = (vw >= 0)? vw: -vw;
+
+    if (absW < 1)
+    {
+        T m = baseTypeMax() * absW;
+        
+        if (vx <= -m || vx >= m || vy <= -m || vy >= m || vz <= -m || vz >= m)
+            throw InfPointExc ("Cannot normalize point at infinity.");
+    }
+
+    x = vx / vw;
+    y = vy / vw;
+    z = vz / vw;
 }
 
 template <class T>
@@ -1287,12 +1625,48 @@ Vec3<T>::operator / (T a) const
     return Vec3 (x / a, y / a, z / a);
 }
 
+template <class T>
+T
+Vec3<T>::lengthTiny () const
+{
+    T absX = (x >= 0)? x: -x;
+    T absY = (y >= 0)? y: -y;
+    T absZ = (z >= 0)? z: -z;
+    
+    T max = absX;
+
+    if (max < absY)
+	max = absY;
+
+    if (max < absZ)
+	max = absZ;
+
+    if (max == 0)
+	return 0;
+
+    //
+    // Do not replace the divisions by max with multiplications by 1/max.
+    // Computing 1/max can overflow but the divisions below will always
+    // produce results less than or equal to 1.
+    //
+
+    absX /= max;
+    absY /= max;
+    absZ /= max;
+
+    return max * Math<T>::sqrt (absX * absX + absY * absY + absZ * absZ);
+}
 
 template <class T>
 inline T
 Vec3<T>::length () const
 {
-    return Math<T>::sqrt (dot (*this));
+    T length2 = dot (*this);
+
+    if (length2 < 2 * limits<T>::smallest())
+	return lengthTiny();
+
+    return Math<T>::sqrt (length2);
 }
 
 template <class T>
@@ -1310,6 +1684,12 @@ Vec3<T>::normalize ()
 
     if (l != 0)
     {
+        //
+        // Do not replace the divisions by l with multiplications by 1/l.
+        // Computing 1/l can overflow but the divisions below will always
+        // produce results less than or equal to 1.
+        //
+
 	x /= l;
 	y /= l;
 	z /= l;
@@ -1379,6 +1759,412 @@ Vec3<T>::normalizedNonNull () const
 }
 
 
+//-----------------------
+// Implementation of Vec4
+//-----------------------
+
+template <class T>
+inline T &
+Vec4<T>::operator [] (int i)
+{
+    return (&x)[i];
+}
+
+template <class T>
+inline const T &
+Vec4<T>::operator [] (int i) const
+{
+    return (&x)[i];
+}
+
+template <class T>
+inline
+Vec4<T>::Vec4 ()
+{
+    // empty
+}
+
+template <class T>
+inline
+Vec4<T>::Vec4 (T a)
+{
+    x = y = z = w = a;
+}
+
+template <class T>
+inline
+Vec4<T>::Vec4 (T a, T b, T c, T d)
+{
+    x = a;
+    y = b;
+    z = c;
+    w = d;
+}
+
+template <class T>
+inline
+Vec4<T>::Vec4 (const Vec4 &v)
+{
+    x = v.x;
+    y = v.y;
+    z = v.z;
+    w = v.w;
+}
+
+template <class T>
+template <class S>
+inline
+Vec4<T>::Vec4 (const Vec4<S> &v)
+{
+    x = T (v.x);
+    y = T (v.y);
+    z = T (v.z);
+    w = T (v.w);
+}
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::operator = (const Vec4 &v)
+{
+    x = v.x;
+    y = v.y;
+    z = v.z;
+    w = v.w;
+    return *this;
+}
+
+template <class T>
+template <class S>
+inline
+Vec4<T>::Vec4 (const Vec3<S> &v)
+{
+    x = T (v.x);
+    y = T (v.y);
+    z = T (v.z);
+    w = T (1);
+}
+
+template <class T>
+template <class S>
+inline bool
+Vec4<T>::operator == (const Vec4<S> &v) const
+{
+    return x == v.x && y == v.y && z == v.z && w == v.w;
+}
+
+template <class T>
+template <class S>
+inline bool
+Vec4<T>::operator != (const Vec4<S> &v) const
+{
+    return x != v.x || y != v.y || z != v.z || w != v.w;
+}
+
+template <class T>
+bool
+Vec4<T>::equalWithAbsError (const Vec4<T> &v, T e) const
+{
+    for (int i = 0; i < 4; i++)
+        if (!Imath::equalWithAbsError ((*this)[i], v[i], e))
+            return false;
+
+    return true;
+}
+
+template <class T>
+bool
+Vec4<T>::equalWithRelError (const Vec4<T> &v, T e) const
+{
+    for (int i = 0; i < 4; i++)
+        if (!Imath::equalWithRelError ((*this)[i], v[i], e))
+            return false;
+
+    return true;
+}
+
+template <class T>
+inline T
+Vec4<T>::dot (const Vec4 &v) const
+{
+    return x * v.x + y * v.y + z * v.z + w * v.w;
+}
+
+template <class T>
+inline T
+Vec4<T>::operator ^ (const Vec4 &v) const
+{
+    return dot (v);
+}
+
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::operator += (const Vec4 &v)
+{
+    x += v.x;
+    y += v.y;
+    z += v.z;
+    w += v.w;
+    return *this;
+}
+
+template <class T>
+inline Vec4<T>
+Vec4<T>::operator + (const Vec4 &v) const
+{
+    return Vec4 (x + v.x, y + v.y, z + v.z, w + v.w);
+}
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::operator -= (const Vec4 &v)
+{
+    x -= v.x;
+    y -= v.y;
+    z -= v.z;
+    w -= v.w;
+    return *this;
+}
+
+template <class T>
+inline Vec4<T>
+Vec4<T>::operator - (const Vec4 &v) const
+{
+    return Vec4 (x - v.x, y - v.y, z - v.z, w - v.w);
+}
+
+template <class T>
+inline Vec4<T>
+Vec4<T>::operator - () const
+{
+    return Vec4 (-x, -y, -z, -w);
+}
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::negate ()
+{
+    x = -x;
+    y = -y;
+    z = -z;
+    w = -w;
+    return *this;
+}
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::operator *= (const Vec4 &v)
+{
+    x *= v.x;
+    y *= v.y;
+    z *= v.z;
+    w *= v.w;
+    return *this;
+}
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::operator *= (T a)
+{
+    x *= a;
+    y *= a;
+    z *= a;
+    w *= a;
+    return *this;
+}
+
+template <class T>
+inline Vec4<T>
+Vec4<T>::operator * (const Vec4 &v) const
+{
+    return Vec4 (x * v.x, y * v.y, z * v.z, w * v.w);
+}
+
+template <class T>
+inline Vec4<T>
+Vec4<T>::operator * (T a) const
+{
+    return Vec4 (x * a, y * a, z * a, w * a);
+}
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::operator /= (const Vec4 &v)
+{
+    x /= v.x;
+    y /= v.y;
+    z /= v.z;
+    w /= v.w;
+    return *this;
+}
+
+template <class T>
+inline const Vec4<T> &
+Vec4<T>::operator /= (T a)
+{
+    x /= a;
+    y /= a;
+    z /= a;
+    w /= a;
+    return *this;
+}
+
+template <class T>
+inline Vec4<T>
+Vec4<T>::operator / (const Vec4 &v) const
+{
+    return Vec4 (x / v.x, y / v.y, z / v.z, w / v.w);
+}
+
+template <class T>
+inline Vec4<T>
+Vec4<T>::operator / (T a) const
+{
+    return Vec4 (x / a, y / a, z / a, w / a);
+}
+
+template <class T>
+T
+Vec4<T>::lengthTiny () const
+{
+    T absX = (x >= 0)? x: -x;
+    T absY = (y >= 0)? y: -y;
+    T absZ = (z >= 0)? z: -z;
+    T absW = (w >= 0)? w: -w;
+    
+    T max = absX;
+
+    if (max < absY)
+        max = absY;
+
+    if (max < absZ)
+        max = absZ;
+
+    if (max < absW)
+        max = absW;
+
+    if (max == 0)
+        return 0;
+
+    //
+    // Do not replace the divisions by max with multiplications by 1/max.
+    // Computing 1/max can overflow but the divisions below will always
+    // produce results less than or equal to 1.
+    //
+
+    absX /= max;
+    absY /= max;
+    absZ /= max;
+    absW /= max;
+
+    return max *
+        Math<T>::sqrt (absX * absX + absY * absY + absZ * absZ + absW * absW);
+}
+
+template <class T>
+inline T
+Vec4<T>::length () const
+{
+    T length2 = dot (*this);
+
+    if (length2 < 2 * limits<T>::smallest())
+        return lengthTiny();
+
+    return Math<T>::sqrt (length2);
+}
+
+template <class T>
+inline T
+Vec4<T>::length2 () const
+{
+    return dot (*this);
+}
+
+template <class T>
+const Vec4<T> &
+Vec4<T>::normalize ()
+{
+    T l = length();
+
+    if (l != 0)
+    {
+        //
+        // Do not replace the divisions by l with multiplications by 1/l.
+        // Computing 1/l can overflow but the divisions below will always
+        // produce results less than or equal to 1.
+        //
+
+        x /= l;
+        y /= l;
+        z /= l;
+        w /= l;
+    }
+
+    return *this;
+}
+
+template <class T>
+const Vec4<T> &
+Vec4<T>::normalizeExc () throw (Iex::MathExc)
+{
+    T l = length();
+
+    if (l == 0)
+        throw NullVecExc ("Cannot normalize null vector.");
+
+    x /= l;
+    y /= l;
+    z /= l;
+    w /= l;
+    return *this;
+}
+
+template <class T>
+inline
+const Vec4<T> &
+Vec4<T>::normalizeNonNull ()
+{
+    T l = length();
+    x /= l;
+    y /= l;
+    z /= l;
+    w /= l;
+    return *this;
+}
+
+template <class T>
+Vec4<T>
+Vec4<T>::normalized () const
+{
+    T l = length();
+
+    if (l == 0)
+        return Vec4 (T (0));
+
+    return Vec4 (x / l, y / l, z / l, w / l);
+}
+
+template <class T>
+Vec4<T>
+Vec4<T>::normalizedExc () const throw (Iex::MathExc)
+{
+    T l = length();
+
+    if (l == 0)
+        throw NullVecExc ("Cannot normalize null vector.");
+
+    return Vec4 (x / l, y / l, z / l, w / l);
+}
+
+template <class T>
+inline
+Vec4<T>
+Vec4<T>::normalizedNonNull () const
+{
+    T l = length();
+    return Vec4 (x / l, y / l, z / l, w / l);
+}
+
 //-----------------------------
 // Stream output implementation
 //-----------------------------
@@ -1395,6 +2181,13 @@ std::ostream &
 operator << (std::ostream &s, const Vec3<T> &v)
 {
     return s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
+}
+
+template <class T>
+std::ostream &
+operator << (std::ostream &s, const Vec4<T> &v)
+{
+    return s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
 }
 
 
@@ -1416,9 +2209,16 @@ operator * (T a, const Vec3<T> &v)
     return Vec3<T> (a * v.x, a * v.y, a * v.z);
 }
 
+template <class T>
+inline Vec4<T>
+operator * (T a, const Vec4<T> &v)
+{
+    return Vec4<T> (a * v.x, a * v.y, a * v.z, a * v.w);
+}
+
 
 #if (defined _WIN32 || defined _WIN64) && defined _MSC_VER
-#pragma warning(default:4290)
+#pragma warning(pop)
 #endif
 
 } // namespace Imath

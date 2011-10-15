@@ -129,46 +129,64 @@ FreeImage_ConvertLine24To32(BYTE *target, BYTE *source, int width_in_pixels) {
 		source += 3;
 	}
 }
+
 // ----------------------------------------------------------
 
-static void DLL_CALLCONV
-MapTransparentTableToAlpha1(RGBQUAD *target, BYTE *source, BYTE *table, int transparent_pixels, int width_in_pixels) {
-	for (int cols = 0 ; cols < width_in_pixels ; cols++) {
+inline void 
+FreeImage_ConvertLine1To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels) {
+	for (int cols = 0; cols < width_in_pixels; cols++) {
 		int index = (source[cols>>3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
-		target[cols].rgbReserved = (index < transparent_pixels) ? table[index] : 255;
-    }
+
+		target[FI_RGBA_BLUE]	= palette[index].rgbBlue;
+		target[FI_RGBA_GREEN]	= palette[index].rgbGreen;
+		target[FI_RGBA_RED]		= palette[index].rgbRed;
+		target[FI_RGBA_ALPHA] = (index < transparent_pixels) ? table[index] : 255;		
+		target += 4;
+	}	
 }
 
-static void DLL_CALLCONV
-MapTransparentTableToAlpha4(RGBQUAD *target, BYTE *source, BYTE *table, int transparent_pixels, int width_in_pixels) {
-    BOOL low_nibble = FALSE;
-    int x = 0;
+inline void 
+FreeImage_ConvertLine4To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels) {
+	BOOL low_nibble = FALSE;
+	int x = 0;
 
-    for (int cols = 0 ; cols < width_in_pixels ; ++cols) {
-        int index;
-        if (low_nibble) {
-            index = LOWNIBBLE(source[x]);
-            x++;
-        } else {
-            index = HINIBBLE(source[x]) >> 4;
-        }
-        target[cols].rgbReserved = (index < transparent_pixels) ? table[index] : 255;
-        low_nibble = !low_nibble;
-    }
-}
+	for (int cols = 0 ; cols < width_in_pixels ; ++cols) {
+		if (low_nibble) {
+			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].rgbBlue;
+			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].rgbGreen;
+			target[FI_RGBA_RED]		= palette[LOWNIBBLE(source[x])].rgbRed;
+			target[FI_RGBA_ALPHA]	= (LOWNIBBLE(source[x]) < transparent_pixels) ? table[LOWNIBBLE(source[x])] : 255;
 
-static void DLL_CALLCONV
-MapTransparentTableToAlpha8(RGBQUAD *target, BYTE *source, BYTE *table, int transparent_pixels, int width_in_pixels) {
-    for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[cols].rgbReserved = (source[cols] < transparent_pixels) ? table[source[cols]] : 255;
+			x++;
+		} else {
+			target[FI_RGBA_BLUE]	= palette[HINIBBLE(source[x]) >> 4].rgbBlue;
+			target[FI_RGBA_GREEN]	= palette[HINIBBLE(source[x]) >> 4].rgbGreen;
+			target[FI_RGBA_RED]		= palette[HINIBBLE(source[x]) >> 4].rgbRed;
+			target[FI_RGBA_ALPHA]	= (HINIBBLE(source[x] >> 4) < transparent_pixels) ? table[HINIBBLE(source[x]) >> 4] : 255;
+		}
+
+		low_nibble = !low_nibble;
+				
+		target += 4;
 	}
-} 
+}
+
+inline void 
+FreeImage_ConvertLine8To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels) {
+	for (int cols = 0; cols < width_in_pixels; cols++) {
+		target[FI_RGBA_BLUE]	= palette[source[cols]].rgbBlue;
+		target[FI_RGBA_GREEN]	= palette[source[cols]].rgbGreen;
+		target[FI_RGBA_RED]		= palette[source[cols]].rgbRed;
+		target[FI_RGBA_ALPHA] = (source[cols] < transparent_pixels) ? table[source[cols]] : 255;
+		target += 4;		
+	}
+}
 
 // ----------------------------------------------------------
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
-	if(!dib) return NULL;
+	if(!FreeImage_HasPixels(dib)) return NULL;
 
 	const int bpp = FreeImage_GetBPP(dib);
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
@@ -194,15 +212,19 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 		// copy metadata from src to dst
 		FreeImage_CloneMetadata(new_dib, dib);
 
+		BOOL bIsTransparent = FreeImage_IsTransparent(dib);
+
 		switch(bpp) {
 			case 1:
 			{
-				for (int rows = 0; rows < height; rows++) {
-					FreeImage_ConvertLine1To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
-					
-					if (FreeImage_IsTransparent(dib)) {
-						MapTransparentTableToAlpha1((RGBQUAD *)FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), width);
+				if(bIsTransparent) {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine1To32MapTransparency(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
 					}
+				} else {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine1To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
+					}					
 				}
 
 				return new_dib;
@@ -210,12 +232,14 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 
 			case 4:
 			{
-				for (int rows = 0; rows < height; rows++) {
-					FreeImage_ConvertLine4To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
-			
-					if (FreeImage_IsTransparent(dib)) {
-						MapTransparentTableToAlpha4((RGBQUAD *)FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), width);
+				if(bIsTransparent) {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine4To32MapTransparency(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
 					}
+				} else {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine4To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
+					}					
 				}
 
 				return new_dib;
@@ -223,12 +247,14 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 				
 			case 8:
 			{
-				for (int rows = 0; rows < height; rows++) {
-					FreeImage_ConvertLine8To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
-
-					if (FreeImage_IsTransparent(dib)) {
-						MapTransparentTableToAlpha8((RGBQUAD *)FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), width);
+				if(bIsTransparent) {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine8To32MapTransparency(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
 					}
+				} else {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine8To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
+					}					
 				}
 
 				return new_dib;

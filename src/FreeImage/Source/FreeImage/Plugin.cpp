@@ -90,7 +90,8 @@ PluginList::AddNode(FI_InitProc init_proc, void *instance, const char *format, c
 
 		memset(plugin, 0, sizeof(Plugin));
 
-		// fill-in the plugin structure
+		// fill-in the plugin structure 
+		// note we have memset to 0, so all unset pointers should be NULL)
 
 		init_proc(plugin, (int)m_plugin_map.size());
 
@@ -114,7 +115,6 @@ PluginList::AddNode(FI_InitProc init_proc, void *instance, const char *format, c
 				node->m_description = description;
 				node->m_extension = extension;
 				node->m_regexpr = regexpr;
-				node->m_next = NULL;
 				node->m_enabled = TRUE;
 
 				m_plugin_map[(const int)m_plugin_map.size()] = node;
@@ -214,7 +214,7 @@ FreeImage_Initialise(BOOL load_local_plugins_only) {
 
 		// internal plugin initialization
 
-		s_plugins = new PluginList;
+		s_plugins = new(std::nothrow) PluginList;
 
 		if (s_plugins) {
 			/* NOTE : 
@@ -299,10 +299,11 @@ FreeImage_Initialise(BOOL load_local_plugins_only) {
 							if (instance != NULL) {
 								FARPROC proc_address = GetProcAddress(instance, "_Init@8");
 
-								if (proc_address != NULL)
+								if (proc_address != NULL) {
 									s_plugins->AddNode((FI_InitProc)proc_address, (void *)instance);
-								else
+								} else {
 									FreeLibrary(instance);
+								}
 							}
 						} while (_findnext(find_handle, &find_data) != -1L);
 
@@ -314,8 +315,9 @@ FreeImage_Initialise(BOOL load_local_plugins_only) {
 
 				// restore the current directory
 
-				if (bOk)
+				if (bOk) {
 					SetCurrentDirectory(current_dir);
+				}
 			}
 #endif // _WIN32
 		}
@@ -337,17 +339,19 @@ FreeImage_DeInitialise() {
 
 void * DLL_CALLCONV
 FreeImage_Open(PluginNode *node, FreeImageIO *io, fi_handle handle, BOOL open_for_reading) {
-	if (node->m_plugin->open_proc != NULL)
+	if (node->m_plugin->open_proc != NULL) {
        return node->m_plugin->open_proc(io, handle, open_for_reading);
+	}
 
 	return NULL;
-};
+}
 
 void DLL_CALLCONV
 FreeImage_Close(PluginNode *node, FreeImageIO *io, fi_handle handle, void *data) {
-	if (node->m_plugin->close_proc != NULL)
+	if (node->m_plugin->close_proc != NULL) {
 		node->m_plugin->close_proc(io, handle, data);
-};
+	}
+}
 
 // =====================================================================
 // Plugin System Load/Save Functions
@@ -420,6 +424,12 @@ FreeImage_LoadU(FREE_IMAGE_FORMAT fif, const wchar_t *filename, int flags) {
 
 BOOL DLL_CALLCONV
 FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi_handle handle, int flags) {
+	// cannot save "header only" formats
+	if(FreeImage_HasPixels(dib) == FALSE) {
+		FreeImage_OutputMessageProc((int)fif, "FreeImage_SaveToHandle: cannot save \"header only\" formats");
+		return FALSE;
+	}
+
 	if ((fif >= 0) && (fif < FreeImage_GetFIFCount())) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
 		
@@ -685,6 +695,19 @@ FreeImage_FIFSupportsICCProfiles(FREE_IMAGE_FORMAT fif) {
 		return (node != NULL) ? 
 			(node->m_plugin->supports_icc_profiles_proc != NULL) ? 
 				node->m_plugin->supports_icc_profiles_proc() : FALSE : FALSE;
+	}
+
+	return FALSE;
+}
+
+BOOL DLL_CALLCONV
+FreeImage_FIFSupportsNoPixels(FREE_IMAGE_FORMAT fif) {
+	if (s_plugins != NULL) {
+		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+
+		return (node != NULL) ? 
+			(node->m_plugin->supports_no_pixels_proc != NULL) ? 
+				node->m_plugin->supports_no_pixels_proc() : FALSE : FALSE;
 	}
 
 	return FALSE;

@@ -99,29 +99,43 @@ insertChannels (Header &header, RgbaChannels rgbaChannels)
 
 
 RgbaChannels
-rgbaChannels (const ChannelList &ch)
+rgbaChannels (const ChannelList &ch, const string &channelNamePrefix = "")
 {
     int i = 0;
 
-    if (ch.findChannel ("R"))
+    if (ch.findChannel (channelNamePrefix + "R"))
 	i |= WRITE_R;
 
-    if (ch.findChannel ("G"))
+    if (ch.findChannel (channelNamePrefix + "G"))
 	i |= WRITE_G;
     
-    if (ch.findChannel ("B"))
+    if (ch.findChannel (channelNamePrefix + "B"))
 	i |= WRITE_B;
 
-    if (ch.findChannel ("A"))
+    if (ch.findChannel (channelNamePrefix + "A"))
 	i |= WRITE_A;
 
-    if (ch.findChannel ("Y"))
+    if (ch.findChannel (channelNamePrefix + "Y"))
 	i |= WRITE_Y;
 
-    if (ch.findChannel ("RY") || ch.findChannel ("BY"))
+    if (ch.findChannel (channelNamePrefix + "RY") ||
+	ch.findChannel (channelNamePrefix + "BY"))
 	i |= WRITE_C;
 
     return RgbaChannels (i);
+}
+
+
+string
+prefixFromLayerName (const string &layerName, const Header &header)
+{
+    if (layerName.empty())
+	return "";
+
+    if (hasMultiView (header) && multiView(header)[0] == layerName)
+	return "";
+
+    return layerName + ".";
 }
 
 
@@ -134,6 +148,40 @@ ywFromHeader (const Header &header)
 	cr = chromaticities (header);
 
     return computeYw (cr);
+}
+
+
+ptrdiff_t
+cachePadding (ptrdiff_t size)
+{
+    //
+    // Some of the buffers that are allocated by classes ToYca and
+    // FromYca, below, may need to be padded to avoid cache thrashing.
+    // If the difference between the buffer size and the nearest power
+    // of two is less than CACHE_LINE_SIZE, then we add an appropriate
+    // amount of padding.
+    //
+    // CACHE_LINE_SIZE must be a power of two, and it must be at
+    // least as big as the true size of a cache line on the machine
+    // we are running on.  (It is ok if CACHE_LINE_SIZE is larger
+    // than a real cache line.)
+    //
+
+    static int LOG2_CACHE_LINE_SIZE = 8;
+    static const ptrdiff_t CACHE_LINE_SIZE = (1 << LOG2_CACHE_LINE_SIZE);
+
+    int i = LOG2_CACHE_LINE_SIZE + 2;
+
+    while ((size >> i) > 1)
+	++i;
+
+    if (size > (1 << (i + 1)) - 64)
+	return 64 + ((1 << (i + 1)) - size);
+
+    if (size < (1 << i) + 64)
+	return 64 + ((1 << i) - size);
+
+    return 0;
 }
 
 } // namespace
@@ -175,6 +223,7 @@ class RgbaOutputFile::ToYca: public Mutex
     LineOrder		_lineOrder;
     int			_currentScanLine;
     V3f			_yw;
+    Rgba *		_bufBase;
     Rgba *		_buf[N];
     Rgba *		_tmpBuf;
     const Rgba *	_fbBase;
@@ -210,8 +259,12 @@ RgbaOutputFile::ToYca::ToYca (OutputFile &outputFile,
 
     _yw = ywFromHeader (_outputFile.header());
 
+    ptrdiff_t pad = cachePadding (_width * sizeof (Rgba)) / sizeof (Rgba);
+
+    _bufBase = new Rgba[(_width + pad) * N];
+
     for (int i = 0; i < N; ++i)
-	_buf[i] = new Rgba[_width];
+	_buf[i] = _bufBase + (i * (_width + pad));
 
     _tmpBuf = new Rgba[_width + N - 1];
 
@@ -226,9 +279,7 @@ RgbaOutputFile::ToYca::ToYca (OutputFile &outputFile,
 
 RgbaOutputFile::ToYca::~ToYca ()
 {
-    for (int i = 0; i < N; ++i)
-	delete [] _buf[i];
-
+    delete [] _bufBase;
     delete [] _tmpBuf;
 }
 
@@ -761,7 +812,8 @@ class RgbaInputFile::FromYca: public Mutex
 
     void		setFrameBuffer (Rgba *base,
 					size_t xStride,
-					size_t yStride);
+					size_t yStride,
+					const string &channelNamePrefix);
 
     void		readPixels (int scanLine1, int scanLine2);
 
@@ -783,6 +835,7 @@ class RgbaInputFile::FromYca: public Mutex
     int			_currentScanLine;
     LineOrder		_lineOrder;
     V3f			_yw;
+    Rgba *		_bufBase;
     Rgba *		_buf1[N + 2];
     Rgba *		_buf2[3];
     Rgba *		_tmpBuf;
@@ -810,11 +863,15 @@ RgbaInputFile::FromYca::FromYca (InputFile &inputFile,
     _lineOrder = _inputFile.header().lineOrder();
     _yw = ywFromHeader (_inputFile.header());
 
+    ptrdiff_t pad = cachePadding (_width * sizeof (Rgba)) / sizeof (Rgba);
+
+    _bufBase = new Rgba[(_width + pad) * (N + 2 + 3)];
+
     for (int i = 0; i < N + 2; ++i)
-	_buf1[i] = new Rgba[_width];
+	_buf1[i] = _bufBase + (i * (_width + pad));
     
     for (int i = 0; i < 3; ++i)
-	_buf2[i] = new Rgba[_width];
+	_buf2[i] = _bufBase + ((i + N + 2) * (_width + pad));
 
     _tmpBuf = new Rgba[_width + N - 1];
 
@@ -826,12 +883,7 @@ RgbaInputFile::FromYca::FromYca (InputFile &inputFile,
 
 RgbaInputFile::FromYca::~FromYca ()
 {
-    for (int i = 0; i < N + 2; ++i)
-	delete [] _buf1[i];
-
-    for (int i = 0; i < 3; ++i)
-	delete [] _buf2[i];
-
+    delete [] _bufBase;
     delete [] _tmpBuf;
 }
 
@@ -839,13 +891,14 @@ RgbaInputFile::FromYca::~FromYca ()
 void
 RgbaInputFile::FromYca::setFrameBuffer (Rgba *base,
 					size_t xStride,
-					size_t yStride)
+					size_t yStride,
+					const string &channelNamePrefix)
 {
     if (_fbBase == 0)
     {
 	FrameBuffer fb;
 
-	fb.insert ("Y",
+	fb.insert (channelNamePrefix + "Y",
 		   Slice (HALF,					// type
 			  (char *) &_tmpBuf[N2 - _xMin].g,	// base
 			  sizeof (Rgba),			// xStride
@@ -856,7 +909,7 @@ RgbaInputFile::FromYca::setFrameBuffer (Rgba *base,
 
 	if (_readC)
 	{
-	    fb.insert ("RY",
+	    fb.insert (channelNamePrefix + "RY",
 		       Slice (HALF,				// type
 			      (char *) &_tmpBuf[N2 - _xMin].r,	// base
 			      sizeof (Rgba) * 2,		// xStride
@@ -865,7 +918,7 @@ RgbaInputFile::FromYca::setFrameBuffer (Rgba *base,
 			      2,				// ySampling
 			      0.0));				// fillValue
 
-	    fb.insert ("BY",
+	    fb.insert (channelNamePrefix + "BY",
 		       Slice (HALF,				// type
 			      (char *) &_tmpBuf[N2 - _xMin].b,	// base
 			      sizeof (Rgba) * 2,		// xStride
@@ -875,7 +928,7 @@ RgbaInputFile::FromYca::setFrameBuffer (Rgba *base,
 			      0.0));				// fillValue
 	}
 
-	fb.insert ("A",
+	fb.insert (channelNamePrefix + "A",
 		   Slice (HALF,					// type
 			  (char *) &_tmpBuf[N2 - _xMin].a,	// base
 			  sizeof (Rgba),			// xStride
@@ -1110,7 +1163,8 @@ RgbaInputFile::FromYca::padTmpBuf ()
 
 RgbaInputFile::RgbaInputFile (const char name[], int numThreads):
     _inputFile (new InputFile (name, numThreads)),
-    _fromYca (0)
+    _fromYca (0),
+    _channelNamePrefix ("")
 {
     RgbaChannels rgbaChannels = channels();
 
@@ -1121,7 +1175,38 @@ RgbaInputFile::RgbaInputFile (const char name[], int numThreads):
 
 RgbaInputFile::RgbaInputFile (IStream &is, int numThreads):
     _inputFile (new InputFile (is, numThreads)),
-    _fromYca (0)
+    _fromYca (0),
+    _channelNamePrefix ("")
+{
+    RgbaChannels rgbaChannels = channels();
+
+    if (rgbaChannels & (WRITE_Y | WRITE_C))
+	_fromYca = new FromYca (*_inputFile, rgbaChannels);
+}
+
+
+RgbaInputFile::RgbaInputFile (const char name[],
+			      const string &layerName,
+			      int numThreads)
+:
+    _inputFile (new InputFile (name, numThreads)),
+    _fromYca (0),
+    _channelNamePrefix (prefixFromLayerName (layerName, _inputFile->header()))
+{
+    RgbaChannels rgbaChannels = channels();
+
+    if (rgbaChannels & (WRITE_Y | WRITE_C))
+	_fromYca = new FromYca (*_inputFile, rgbaChannels);
+}
+
+
+RgbaInputFile::RgbaInputFile (IStream &is,
+			      const string &layerName,
+			      int numThreads)
+:
+    _inputFile (new InputFile (is, numThreads)),
+    _fromYca (0),
+    _channelNamePrefix (prefixFromLayerName (layerName, _inputFile->header()))
 {
     RgbaChannels rgbaChannels = channels();
 
@@ -1143,7 +1228,7 @@ RgbaInputFile::setFrameBuffer (Rgba *base, size_t xStride, size_t yStride)
     if (_fromYca)
     {
 	Lock lock (*_fromYca);
-	_fromYca->setFrameBuffer (base, xStride, yStride);
+	_fromYca->setFrameBuffer (base, xStride, yStride, _channelNamePrefix);
     }
     else
     {
@@ -1152,32 +1237,54 @@ RgbaInputFile::setFrameBuffer (Rgba *base, size_t xStride, size_t yStride)
 
 	FrameBuffer fb;
 
-	fb.insert ("R", Slice (HALF,
-			       (char *) &base[0].r,
-			       xs, ys,
-			       1, 1,	// xSampling, ySampling
-			       0.0));	// fillValue
+	fb.insert (_channelNamePrefix + "R",
+		   Slice (HALF,
+			  (char *) &base[0].r,
+			  xs, ys,
+			  1, 1,		// xSampling, ySampling
+			  0.0));	// fillValue
 
-	fb.insert ("G", Slice (HALF,
-			       (char *) &base[0].g,
-			       xs, ys,
-			       1, 1,	// xSampling, ySampling
-			       0.0));	// fillValue
+	fb.insert (_channelNamePrefix + "G",
+		   Slice (HALF,
+			  (char *) &base[0].g,
+			  xs, ys,
+			  1, 1,		// xSampling, ySampling
+			  0.0));	// fillValue
 
-	fb.insert ("B", Slice (HALF,
-			       (char *) &base[0].b,
-			       xs, ys,
-			       1, 1,	// xSampling, ySampling
-			       0.0));	// fillValue
+	fb.insert (_channelNamePrefix + "B",
+		   Slice (HALF,
+			  (char *) &base[0].b,
+			  xs, ys,
+			  1, 1,		// xSampling, ySampling
+			  0.0));	// fillValue
 
-	fb.insert ("A", Slice (HALF,
-			       (char *) &base[0].a,
-			       xs, ys,
-			       1, 1,	// xSampling, ySampling
-			       1.0));	// fillValue
+	fb.insert (_channelNamePrefix + "A",
+		   Slice (HALF,
+			  (char *) &base[0].a,
+			  xs, ys,
+			  1, 1,		// xSampling, ySampling
+			  1.0));	// fillValue
 
 	_inputFile->setFrameBuffer (fb);
     }
+}
+
+
+void
+RgbaInputFile::setLayerName (const string &layerName)
+{
+    delete _fromYca;
+    _fromYca = 0;
+
+    _channelNamePrefix = prefixFromLayerName (layerName, _inputFile->header());
+
+    RgbaChannels rgbaChannels = channels();
+
+    if (rgbaChannels & (WRITE_Y | WRITE_C))
+	_fromYca = new FromYca (*_inputFile, rgbaChannels);
+
+    FrameBuffer fb;
+    _inputFile->setFrameBuffer (fb);
 }
 
 
@@ -1283,7 +1390,7 @@ RgbaInputFile::compression () const
 RgbaChannels	
 RgbaInputFile::channels () const
 {
-    return rgbaChannels (_inputFile->header().channels());
+    return rgbaChannels (_inputFile->header().channels(), _channelNamePrefix);
 }
 
 

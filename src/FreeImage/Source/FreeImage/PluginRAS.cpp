@@ -183,6 +183,11 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
 
+static BOOL DLL_CALLCONV
+SupportsNoPixels() {
+	return TRUE;
+}
+
 // ----------------------------------------------------------
 
 static FIBITMAP * DLL_CALLCONV
@@ -198,273 +203,283 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	BYTE *bits;			// Pointer to dib data
 	WORD x, y;
 
-	if (handle) {
-		try {
-			// Read SUN raster header
+	if(!handle) {
+		return NULL;
+	}
 
-			io->read_proc(&header, sizeof(SUNHEADER), 1, handle);
+	BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+
+	try {
+		// Read SUN raster header
+
+		io->read_proc(&header, sizeof(SUNHEADER), 1, handle);
 
 #ifndef FREEIMAGE_BIGENDIAN
-			// SUN rasterfiles are big endian only
+		// SUN rasterfiles are big endian only
 
-			SwapLong(&header.magic);
-			SwapLong(&header.width);
-			SwapLong(&header.height);
-			SwapLong(&header.depth);
-			SwapLong(&header.length);
-			SwapLong(&header.type);
-			SwapLong(&header.maptype);
-			SwapLong(&header.maplength);
+		SwapLong(&header.magic);
+		SwapLong(&header.width);
+		SwapLong(&header.height);
+		SwapLong(&header.depth);
+		SwapLong(&header.length);
+		SwapLong(&header.type);
+		SwapLong(&header.maptype);
+		SwapLong(&header.maplength);
 #endif
 
-			// Verify SUN identifier
+		// Verify SUN identifier
 
-			if (header.magic != RAS_MAGIC) {
-				throw FI_MSG_ERROR_MAGIC_NUMBER;
-			}
+		if (header.magic != RAS_MAGIC) {
+			throw FI_MSG_ERROR_MAGIC_NUMBER;
+		}
 
-			// Allocate a new DIB
+		// Allocate a new DIB
 
-			switch(header.depth) {
-				case 1:
-				case 8:
-					dib = FreeImage_Allocate(header.width, header.height, header.depth);
-					break;
+		switch(header.depth) {
+			case 1:
+			case 8:
+				dib = FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth);
+				break;
 
-				case 24:
-					dib = FreeImage_Allocate(header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-					break;
+			case 24:
+				dib = FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				break;
 
-				case 32:
-					dib = FreeImage_Allocate(header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-					break;
-			}
+			case 32:
+				dib = FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				break;
+		}
 
-			if (dib == NULL) {
-				throw FI_MSG_ERROR_DIB_MEMORY;
-			}
+		if (dib == NULL) {
+			throw FI_MSG_ERROR_DIB_MEMORY;
+		}
 
-			// Check the file format
+		// Check the file format
 
-			rle = FALSE;
-			isRGB = FALSE;
+		rle = FALSE;
+		isRGB = FALSE;
 
-			switch(header.type) {
-				case RT_OLD:
-				case RT_STANDARD:
-				case RT_FORMAT_TIFF: // I don't even know what these format are...
-				case RT_FORMAT_IFF: //The TIFF and IFF format types indicate that the raster
-					//file was originally converted from either of these file formats.
-					//so lets at least try to process them as RT_STANDARD
-					break;
+		switch(header.type) {
+			case RT_OLD:
+			case RT_STANDARD:
+			case RT_FORMAT_TIFF: // I don't even know what these format are...
+			case RT_FORMAT_IFF: //The TIFF and IFF format types indicate that the raster
+				//file was originally converted from either of these file formats.
+				//so lets at least try to process them as RT_STANDARD
+				break;
 
-				case RT_BYTE_ENCODED:
-					rle = TRUE;
-					break;
+			case RT_BYTE_ENCODED:
+				rle = TRUE;
+				break;
 
-				case RT_FORMAT_RGB:
-					isRGB = TRUE;
-					break;
+			case RT_FORMAT_RGB:
+				isRGB = TRUE;
+				break;
 
-				default:
-					throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
-			}
+			default:
+				throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
+		}
 
-			// set up the colormap if needed
+		// set up the colormap if needed
 
-			switch(header.maptype) {
-				case RMT_NONE :
-				{				
-					if (header.depth < 24) {
-						// Create linear color ramp
-
-						RGBQUAD *pal = FreeImage_GetPalette(dib);
-
-						int numcolors = 1 << header.depth;
-
-						for (int i = 0; i < numcolors; i++) {
-							pal[i].rgbRed	= (BYTE)((255 * i) / (numcolors - 1));
-							pal[i].rgbGreen = (BYTE)((255 * i) / (numcolors - 1));
-							pal[i].rgbBlue	= (BYTE)((255 * i) / (numcolors - 1));
-						}
-					}
-
-					break;
-				}
-
-				case RMT_EQUAL_RGB:
-				{
-					BYTE *r, *g, *b;
-
-					// Read SUN raster colormap
-
-					int numcolors = 1 << header.depth;
-					if((DWORD)(3 * numcolors) > header.maplength) {
-						// some RAS may have less colors than the full palette
-						numcolors = header.maplength / 3;
-					} else {
-						throw "Invalid palette";
-					}
-
-					r = (BYTE*)malloc(3 * numcolors * sizeof(BYTE));
-					g = r + numcolors;
-					b = g + numcolors;
+		switch(header.maptype) {
+			case RMT_NONE :
+			{				
+				if (header.depth < 24) {
+					// Create linear color ramp
 
 					RGBQUAD *pal = FreeImage_GetPalette(dib);
 
-					io->read_proc(r, 3 * numcolors, 1, handle);
+					int numcolors = 1 << header.depth;
 
 					for (int i = 0; i < numcolors; i++) {
-						pal[i].rgbRed	= r[i];
-						pal[i].rgbGreen = g[i];
-						pal[i].rgbBlue	= b[i];
+						pal[i].rgbRed	= (BYTE)((255 * i) / (numcolors - 1));
+						pal[i].rgbGreen = (BYTE)((255 * i) / (numcolors - 1));
+						pal[i].rgbBlue	= (BYTE)((255 * i) / (numcolors - 1));
 					}
-
-					free(r);
-					break;
 				}
 
-				case RMT_RAW:
-				{
-					BYTE *colormap;
-
-					// Read (skip) SUN raster colormap.
-
-					colormap = (BYTE *)malloc(header.maplength * sizeof(BYTE));
-
-					io->read_proc(colormap, header.maplength, 1, handle);
-
-					free(colormap);
-					break;
-				}
+				break;
 			}
 
-			// Calculate the line + pitch
-			// Each row is multiple of 16 bits (2 bytes).
+			case RMT_EQUAL_RGB:
+			{
+				BYTE *r, *g, *b;
 
-			if (header.depth == 1)
-				linelength = (WORD)((header.width / 8) + (header.width % 8 ? 1 : 0));
-			else
-				linelength = (WORD)header.width;
+				// Read SUN raster colormap
 
-			fill = (linelength % 2) ? 1 : 0;
-
-			int pitch = FreeImage_GetPitch(dib);
-
-			// Read the image data
-			
-			switch(header.depth) {
-				case 1:
-				case 8:
-				{
-					bits = FreeImage_GetBits(dib) + (header.height - 1) * pitch;
-
-					for (y = 0; y < header.height; y++) {
-						ReadData(io, handle, bits, linelength, rle);
-
-						bits -= pitch;
-
-						if (fill)
-							ReadData(io, handle, &fillchar, fill, rle);
-					}
-
-					break;
+				int numcolors = 1 << header.depth;
+				if((DWORD)(3 * numcolors) > header.maplength) {
+					// some RAS may have less colors than the full palette
+					numcolors = header.maplength / 3;
+				} else {
+					throw "Invalid palette";
 				}
 
-				case 24:
-				{
-					BYTE *buf, *bp;
+				r = (BYTE*)malloc(3 * numcolors * sizeof(BYTE));
+				g = r + numcolors;
+				b = g + numcolors;
 
-					buf = (BYTE*)malloc(header.width * 3);
+				RGBQUAD *pal = FreeImage_GetPalette(dib);
 
-					for (y = 0; y < header.height; y++) {
-						bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
+				io->read_proc(r, 3 * numcolors, 1, handle);
 
-						ReadData(io, handle, buf, header.width * 3, rle);
-
-						bp = buf;
-
-						if (isRGB) {
-							for (x = 0; x < header.width; x++) {
-								bits[FI_RGBA_RED] = *(bp++);	// red
-								bits[FI_RGBA_GREEN] = *(bp++);	// green
-								bits[FI_RGBA_BLUE] = *(bp++);	// blue
-
-								bits += 3;
-							}
-						} else {
-							for (x = 0; x < header.width; x++) {
-								bits[FI_RGBA_RED] = *(bp + 2);	// red
-								bits[FI_RGBA_GREEN] = *(bp + 1);// green
-								bits[FI_RGBA_BLUE] = *bp;       // blue
-
-								bits += 3; bp += 3;
-							}
-						}
-
-						if (fill)
-							ReadData(io, handle, &fillchar, fill, rle);
-					}
-
-					free(buf);
-					break;
+				for (int i = 0; i < numcolors; i++) {
+					pal[i].rgbRed	= r[i];
+					pal[i].rgbGreen = g[i];
+					pal[i].rgbBlue	= b[i];
 				}
 
-				case 32:
-				{
-					BYTE *buf, *bp;
-
-					buf = (BYTE*)malloc(header.width * 4);
-
-					for (y = 0; y < header.height; y++) {
-						bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
-
-						ReadData(io, handle, buf, header.width * 4, rle);
-
-						bp = buf;
-
-						if (isRGB) {
-							for (x = 0; x < header.width; x++) {
-								bits[FI_RGBA_ALPHA] = *(bp++);	// alpha
-								bits[FI_RGBA_RED] = *(bp++);	// red
-								bits[FI_RGBA_GREEN] = *(bp++);	// green
-								bits[FI_RGBA_BLUE] = *(bp++);	// blue
-
-								bits += 4;
-							}
-						}
-						else {
-							for (x = 0; x < header.width; x++) {
-								bits[FI_RGBA_RED] = *(bp + 3);	// red
-								bits[FI_RGBA_GREEN] = *(bp + 2); // green
-								bits[FI_RGBA_BLUE] = *(bp + 1);	// blue
-								bits[FI_RGBA_ALPHA] = *bp;		// alpha
-
-								bits += 4;
-								bp += 4;
-							}
-						}
-
-						if (fill)
-							ReadData(io, handle, &fillchar, fill, rle);
-					}
-
-					free(buf);
-					break;
-				}
+				free(r);
+				break;
 			}
-			
-			return dib;
 
-		} catch (const char *text) {
-			if(dib) {
-				FreeImage_Unload(dib);
+			case RMT_RAW:
+			{
+				BYTE *colormap;
+
+				// Read (skip) SUN raster colormap.
+
+				colormap = (BYTE *)malloc(header.maplength * sizeof(BYTE));
+
+				io->read_proc(colormap, header.maplength, 1, handle);
+
+				free(colormap);
+				break;
 			}
-			FreeImage_OutputMessageProc(s_format_id, text);
-	
-			return NULL;
 		}
 
+		if(header_only) {
+			// header only mode
+			return dib;
+		}
+
+		// Calculate the line + pitch
+		// Each row is multiple of 16 bits (2 bytes).
+
+		if (header.depth == 1) {
+			linelength = (WORD)((header.width / 8) + (header.width % 8 ? 1 : 0));
+		} else {
+			linelength = (WORD)header.width;
+		}
+
+		fill = (linelength % 2) ? 1 : 0;
+
+		unsigned pitch = FreeImage_GetPitch(dib);
+
+		// Read the image data
+		
+		switch(header.depth) {
+			case 1:
+			case 8:
+			{
+				bits = FreeImage_GetBits(dib) + (header.height - 1) * pitch;
+
+				for (y = 0; y < header.height; y++) {
+					ReadData(io, handle, bits, linelength, rle);
+
+					bits -= pitch;
+
+					if (fill) {
+						ReadData(io, handle, &fillchar, fill, rle);
+					}
+				}
+
+				break;
+			}
+
+			case 24:
+			{
+				BYTE *buf, *bp;
+
+				buf = (BYTE*)malloc(header.width * 3);
+
+				for (y = 0; y < header.height; y++) {
+					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
+
+					ReadData(io, handle, buf, header.width * 3, rle);
+
+					bp = buf;
+
+					if (isRGB) {
+						for (x = 0; x < header.width; x++) {
+							bits[FI_RGBA_RED] = *(bp++);	// red
+							bits[FI_RGBA_GREEN] = *(bp++);	// green
+							bits[FI_RGBA_BLUE] = *(bp++);	// blue
+
+							bits += 3;
+						}
+					} else {
+						for (x = 0; x < header.width; x++) {
+							bits[FI_RGBA_RED] = *(bp + 2);	// red
+							bits[FI_RGBA_GREEN] = *(bp + 1);// green
+							bits[FI_RGBA_BLUE] = *bp;       // blue
+
+							bits += 3; bp += 3;
+						}
+					}
+
+					if (fill) {
+						ReadData(io, handle, &fillchar, fill, rle);
+					}
+				}
+
+				free(buf);
+				break;
+			}
+
+			case 32:
+			{
+				BYTE *buf, *bp;
+
+				buf = (BYTE*)malloc(header.width * 4);
+
+				for (y = 0; y < header.height; y++) {
+					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
+
+					ReadData(io, handle, buf, header.width * 4, rle);
+
+					bp = buf;
+
+					if (isRGB) {
+						for (x = 0; x < header.width; x++) {
+							bits[FI_RGBA_ALPHA] = *(bp++);	// alpha
+							bits[FI_RGBA_RED] = *(bp++);	// red
+							bits[FI_RGBA_GREEN] = *(bp++);	// green
+							bits[FI_RGBA_BLUE] = *(bp++);	// blue
+
+							bits += 4;
+						}
+					}
+					else {
+						for (x = 0; x < header.width; x++) {
+							bits[FI_RGBA_RED] = *(bp + 3);	// red
+							bits[FI_RGBA_GREEN] = *(bp + 2); // green
+							bits[FI_RGBA_BLUE] = *(bp + 1);	// blue
+							bits[FI_RGBA_ALPHA] = *bp;		// alpha
+
+							bits += 4;
+							bp += 4;
+						}
+					}
+
+					if (fill) {
+						ReadData(io, handle, &fillchar, fill, rle);
+					}
+				}
+
+				free(buf);
+				break;
+			}
+		}
+		
+		return dib;
+
+	} catch (const char *text) {
+		if(dib) {
+			FreeImage_Unload(dib);
+		}
+		FreeImage_OutputMessageProc(s_format_id, text);
 	}
 
 	return NULL;
@@ -493,4 +508,5 @@ InitRAS(Plugin *plugin, int format_id) {
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

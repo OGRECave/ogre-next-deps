@@ -31,6 +31,8 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 	FIBITMAP *src = NULL;
 	FIBITMAP *dst = NULL;
 
+	if(!FreeImage_HasPixels(dib)) return NULL;
+
 	const FREE_IMAGE_TYPE src_type = FreeImage_GetImageType(dib);
 
 	// check for allowed conversions 
@@ -47,12 +49,24 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 			}
 			break;
 		}
+		case FIT_UINT16:
+			// allow conversion from 16-bit
+			src = dib;
+			break;
 		case FIT_RGB16:
-			// allow conversion from 48-bit
+			// allow conversion from 48-bit RGB
+			src = dib;
+			break;
+		case FIT_RGBA16:
+			// allow conversion from 64-bit RGBA (ignore the alpha channel)
+			src = dib;
+			break;
+		case FIT_FLOAT:
+			// allow conversion from 32-bit float
 			src = dib;
 			break;
 		case FIT_RGBAF:
-			// allow conversion from 128-bit
+			// allow conversion from 128-bit RGBAF
 			src = dib;
 			break;
 		case FIT_RGBF:
@@ -69,7 +83,12 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 	const unsigned height = FreeImage_GetHeight(src);
 
 	dst = FreeImage_AllocateT(FIT_RGBF, width, height);
-	if(!dst) return NULL;
+	if(!dst) {
+		if(src != dib) {
+			FreeImage_Unload(src);
+		}
+		return NULL;
+	}
 
 	// copy metadata from src to dst
 	FreeImage_CloneMetadata(dst, src);
@@ -93,12 +112,34 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 				FIRGBF *dst_pixel = (FIRGBF*)dst_bits;
 				for(unsigned x = 0; x < width; x++) {
 					// convert and scale to the range [0..1]
-					dst_pixel->red   = (float)(src_pixel[FI_RGBA_RED])   / 255;
-					dst_pixel->green = (float)(src_pixel[FI_RGBA_GREEN]) / 255;
-					dst_pixel->blue  = (float)(src_pixel[FI_RGBA_BLUE])  / 255;
+					dst_pixel->red   = (float)(src_pixel[FI_RGBA_RED])   / 255.0F;
+					dst_pixel->green = (float)(src_pixel[FI_RGBA_GREEN]) / 255.0F;
+					dst_pixel->blue  = (float)(src_pixel[FI_RGBA_BLUE])  / 255.0F;
 
 					src_pixel += bytespp;
 					dst_pixel ++;
+				}
+				src_bits += src_pitch;
+				dst_bits += dst_pitch;
+			}
+		}
+		break;
+
+		case FIT_UINT16:
+		{
+			const BYTE *src_bits = (BYTE*)FreeImage_GetBits(src);
+			BYTE *dst_bits = (BYTE*)FreeImage_GetBits(dst);
+
+			for(unsigned y = 0; y < height; y++) {
+				const WORD *src_pixel = (WORD*)src_bits;
+				FIRGBF *dst_pixel = (FIRGBF*)dst_bits;
+
+				for(unsigned x = 0; x < width; x++) {
+					// convert and scale to the range [0..1]
+					const float dst_value = (float)src_pixel[x] / 65535.0F;
+					dst_pixel[x].red   = dst_value;
+					dst_pixel[x].green = dst_value;
+					dst_pixel[x].blue  = dst_value;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -117,9 +158,9 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 
 				for(unsigned x = 0; x < width; x++) {
 					// convert and scale to the range [0..1]
-					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535;
-					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535;
-					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535;
+					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535.0F;
+					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535.0F;
+					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535.0F;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -138,9 +179,30 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 
 				for(unsigned x = 0; x < width; x++) {
 					// convert and scale to the range [0..1]
-					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535;
-					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535;
-					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535;
+					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535.0F;
+					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535.0F;
+					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535.0F;
+				}
+				src_bits += src_pitch;
+				dst_bits += dst_pitch;
+			}
+		}
+		break;
+
+		case FIT_FLOAT:
+		{
+			const BYTE *src_bits = (BYTE*)FreeImage_GetBits(src);
+			BYTE *dst_bits = (BYTE*)FreeImage_GetBits(dst);
+
+			for(unsigned y = 0; y < height; y++) {
+				const float *src_pixel = (float*) src_bits;
+				FIRGBF  *dst_pixel = (FIRGBF*)  dst_bits;
+
+				for(unsigned x = 0; x < width; x++) {
+					// convert by copying greyscale channel to each R, G, B channels
+					dst_pixel[x].red   = src_pixel[x];
+					dst_pixel[x].green = src_pixel[x];
+					dst_pixel[x].blue  = src_pixel[x];
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;

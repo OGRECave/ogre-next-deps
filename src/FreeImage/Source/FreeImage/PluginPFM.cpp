@@ -180,6 +180,11 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 	);
 }
 
+static BOOL DLL_CALLCONV
+SupportsNoPixels() {
+	return TRUE;
+}
+
 // ----------------------------------------------------------
 
 static FIBITMAP * DLL_CALLCONV
@@ -189,8 +194,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	FIBITMAP *dib = NULL;
 	float *lineBuffer = NULL;
 
-	if (!handle)
+	if (!handle) {
 		return NULL;
+	}
+
+	BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	try {
 		FREE_IMAGE_TYPE image_type = FIT_UNKNOWN;
@@ -228,9 +236,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// Create a new DIB
-		dib = FreeImage_AllocateT(image_type, width, height);
+		dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
 		if (dib == NULL) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
+		}
+
+		if(header_only) {
+			// header only mode
+			return dib;
 		}
 
 		// Read the image...
@@ -385,4 +398,5 @@ InitPFM(Plugin *plugin, int format_id) {
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

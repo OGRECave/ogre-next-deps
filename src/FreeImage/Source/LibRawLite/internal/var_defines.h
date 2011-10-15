@@ -4,20 +4,18 @@
  * Created: Sat Mar  8, 2008
  *
  * LibRaw redefinitions of dcraw internal variables
- *
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+LibRaw is free software; you can redistribute it and/or modify
+it under the terms of the one of three licenses as you choose:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+1. GNU LESSER GENERAL PUBLIC LICENSE version 2.1
+   (See file LICENSE.LGPL provided in LibRaw distribution archive for details).
+
+2. COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0
+   (See file LICENSE.CDDL provided in LibRaw distribution archive for details).
+
+3. LibRaw Software License 27032010
+   (See file LICENSE.LibRaw.pdf provided in LibRaw distribution archive for details).
  */
 
 #ifndef VAR_DEFINES_H
@@ -61,8 +59,10 @@
 #endif
 #ifndef SRC_USES_BLACK
 #define black           (imgdata.color.black)
+#define cblack           (imgdata.color.cblack)
 #endif
 #define maximum         (imgdata.color.maximum)
+#define channel_maximum         (imgdata.color.channel_maximum)
 #define profile_length  (imgdata.color.profile_length)
 #define color_flags     (imgdata.color.color_flags)
 #define ph1             (imgdata.color.phase_one_data)
@@ -90,6 +90,7 @@
 
 //imgdata.output
 #define greybox         (imgdata.params.greybox)
+#define cropbox         (imgdata.params.cropbox)
 #define aber            (imgdata.params.aber)
 #define gamm            (imgdata.params.gamm)
 #define user_mul        (imgdata.params.user_mul)
@@ -111,6 +112,24 @@
 #define med_passes      (imgdata.params.med_passes)
 #define no_auto_bright  (imgdata.params.no_auto_bright)
 #define use_fuji_rotate (imgdata.params.use_fuji_rotate)
+#define filtering_mode (imgdata.params.filtering_mode)
+
+// Demosaic packs
+//AFD
+//#define afd_noise_att				(imgdata.params.afd_noise_att)
+//#define afd_noise_thres				(imgdata.params.afd_noise_thres)
+//#define afd_luminance_passes		(imgdata.params.afd_luminance_passes)
+//#define afd_chrominance_method		(imgdata.params.afd_chrominance_method)
+//#define afd_luminance_only			(imgdata.params.afd_luminance_only)
+// DCB
+#define dcb_iterations   (imgdata.params.iterations)
+#define dcb_enhance_fl   (imgdata.params.dcb_enhance)
+#define fbdd_noiserd     (imgdata.params.fbdd_noiserd)
+// VCD
+#define eeci_refine    (imgdata.params.eeci_refine)
+#define es_med_passes  (imgdata.params.es_med_passes)
+
+
 
 //rgb_constants
 #define xyz_rgb         (rgb_constants.xyz_rgb)
@@ -120,6 +139,7 @@
 #define meta_data       (libraw_internal_data.internal_data.meta_data)
 #define ifp             libraw_internal_data.internal_data.input
 #define ifname          ((char*)libraw_internal_data.internal_data.input->fname())
+#define ofp             libraw_internal_data.internal_data.output
 #define profile_offset  (libraw_internal_data.internal_data.profile_offset)
 #define thumb_offset    (libraw_internal_data.internal_data.toffset)
 
@@ -152,6 +172,7 @@
 #define kodak_cbpp      (libraw_internal_data.unpacker_data.kodak_cbpp)
 #define strip_offset    (libraw_internal_data.unpacker_data.strip_offset)
 #define data_offset     (libraw_internal_data.unpacker_data.data_offset)
+#define data_size     (libraw_internal_data.unpacker_data.data_size)
 #define meta_offset     (libraw_internal_data.unpacker_data.meta_offset)
 #define meta_length     (libraw_internal_data.unpacker_data.meta_length)
 #define thumb_misc      (libraw_internal_data.unpacker_data.thumb_misc)
@@ -170,8 +191,12 @@
 #define fseeko(stream,o,w)	 stream->seek(o,w)
 #define ftell(stream)		 stream->tell()
 #define ftello(stream)		 stream->tell()
+#ifdef getc
+#undef getc
+#endif
 #define getc(stream)		 stream->get_char()
 #define fgetc(stream)		 stream->get_char()
+#define fgetcb(stream)		 stream->get_char_buf()
 #define fgets(str,n,stream)	 stream->gets(str,n)
 #define fscanf(stream,fmt,ptr)	 stream->scanf_one(fmt,ptr)
 #endif

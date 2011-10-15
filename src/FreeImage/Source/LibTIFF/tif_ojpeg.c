@@ -1,4 +1,4 @@
-/* $Id: tif_ojpeg.c,v 1.27 2009/11/08 19:22:38 drolon Exp $ */
+/* $Id: tif_ojpeg.c,v 1.36 2011/04/10 17:14:09 drolon Exp $ */
 
 /* WARNING: The type of JPEG encapsulation defined by the TIFF Version 6.0
    specification is now totally obsolete and deprecated for new applications and
@@ -1537,7 +1537,6 @@ OJPEGReadHeaderInfoSecStreamSof(TIFF* tif, uint8 marker_id)
 		OJPEGReadSkip(sp,4);
 	else
 	{
-		/* TODO: probably best to also add check on allowed upper bound, especially x, may cause buffer overflow otherwise i think */
 		/* Y: Number of lines */
 		if (OJPEGReadWord(sp,&p)==0)
 			return(0);
@@ -1553,6 +1552,11 @@ OJPEGReadHeaderInfoSecStreamSof(TIFF* tif, uint8 marker_id)
 		if ((p<sp->image_width) && (p<sp->strile_width))
 		{
 			TIFFErrorExt(tif->tif_clientdata,module,"JPEG compressed data indicates unexpected width");
+			return(0);
+		}
+		if ((uint32)p>sp->strile_width)
+		{
+			TIFFErrorExt(tif->tif_clientdata,module,"JPEG compressed data image width exceeds expected image width");
 			return(0);
 		}
 		sp->sof_x=p;
@@ -1909,13 +1913,23 @@ OJPEGReadBufferFill(OJPEGState* sp)
 					sp->in_buffer_source=osibsEof;
 				else
 				{
+					if (sp->tif->tif_dir.td_stripoffset == 0) {
+						TIFFErrorExt(sp->tif->tif_clientdata,sp->tif->tif_name,"Strip offsets are missing");
+						return(0);
+					}
 					sp->in_buffer_file_pos=sp->tif->tif_dir.td_stripoffset[sp->in_buffer_next_strile];  
 					if (sp->in_buffer_file_pos!=0)
 					{
 						if (sp->in_buffer_file_pos>=sp->file_size)
 							sp->in_buffer_file_pos=0;
+						else if (sp->tif->tif_dir.td_stripbytecount==NULL)
+							sp->in_buffer_file_togo=sp->file_size-sp->in_buffer_file_pos;
 						else
 						{
+							if (sp->tif->tif_dir.td_stripbytecount == 0) {
+								TIFFErrorExt(sp->tif->tif_clientdata,sp->tif->tif_name,"Strip byte counts are missing");
+								return(0);
+							}
 							sp->in_buffer_file_togo=sp->tif->tif_dir.td_stripbytecount[sp->in_buffer_next_strile];  
 							if (sp->in_buffer_file_togo==0)
 								sp->in_buffer_file_pos=0;
@@ -2425,3 +2439,10 @@ OJPEGLibjpegJpegSourceMgrTermSource(jpeg_decompress_struct* cinfo)
 #endif
 
 
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

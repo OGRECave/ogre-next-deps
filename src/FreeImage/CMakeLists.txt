@@ -14,10 +14,13 @@ set(FreeImage_SOURCES
 	Source/FreeImage/Conversion16_565.cpp
 	Source/FreeImage/Conversion24.cpp
 	Source/FreeImage/Conversion32.cpp
+    Source/FreeImage/ConversionFloat.cpp
+    Source/FreeImage/ConversionRGB16.cpp
 	Source/FreeImage/Conversion4.cpp
 	Source/FreeImage/Conversion8.cpp
 	Source/FreeImage/ConversionRGBF.cpp
 	Source/FreeImage/ConversionType.cpp
+    Source/FreeImage/ConversionUINT16.cpp
 	Source/FreeImage/FreeImage.cpp
 	Source/FreeImage/FreeImageIO.cpp
 	Source/FreeImage/GetType.cpp
@@ -206,6 +209,7 @@ set(FreeImage_SOURCES
 	Source/LibOpenJPEG/mqc.h
 	Source/LibOpenJPEG/openjpeg.c
 	Source/LibOpenJPEG/openjpeg.h
+    Source/LibOpenJPEG/opj_config.h
 	Source/LibOpenJPEG/opj_includes.h
 	Source/LibOpenJPEG/opj_malloc.h
 	Source/LibOpenJPEG/pi.c
@@ -224,17 +228,23 @@ set(FreeImage_SOURCES
 	Source/LibPNG/png.c
 	Source/LibPNG/png.h
 	Source/LibPNG/pngconf.h
+    Source/LibPNG/pngdebug.h
 	Source/LibPNG/pngerror.c
 	Source/LibPNG/pnggccrd.c
 	Source/LibPNG/pngget.c
+    Source/LibPNG/pnginfo.h
+    Source/LibPNG/pnglibconf.h
 	Source/LibPNG/pngmem.c
 	Source/LibPNG/pngpread.c
 	Source/LibPNG/pngread.c
+    Source/LibPNG/pngpriv.h
 	Source/LibPNG/pngrio.c
 	Source/LibPNG/pngrtran.c
 	Source/LibPNG/pngrutil.c
 	Source/LibPNG/pngset.c
+    Source/LibPNG/pngstruct.h
 	Source/LibPNG/pngtrans.c
+    Source/LibPNG/pngvalid.c
 	Source/LibPNG/pngvcrd.c
 	Source/LibPNG/pngwio.c
 	Source/LibPNG/pngwrite.c
@@ -503,7 +513,12 @@ set(FreeImage_SOURCES
 	Source/ZLib/crc32.h
 	Source/ZLib/deflate.c
 	Source/ZLib/deflate.h
+    Source/ZLib/gzclose.c
+    Source/ZLib/gzguts.h
 	Source/ZLib/gzio.c
+    Source/ZLib/gzlib.c
+    Source/ZLib/gzread.c
+    Source/ZLib/gzwrite.c
 	Source/ZLib/infback.c
 	Source/ZLib/inffast.c
 	Source/ZLib/inffast.h

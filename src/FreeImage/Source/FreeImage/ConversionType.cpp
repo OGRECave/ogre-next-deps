@@ -182,38 +182,38 @@ CONVERT_TO_COMPLEX<Tsrc>::convert(FIBITMAP *src) {
 // Convert from type BYTE to type X
 CONVERT_TYPE<unsigned short, BYTE>	convertByteToUShort;
 CONVERT_TYPE<short, BYTE>			convertByteToShort;
-CONVERT_TYPE<unsigned long, BYTE>	convertByteToULong;
-CONVERT_TYPE<long, BYTE>			convertByteToLong;
+CONVERT_TYPE<DWORD, BYTE>			convertByteToULong;
+CONVERT_TYPE<LONG, BYTE>			convertByteToLong;
 CONVERT_TYPE<float, BYTE>			convertByteToFloat;
 CONVERT_TYPE<double, BYTE>			convertByteToDouble;
 
 // Convert from type X to type BYTE
 CONVERT_TO_BYTE<unsigned short>	convertUShortToByte;
 CONVERT_TO_BYTE<short>			convertShortToByte;
-CONVERT_TO_BYTE<unsigned long>	convertULongToByte;
-CONVERT_TO_BYTE<long>			convertLongToByte;
+CONVERT_TO_BYTE<DWORD>			convertULongToByte;
+CONVERT_TO_BYTE<LONG>			convertLongToByte;
 CONVERT_TO_BYTE<float>			convertFloatToByte;
 CONVERT_TO_BYTE<double>			convertDoubleToByte;
 
 // Convert from type X to type float
 CONVERT_TYPE<float, unsigned short>	convertUShortToFloat;
 CONVERT_TYPE<float, short>			convertShortToFloat;
-CONVERT_TYPE<float, unsigned long>	convertULongToFloat;
-CONVERT_TYPE<float, long>			convertLongToFloat;
+CONVERT_TYPE<float, DWORD>			convertULongToFloat;
+CONVERT_TYPE<float, LONG>			convertLongToFloat;
 
 // Convert from type X to type double
 CONVERT_TYPE<double, unsigned short>	convertUShortToDouble;
 CONVERT_TYPE<double, short>				convertShortToDouble;
-CONVERT_TYPE<double, unsigned long>		convertULongToDouble;
-CONVERT_TYPE<double, long>				convertLongToDouble;
+CONVERT_TYPE<double, DWORD>				convertULongToDouble;
+CONVERT_TYPE<double, LONG>				convertLongToDouble;
 CONVERT_TYPE<double, float>				convertFloatToDouble;
 
 // Convert from type X to type FICOMPLEX
 CONVERT_TO_COMPLEX<BYTE>			convertByteToComplex;
 CONVERT_TO_COMPLEX<unsigned short>	convertUShortToComplex;
 CONVERT_TO_COMPLEX<short>			convertShortToComplex;
-CONVERT_TO_COMPLEX<unsigned long>	convertULongToComplex;
-CONVERT_TO_COMPLEX<long>			convertLongToComplex;
+CONVERT_TO_COMPLEX<DWORD>			convertULongToComplex;
+CONVERT_TO_COMPLEX<LONG>			convertLongToComplex;
 CONVERT_TO_COMPLEX<float>			convertFloatToComplex;
 CONVERT_TO_COMPLEX<double>			convertDoubleToComplex;
 
@@ -306,7 +306,7 @@ FIBITMAP* DLL_CALLCONV
 FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_linear) {
 	FIBITMAP *dst = NULL;
 
-	if(!src) return NULL;
+	if(!FreeImage_HasPixels(src)) return NULL;
 
 	// convert from src_type to dst_type
 
@@ -315,43 +315,35 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 	if(src_type == dst_type) {
 		return FreeImage_Clone(src);
 	}
-	if(src_type == FIT_BITMAP) {
-		const unsigned src_bpp = FreeImage_GetBPP(src);
-		if(((src_bpp == 24) || (src_bpp == 32)) && (dst_type != FIT_RGBF)) {
-			FreeImage_OutputMessageProc(FIF_UNKNOWN, "FREE_IMAGE_TYPE: Only 24-/32-bit dib can be converted to type %d.", dst_type);
-			return NULL;
-		}
-		else if(src_bpp != 8) {
-			FreeImage_OutputMessageProc(FIF_UNKNOWN, "FREE_IMAGE_TYPE: Only 8-bit dib can be converted to type %d.", dst_type);
-			return NULL;
-		}
-	}
+
+	const unsigned src_bpp = FreeImage_GetBPP(src);
 
 	switch(src_type) {
 		case FIT_BITMAP:
 			switch(dst_type) {
 				case FIT_UINT16:
-					dst = convertByteToUShort.convert(src, dst_type);
+					dst = FreeImage_ConvertToUINT16(src);
 					break;
 				case FIT_INT16:
-					dst = convertByteToShort.convert(src, dst_type);
+					dst = (src_bpp == 8) ? convertByteToShort.convert(src, dst_type) : NULL;
 					break;
 				case FIT_UINT32:
-					dst = convertByteToULong.convert(src, dst_type);
+					dst = (src_bpp == 8) ? convertByteToULong.convert(src, dst_type) : NULL;
 					break;
 				case FIT_INT32:
-					dst = convertByteToLong.convert(src, dst_type);
+					dst = (src_bpp == 8) ? convertByteToLong.convert(src, dst_type) : NULL;
 					break;
 				case FIT_FLOAT:
-					dst = convertByteToFloat.convert(src, dst_type);
+					dst = FreeImage_ConvertToFloat(src);
 					break;
 				case FIT_DOUBLE:
-					dst = convertByteToDouble.convert(src, dst_type);
+					dst = (src_bpp == 8) ? convertByteToDouble.convert(src, dst_type) : NULL;
 					break;
 				case FIT_COMPLEX:
-					dst = convertByteToComplex.convert(src);
+					dst = (src_bpp == 8) ? convertByteToComplex.convert(src) : NULL;
 					break;
-				case FIT_RGB16:					
+				case FIT_RGB16:
+					dst = FreeImage_ConvertToRGB16(src);
 					break;
 				case FIT_RGBA16:
 					break;
@@ -374,7 +366,7 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 				case FIT_INT32:
 					break;
 				case FIT_FLOAT:
-					dst = convertUShortToFloat.convert(src, dst_type);
+					dst = FreeImage_ConvertToFloat(src);
 					break;
 				case FIT_DOUBLE:
 					dst = convertUShortToDouble.convert(src, dst_type);
@@ -383,10 +375,12 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 					dst = convertUShortToComplex.convert(src);
 					break;
 				case FIT_RGB16:
+					dst = FreeImage_ConvertToRGB16(src);
 					break;
 				case FIT_RGBA16:
 					break;
 				case FIT_RGBF:
+					dst = FreeImage_ConvertToRGBF(src);
 					break;
 				case FIT_RGBAF:
 					break;
@@ -506,6 +500,7 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 				case FIT_RGBA16:
 					break;
 				case FIT_RGBF:
+					dst = FreeImage_ConvertToRGBF(src);
 					break;
 				case FIT_RGBAF:
 					break;
@@ -571,6 +566,7 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 					dst = FreeImage_ConvertTo24Bits(src);
 					break;
 				case FIT_UINT16:
+					dst = FreeImage_ConvertToUINT16(src);
 					break;
 				case FIT_INT16:
 					break;
@@ -579,6 +575,7 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 				case FIT_INT32:
 					break;
 				case FIT_FLOAT:
+					dst = FreeImage_ConvertToFloat(src);
 					break;
 				case FIT_DOUBLE:
 					break;
@@ -599,6 +596,7 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 					dst = FreeImage_ConvertTo32Bits(src);
 					break;
 				case FIT_UINT16:
+					dst = FreeImage_ConvertToUINT16(src);
 					break;
 				case FIT_INT16:
 					break;
@@ -607,12 +605,14 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 				case FIT_INT32:
 					break;
 				case FIT_FLOAT:
+					dst = FreeImage_ConvertToFloat(src);
 					break;
 				case FIT_DOUBLE:
 					break;
 				case FIT_COMPLEX:
 					break;
 				case FIT_RGB16:
+					dst = FreeImage_ConvertToRGB16(src);
 					break;
 				case FIT_RGBF:
 					dst = FreeImage_ConvertToRGBF(src);
@@ -634,6 +634,7 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 				case FIT_INT32:
 					break;
 				case FIT_FLOAT:
+					dst = FreeImage_ConvertToFloat(src);
 					break;
 				case FIT_DOUBLE:
 					break;
@@ -660,6 +661,7 @@ FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_line
 				case FIT_INT32:
 					break;
 				case FIT_FLOAT:
+					dst = FreeImage_ConvertToFloat(src);
 					break;
 				case FIT_DOUBLE:
 					break;

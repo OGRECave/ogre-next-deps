@@ -2,7 +2,8 @@
 // Photoshop Loader
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - HervÃ© Drolon (drolon@infonie.fr)
+// - Mihail Naydenov (mnaydenov@users.sourceforge.net)
 //
 // Based on LGPL code created and published by http://sourceforge.net/projects/elynx/
 //
@@ -83,6 +84,10 @@ SupportsICCProfiles() {
 	return TRUE;
 }
 
+static BOOL DLL_CALLCONV
+SupportsNoPixels() {
+	return TRUE;
+} 
 
 // ----------------------------------------------------------
 
@@ -91,7 +96,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if(handle) {
 		psdParser parser;
 		
-		FIBITMAP *dib = parser.Load(io, handle, s_format_id);
+		FIBITMAP *dib = parser.Load(io, handle, s_format_id, flags);
 
 		return dib;
 	}
@@ -122,4 +127,5 @@ InitPSD(Plugin *plugin, int format_id) {
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = SupportsICCProfiles;
+	plugin->supports_no_pixels_proc = SupportsNoPixels; 
 }

@@ -104,12 +104,6 @@ struct ThreadPool::Data
 };
 
 
-//
-// The global thread pool
-//
-
-ThreadPool gThreadPool (0);
-
 
 //
 // class WorkerThread
@@ -247,7 +241,7 @@ ThreadPool::Data::finish ()
     // an error like: "pure virtual method called"
     //
 
-    for (int i = 0; i < numThreads; i++)
+    for (size_t i = 0; i < numThreads; i++)
     {
 	taskSemaphore.post();
 	threadSemaphore.wait();
@@ -364,19 +358,19 @@ ThreadPool::setNumThreads (int count)
 
     Lock lock (_data->threadMutex);
 
-    if (count > _data->numThreads)
+    if ((size_t)count > _data->numThreads)
     {
 	//
         // Add more threads
 	//
 
-        while (_data->numThreads < count)
+        while (_data->numThreads < (size_t)count)
         {
             _data->threads.push_back (new WorkerThread (_data));
             _data->numThreads++;
         }
     }
-    else if (count < _data->numThreads)
+    else if ((size_t)count < _data->numThreads)
     {
 	//
 	// Wait until all existing threads are finished processing,
@@ -389,7 +383,7 @@ ThreadPool::setNumThreads (int count)
         // Add in new threads
 	//
 
-        while (_data->numThreads < count)
+        while (_data->numThreads < (size_t)count)
         {
             _data->threads.push_back (new WorkerThread (_data));
             _data->numThreads++;
@@ -442,6 +436,12 @@ ThreadPool::addTask (Task* task)
 ThreadPool&
 ThreadPool::globalThreadPool ()
 {
+    //
+    // The global thread pool
+    //
+    
+    static ThreadPool gThreadPool (0);
+
     return gThreadPool;
 }
 
@@ -449,7 +449,7 @@ ThreadPool::globalThreadPool ()
 void
 ThreadPool::addGlobalTask (Task* task)
 {
-    gThreadPool.addTask (task);
+    globalThreadPool().addTask (task);
 }
 
 

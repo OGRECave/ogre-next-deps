@@ -23,21 +23,22 @@
 #define FIRATIONAL_H
 
 /**
-Helper class to deal with rational numbers
+Helper class to deal with rational numbers. 
+NB: LONG data type is assumed to be a signed 32-bit number. 
 */
 class FIRational {
 private:
 	/// numerator
-	long _numerator;
+	LONG _numerator;
 	/// denominator
-	long _denominator;
+	LONG _denominator;
 
 public:
 	/// Default constructor
 	FIRational();
 
 	/// Constructor with longs
-	FIRational(long n, long d = 1);
+	FIRational(LONG n, LONG d = 1);
 
 	/// Constructor with FITAG
 	FIRational(const FITAG *tag);
@@ -55,15 +56,15 @@ public:
 	FIRational& operator=(FIRational& r);
 
 	/// Get the numerator
-	long getNumerator();
+	LONG getNumerator();
 
 	/// Get the denominator
-	long getDenominator();
+	LONG getDenominator();
 
 	/// Converts rational value by truncating towards zero
-	long truncate() {
+	LONG truncate() {
 		// Return truncated rational
-		return _denominator ? (long) (_numerator / _denominator) : 0;
+		return _denominator ? (LONG) (_numerator / _denominator) : 0;
 	}
 
 	/**@name Implicit conversions */
@@ -74,8 +75,8 @@ public:
 	int intValue() {
 		return (int)truncate();
 	}
-	long longValue() {
-		return (long)truncate();
+	LONG longValue() {
+		return (LONG)truncate();
 	}
 	float floatValue() {
 		return _denominator ? ((float)_numerator)/((float)_denominator) : 0;
@@ -93,10 +94,10 @@ public:
 
 private:
 	/// Initialize and normalize a rational number
-	void initialize(long n, long d);
+	void initialize(LONG n, LONG d);
 
 	/// Calculate GCD
-	long gcd(long a, long b);
+	LONG gcd(LONG a, LONG b);
 	
 	/// Normalize numerator / denominator 
 	void normalize();

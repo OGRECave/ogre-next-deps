@@ -54,10 +54,10 @@ ConvertAnyTag(FITAG *tag) {
 		{
 			BYTE *pvalue = (BYTE*)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%ld",	(long) pvalue[0]);
+			sprintf(format, "%ld",	(LONG) pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %ld",	(long) pvalue[i]);
+				sprintf(format, " %ld",	(LONG) pvalue[i]);
 				buffer += format;
 			}
 			break;
@@ -76,7 +76,7 @@ ConvertAnyTag(FITAG *tag) {
 		}
 		case FIDT_LONG:		// N x 32-bit unsigned integer 
 		{
-			unsigned long *pvalue = (unsigned long *)FreeImage_GetTagValue(tag);
+			DWORD *pvalue = (DWORD *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%lu", pvalue[0]);
 			buffer += format;
@@ -102,10 +102,10 @@ ConvertAnyTag(FITAG *tag) {
 		{
 			char *pvalue = (char*)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%ld",	(long) pvalue[0]);
+			sprintf(format, "%ld",	(LONG) pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %ld",	(long) pvalue[i]);
+				sprintf(format, " %ld",	(LONG) pvalue[i]);
 				buffer += format;
 			}
 			break;
@@ -124,7 +124,7 @@ ConvertAnyTag(FITAG *tag) {
 		}
 		case FIDT_SLONG:	// N x 32-bit signed integer 
 		{
-			long *pvalue = (long *)FreeImage_GetTagValue(tag);
+			LONG *pvalue = (LONG *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%ld", pvalue[0]);
 			buffer += format;
@@ -172,7 +172,7 @@ ConvertAnyTag(FITAG *tag) {
 		}
 		case FIDT_IFD:		// N x 32-bit unsigned integer (offset) 
 		{
-			unsigned long *pvalue = (unsigned long *)FreeImage_GetTagValue(tag);
+			DWORD *pvalue = (DWORD *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%X", pvalue[0]);
 			buffer += format;
@@ -374,8 +374,8 @@ ConvertExifTag(FITAG *tag) {
 		case TAG_SHUTTER_SPEED_VALUE:
 		{
 			FIRational r(tag);
-			long apexValue = r.longValue();
-			long apexPower = 1 << apexValue;
+			LONG apexValue = r.longValue();
+			LONG apexPower = 1 << apexValue;
 			sprintf(format, "1/%d sec", (int)apexPower);
 			buffer += format;
 			return buffer.c_str();

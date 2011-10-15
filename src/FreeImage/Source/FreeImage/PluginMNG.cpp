@@ -23,7 +23,7 @@
 #include "Utilities.h"
 
 #include "../LibMNG/libmng.h"
-#include "../LibMNG/libmng_data.h"
+//#include "../LibMNG/libmng_data.h"
 
 // ==========================================================
 // Plugin Interface
@@ -259,10 +259,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// read all bitmaps
 			int retval = MNG_NOERROR;
-			mng_datap pData = (mng_datap)hmng;
-			while(pData->bReading) {
+			while(mng_status_reading(hmng)) {
 				retval = mng_display_resume(hmng);
-				if((retval == MNG_NEEDTIMERWAIT) || (retval == MNG_FUNCTIONINVALID))
+				if((mng_get_imagetype(hmng) != mng_it_jng) && (retval == MNG_NEEDTIMERWAIT) || (retval == MNG_FUNCTIONINVALID))
 					break;
 			}
 

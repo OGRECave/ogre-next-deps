@@ -987,8 +987,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		WORD rowBytes = 0;
 		BOOL isRegion = FALSE;
 		BOOL done = FALSE;
+		long currentPos = 0;
+
 		while ( !done ) {
 			WORD opcode = 0;
+
+			// get the current stream position (used to avoid infinite loops)
+			currentPos = io->tell_proc(handle);
 			
 			if ((version == 1) || ((io->tell_proc( handle ) % 2) != 0)) {
 				// align to word for version 2
@@ -1203,7 +1208,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			else {
 				sprintf( outputMessage, "Can't handle opcode %x.\n", opcode );
 				throw outputMessage;
-			}		
+			}
+
+			if(currentPos == io->tell_proc(handle)) {
+				// we probaly reached the end of file as we can no longer move forward ... 
+				throw "Invalid PICT file";
+			}
 		}
 				
 		switch ( pictType )	{

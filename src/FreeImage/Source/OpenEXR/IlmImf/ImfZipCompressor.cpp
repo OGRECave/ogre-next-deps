@@ -39,8 +39,10 @@
 //	class ZipCompressor
 //
 //-----------------------------------------------------------------------------
+//#define ZLIB_WINAPI
 
 #include <ImfZipCompressor.h>
+#include <ImfCheckedArithmetic.h>
 #include "Iex.h"
 #include <zlib.h>
 
@@ -49,8 +51,8 @@ namespace Imf {
 
 ZipCompressor::ZipCompressor
     (const Header &hdr,
-     int maxScanLineSize,
-     int numScanLines)
+     size_t maxScanLineSize,
+     size_t numScanLines)
 :
     Compressor (hdr),
     _maxScanLineSize (maxScanLineSize),
@@ -58,11 +60,19 @@ ZipCompressor::ZipCompressor
     _tmpBuffer (0),
     _outBuffer (0)
 {
+    size_t maxInBytes =
+        uiMult (maxScanLineSize, numScanLines);
+
+    size_t maxOutBytes =
+        uiAdd (uiAdd (maxInBytes,
+                      size_t (ceil (maxInBytes * 0.01))),
+               size_t (100));
+
     _tmpBuffer =
-	new char [maxScanLineSize * numScanLines];
+	new char [maxInBytes];
 
     _outBuffer =
-	new char [int (ceil (maxScanLineSize * numScanLines * 1.01)) + 100];
+	new char [maxOutBytes];
 }
 
 

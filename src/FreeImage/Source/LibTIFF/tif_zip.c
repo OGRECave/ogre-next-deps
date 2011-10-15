@@ -1,4 +1,4 @@
-/* $Id: tif_zip.c,v 1.28 2009/11/07 19:18:27 drolon Exp $ */
+/* $Id: tif_zip.c,v 1.37 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1995-1997 Sam Leffler
@@ -410,3 +410,10 @@ bad:
 #endif /* ZIP_SUPORT */
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

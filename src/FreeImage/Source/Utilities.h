@@ -3,7 +3,7 @@
 //
 // Design and implementation by
 // - Floris van den Berg (flvdberg@wxs.nl)
-// - Hervé Drolon <drolon@infonie.fr>
+// - HervÃ© Drolon <drolon@infonie.fr>
 // - Ryan Rubley (ryan@lostreality.org)
 //
 // This file is part of FreeImage 3
@@ -36,6 +36,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <assert.h>
+#include <errno.h>
+#include <float.h>
 #include <limits.h>
 
 #include <string>
@@ -46,6 +48,8 @@
 #include <stack>
 #include <sstream>
 #include <algorithm>
+#include <limits>
+#include <memory>
 
 // ==========================================================
 //   Bitmap palette and pixels alignment
@@ -58,6 +62,44 @@
 
 void* FreeImage_Aligned_Malloc(size_t amount, size_t alignment);
 void FreeImage_Aligned_Free(void* mem);
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+/**
+Allocate a FIBITMAP with possibly no pixel data 
+(i.e. only header data and some or all metadata)
+@param header_only If TRUE, allocate a 'header only' FIBITMAP, otherwise allocate a full FIBITMAP
+@param type Image type
+@param width
+@param height
+@param bpp
+@param red_mask
+@param green_mask
+@param blue_mask
+@see FreeImage_AllocateT
+*/
+DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeaderT(BOOL header_only, FREE_IMAGE_TYPE type, int width, int height, int bpp FI_DEFAULT(8), unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
+
+/**
+Allocate a FIBITMAP of type FIT_BITMAP, with possibly no pixel data 
+(i.e. only header data and some or all metadata)
+@param header_only If TRUE, allocate a 'header only' FIBITMAP, otherwise allocate a full FIBITMAP
+@param width
+@param height
+@param bpp
+@param red_mask
+@param green_mask
+@param blue_mask
+@see FreeImage_Allocate
+*/
+DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeader(BOOL header_only, int width, int height, int bpp, unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
+
+#if defined(__cplusplus)
+}
+#endif
+
 
 // ==========================================================
 //   File I/O structs
@@ -93,6 +135,61 @@ typedef struct tagFILE_BGR {
 #else
 #pragma pack()
 #endif // _WIN32
+
+// ==========================================================
+//   Template utility functions
+// ==========================================================
+
+/// Max function
+template <class T> T MAX(T a, T b) {
+	return (a > b) ? a: b;
+}
+
+/// Min function
+template <class T> T MIN(T a, T b) {
+	return (a < b) ? a: b;
+}
+
+/// INPLACESWAP adopted from codeguru.com 
+template <class T> void INPLACESWAP(T& a, T& b) {
+	a ^= b; b ^= a; a ^= b;
+}
+
+/// Clamp function
+template <class T> T CLAMP(T value, T min_value, T max_value) {
+	return ((value < min_value) ? min_value : (value > max_value) ? max_value : value);
+}
+
+/** This procedure computes minimum min and maximum max
+ of n numbers using only (3n/2) - 2 comparisons.
+ min = L[i1] and max = L[i2].
+ ref: Aho A.V., Hopcroft J.E., Ullman J.D., 
+ The design and analysis of computer algorithms, 
+ Addison-Wesley, Reading, 1974.
+*/
+template <class T> void 
+MAXMIN(const T* L, long n, T& max, T& min) {
+	long i1, i2, i, j;
+	T x1, x2;
+	long k1, k2;
+
+	i1 = 0; i2 = 0; min = L[0]; max = L[0]; j = 0;
+	if((n % 2) != 0)  j = 1;
+	for(i = j; i < n; i+= 2) {
+		k1 = i; k2 = i+1;
+		x1 = L[k1]; x2 = L[k2];
+		if(x1 > x2)	{
+			k1 = k2;  k2 = i;
+			x1 = x2;  x2 = L[k2];
+		}
+		if(x1 < min) {
+			min = x1;  i1 = k1;
+		}
+		if(x2 > max) {
+			max = x2;  i2 = k2;
+		}
+	}
+}
 
 // ==========================================================
 //   Utility functions
@@ -153,18 +250,18 @@ CalculateUsedBits(int bits) {
 	return bit_count;
 }
 
-inline int
-CalculateLine(int width, int bitdepth) {
+inline unsigned
+CalculateLine(unsigned width, unsigned bitdepth) {
 	return ((width * bitdepth) + 7) / 8;
 }
 
-inline int
-CalculatePitch(int line) {
+inline unsigned
+CalculatePitch(unsigned line) {
 	return line + 3 & ~3;
 }
 
-inline int
-CalculateUsedPaletteEntries(int bit_count) {
+inline unsigned
+CalculateUsedPaletteEntries(unsigned bit_count) {
 	if ((bit_count >= 1) && (bit_count <= 8))
 		return 1 << bit_count;
 
@@ -176,21 +273,92 @@ CalculateScanLine(unsigned char *bits, unsigned pitch, int scanline) {
 	return (bits + (pitch * scanline));
 }
 
-inline void
-ReplaceExtension(char *result, const char *filename, const char *extension) {
-	for (size_t i = strlen(filename) - 1; i > 0; --i) {
-		if (filename[i] == '.') {
-			memcpy(result, filename, i);
-			result[i] = '.';
-			memcpy(result + i + 1, extension, strlen(extension) + 1);
-			return;
-		}
-	}
+// ----------------------------------------------------------
 
-	memcpy(result, filename, strlen(filename));
-	result[strlen(filename)] = '.';
-	memcpy(result + strlen(filename) + 1, extension, strlen(extension) + 1);
+/**
+Fast generic assign (faster then for loop)
+@param dst Destination pixel
+@param src Source pixel
+@param bytesperpixel # of bytes per pixel
+*/
+inline void 
+AssignPixel(BYTE* dst, const BYTE* src, unsigned bytesperpixel) {
+	switch (bytesperpixel) {
+		case 1:	// FIT_BITMAP (8-bit)
+			*dst = *src;
+			break;
+
+		case 2: // FIT_UINT16 / FIT_INT16 / 16-bit
+			*(reinterpret_cast<WORD*>(dst)) = *(reinterpret_cast<const WORD*> (src));
+			break;
+
+		case 3: // FIT_BITMAP (24-bit)
+			*(reinterpret_cast<WORD*>(dst)) = *(reinterpret_cast<const WORD*> (src));
+			dst[2] = src[2];
+			break;
+
+		case 4: // FIT_BITMAP (32-bit) / FIT_UINT32 / FIT_INT32 / FIT_FLOAT
+			*(reinterpret_cast<DWORD*>(dst)) = *(reinterpret_cast<const DWORD*> (src));
+			break;
+
+		case 6: // FIT_RGB16 (3 x 16-bit)
+			*(reinterpret_cast<DWORD*>(dst)) = *(reinterpret_cast<const DWORD*> (src));
+			*(reinterpret_cast<WORD*>(dst + 4)) = *(reinterpret_cast<const WORD*> (src + 4));	
+			break;
+
+		// the rest can be speeded up with int64
+			
+		case 8: // FIT_RGBA16 (4 x 16-bit)
+			*(reinterpret_cast<DWORD*>(dst)) = *(reinterpret_cast<const DWORD*> (src));
+			*(reinterpret_cast<DWORD*>(dst + 4)) = *(reinterpret_cast<const DWORD*> (src + 4));	
+			break;
+		
+		case 12: // FIT_RGBF (3 x 32-bit IEEE floating point)
+			*(reinterpret_cast<float*>(dst)) = *(reinterpret_cast<const float*> (src));
+			*(reinterpret_cast<float*>(dst + 4)) = *(reinterpret_cast<const float*> (src + 4));
+			*(reinterpret_cast<float*>(dst + 8)) = *(reinterpret_cast<const float*> (src + 8));
+			break;
+		
+		case 16: // FIT_RGBAF (4 x 32-bit IEEE floating point)
+			*(reinterpret_cast<float*>(dst)) = *(reinterpret_cast<const float*> (src));
+			*(reinterpret_cast<float*>(dst + 4)) = *(reinterpret_cast<const float*> (src + 4));
+			*(reinterpret_cast<float*>(dst + 8)) = *(reinterpret_cast<const float*> (src + 8));
+			*(reinterpret_cast<float*>(dst + 12)) = *(reinterpret_cast<const float*> (src + 12));
+			break;
+			
+		default:
+			assert(FALSE);
+	}
 }
+
+/**
+Swap red and blue channels in a 24- or 32-bit dib. 
+@return Returns TRUE if successful, returns FALSE otherwise
+@see See definition in Conversion.cpp
+*/
+BOOL SwapRedBlue32(FIBITMAP* dib);
+
+/**
+Inplace convert CMYK to RGBA.(8- and 16-bit). 
+Alpha is filled with the first extra channel if any or white otherwise.
+@return Returns TRUE if successful, returns FALSE otherwise
+@see See definition in Conversion.cpp
+*/
+BOOL ConvertCMYKtoRGBA(FIBITMAP* dib);
+
+/**
+Inplace convert CIELab to RGBA (8- and 16-bit).
+@return Returns TRUE if successful, returns FALSE otherwise
+@see See definition in Conversion.cpp
+*/
+BOOL ConvertLABtoRGB(FIBITMAP* dib);
+
+/**
+RGBA to RGB conversion
+@see See definition in Conversion.cpp
+*/
+FIBITMAP* RemoveAlphaChannel(FIBITMAP* dib);
+
 
 // ==========================================================
 //   Big Endian / Little Endian utility functions
@@ -267,7 +435,20 @@ SwapLong(DWORD *lp) {
 //   Greyscale and color conversion
 // ==========================================================
 
+/**
+Extract the luminance channel L from a RGBF image. 
+Luminance is calculated from the sRGB model using a D65 white point, using the Rec.709 formula : 
+L = ( 0.2126 * r ) + ( 0.7152 * g ) + ( 0.0722 * b )
+Reference : 
+A Standard Default Color Space for the Internet - sRGB. 
+[online] http://www.w3.org/Graphics/Color/sRGB
+*/
+#define LUMA_REC709(r, g, b)	(0.2126F * r + 0.7152F * g + 0.0722F * b)
+
+#define GREY(r, g, b) (BYTE)LUMA_REC709(r, g, b)
+/*
 #define GREY(r, g, b) (BYTE)(((WORD)r * 77 + (WORD)g * 150 + (WORD)b * 29) >> 8)	// .299R + .587G + .114B
+*/
 /*
 #define GREY(r, g, b) (BYTE)(((WORD)r * 169 + (WORD)g * 256 + (WORD)b * 87) >> 9)	// .33R + 0.5G + .17B
 */
@@ -289,65 +470,15 @@ SwapLong(DWORD *lp) {
 	}
 
 // ==========================================================
-//   Template utility functions
-// ==========================================================
-
-/// Max function
-template <class T> T MAX(T a, T b) {
-	return (a > b) ? a: b;
-}
-
-/// Min function
-template <class T> T MIN(T a, T b) {
-	return (a < b) ? a: b;
-}
-
-/// INPLACESWAP adopted from codeguru.com 
-template <class T> void INPLACESWAP(T& a, T& b) {
-	a ^= b; b ^= a; a ^= b;
-}
-
-/** This procedure computes minimum min and maximum max
- of n numbers using only (3n/2) - 2 comparisons.
- min = L[i1] and max = L[i2].
- ref: Aho A.V., Hopcroft J.E., Ullman J.D., 
- The design and analysis of computer algorithms, 
- Addison-Wesley, Reading, 1974.
-*/
-template <class T> void 
-MAXMIN(const T* L, long n, T& max, T& min) {
-	long i1, i2, i, j;
-	T x1, x2;
-	long k1, k2;
-
-	i1 = 0; i2 = 0; min = L[0]; max = L[0]; j = 0;
-	if((n % 2) != 0)  j = 1;
-	for(i = j; i < n; i+= 2) {
-		k1 = i; k2 = i+1;
-		x1 = L[k1]; x2 = L[k2];
-		if(x1 > x2)	{
-			k1 = k2;  k2 = i;
-			x1 = x2;  x2 = L[k2];
-		}
-		if(x1 < min) {
-			min = x1;  i1 = k1;
-		}
-		if(x2 > max) {
-			max = x2;  i2 = k2;
-		}
-	}
-}
-
-// ==========================================================
 //   Generic error messages
 // ==========================================================
 
 static const char *FI_MSG_ERROR_MEMORY = "Memory allocation failed";
-static const char *FI_MSG_ERROR_DIB_MEMORY = "DIB allocation failed";
+static const char *FI_MSG_ERROR_DIB_MEMORY = "DIB allocation failed, probably caused by an invalid image";
 static const char *FI_MSG_ERROR_PARSING = "Parsing error";
 static const char *FI_MSG_ERROR_MAGIC_NUMBER = "Invalid magic number";
 static const char *FI_MSG_ERROR_UNSUPPORTED_FORMAT = "Unsupported format";
 static const char *FI_MSG_ERROR_UNSUPPORTED_COMPRESSION = "Unsupported compression type";
-
+static const char *FI_MSG_WARNING_INVALID_THUMBNAIL = "Warning: attached thumbnail cannot be written to output file (invalid format) - Thumbnail saving aborted";
 
 #endif // UTILITIES_H

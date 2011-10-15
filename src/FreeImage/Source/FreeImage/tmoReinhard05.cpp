@@ -215,7 +215,7 @@ User parameters control intensity, contrast, and level of adaptation
 */
 FIBITMAP* DLL_CALLCONV 
 FreeImage_TmoReinhard05Ex(FIBITMAP *src, double intensity, double contrast, double adaptation, double color_correction) {
-	if(!src) return NULL;
+	if(!FreeImage_HasPixels(src)) return NULL;
 
 	// working RGBF variable
 	FIBITMAP *dib = NULL, *Y = NULL;

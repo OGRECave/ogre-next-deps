@@ -1,4 +1,4 @@
-/* $Id: tif_fax3.h,v 1.28 2009/11/07 19:18:27 drolon Exp $ */
+/* $Id: tif_fax3.h,v 1.37 2011/04/10 17:14:09 drolon Exp $ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler
@@ -478,6 +478,12 @@ done1d:									\
 	    break;							\
 	case S_VL:							\
 	    CHECK_b1;							\
+	    if (b1 <= (int) (a0 + TabEnt->Param)) {			\
+		if (b1 < (int) (a0 + TabEnt->Param) || pa != thisrun) {	\
+		    unexpected("VL", a0);				\
+		    goto eol2d;						\
+		}							\
+	    }								\
 	    SETVALUE(b1 - a0 - TabEnt->Param);				\
 	    b1 -= *--pb;						\
 	    break;							\
@@ -523,3 +529,10 @@ eol2d:									\
     CLEANUP_RUNS();							\
 } while (0)
 #endif /* _FAX3_ */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

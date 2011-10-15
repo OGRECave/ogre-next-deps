@@ -12,6 +12,7 @@ set(freetype_SOURCES
 	include/freetype/ftbbox.h
 	include/freetype/ftbdf.h
 	include/freetype/ftbitmap.h
+    include/freetype/ftbzip2.h
 	include/freetype/ftcache.h
 	include/freetype/ftchapters.h
 	include/freetype/ftcid.h

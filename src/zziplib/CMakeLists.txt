@@ -47,7 +47,7 @@ if (WIN32)
 endif ()
 
 add_library(zziplib STATIC ${zziplib_SOURCES})
-install_dep(zziplib include/zzip zzip/_config.h zzip/conf.h zzip/types.h zzip/zzip.h zzip/plugin.h)
+install_dep(zziplib include/zzip zzip/_config.h zzip/conf.h zzip/types.h zzip/zzip.h zzip/plugin.h zzip/_msvc.h)
 
 set(ZZip_INCLUDE_DIR "${zziplib_SOURCE_DIR}" CACHE PATH "" FORCE)
 set(ZZip_LIBRARY_DBG "zziplib" CACHE STRING "" FORCE)

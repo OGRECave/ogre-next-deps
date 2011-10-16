@@ -21,6 +21,9 @@
 #include <zzip/lib.h>           /* exported... */
 #include <zzip/file.h>
 #include <string.h>
+#if defined(_AIX)
+#include <strings.h> /* for strcasecmp */
+#endif
 #include <sys/stat.h>
 
 #define ZZIP_USE_INTERNAL
@@ -37,7 +40,8 @@ zzip_dir_stat(ZZIP_DIR * dir, zzip_char_t * name, ZZIP_STAT * zs, int flags)
     struct zzip_dir_hdr *hdr = dir->hdr0;
     int (*cmp) (zzip_char_t *, zzip_char_t *);
 
-    cmp = (flags & ZZIP_CASEINSENSITIVE) ? strcasecmp : strcmp;
+    if (flags & ZZIP_CASEINSENSITIVE) flags |= ZZIP_CASELESS;
+    cmp = (flags & ZZIP_CASELESS) ? strcasecmp : strcmp;
 
     if (! hdr)
     {

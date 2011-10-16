@@ -40,7 +40,7 @@ set(zziplib_SOURCES
 
 # need zlib includes
 include_directories(${OGREDEPS_SOURCE_DIR}/src/zlib)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/zzip)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WIN32)
   add_definitions(-D_MSC_VER)

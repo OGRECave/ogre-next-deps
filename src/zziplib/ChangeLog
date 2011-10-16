@@ -1,3 +1,66 @@
+2010-12-29 guidod <guidod@gmx.de>
+        * Makefile.am: allow nonstaic build
+        * wrap fd.open like in the Fedora patch
+
+2010-12-28 guidod <guidod@gmx.de>
+        * zziplib.spec - simplify the spec based on distro specs.
+
+2010-12-27 guidod <guidod@gmx.de>
+        * adding fetch.h/fetch.c to msvc8/zziplib.vcproj to allow
+          tests with Visual Studio C++ Express 2005
+
+2010-12-27 guidod <guidod@gmx.de>
+        * fix stat.c to check ZZIP_CASELESS instead of the deprecated
+          ZZIP_CASEINSENSITIVE. The latter is still recognized for
+          compatibility reasons and implicitly mapped to ZZIP_CASELESS.
+        * fixes the zziplib-Patches-3078188 which reported the bug.
+
+2010-12-27 guidod <guidod@gmx.de>
+        * apply patches by Peter Breitenlohner for better compatibility
+          with AIX host system. Also the Sun Studio compiler insists on
+          static inline functions or else assumes extern inline.
+        * also fixes zziplib-Patches-3011551 on the AIX problem.
+
+2010-12-27 guidod <guidod@gmx.de>
+        * add hints that the ext_io plugin handlers should be static.
+
+2010-05-09  guidod  <guidod@gmx.de>
+
+	* zzip/__fnmatch.h: add include <string.h> to make mingw32 happy.
+	     Patches item #2995373 by Gregory Smith 
+
+2010-05-08  guidod  <guidod@gmx.de>
+
+	* SDL/Makefile.am: fix generation of sdl-uninstalled.pc that was
+	   not recognized during compilation.
+
+2010-04-05  guidod  <guidod@gmx.de>
+
+	* Makefile.am: fix "osc rm" and fix "test-sdl" if SDL was not found.
+	* configure.ac: SDL example builds on pkgconfig/sdl.pc which
+	
+	    was introduced with SDL 1.2.11 - CentOs5 ships 1.2.10 which
+	    does only have "sdl-config" and it made for a mismatch in
+	    in the build configuration: sdl-devel yes, pkgconfig sdl no.
+	* zzip/zip.c (__zzip_parse_root_directory): move the check for
+	     zzip_disk_entry_check_magic to be after the the check that
+	     the seek-value is more than a header's size before the end.
+	     (based on a segfault report by Tulipánt Gergely when the
+	      new modulo_entries code is enabled (which is off by default))
+
+2010-03-30  guidod  <guidod@gmx.de>
+
+	* zzip/Makefile.am:  fixing symlinks for lib* - use only for Linux
+	    Thanks to Ryan Schmidt (macports):
+		... likes to install some symlinks that don't make sense on Mac OS X:
+		$ ls -l /opt/local/lib/*zzip*so*
+		lrwxr-xr-x  /opt/local/lib/libzzip*.so.10 -> libzzip*.so.13
+		lrwxr-xr-x  /opt/local/lib/libzzip*.so.11 -> libzzip*.so.13
+		lrwxr-xr-x  /opt/local/lib/libzzip*.so.12 -> libzzip*.so.13
+		Yes, the filenames literally contain an asterisk.
+	
+    * prepare 0.13.60
+
 2010-03-29  guidod  <guidod@gmx.de>
 
 	* Makefile.am: change osc to new home:guidod:zziplib-13

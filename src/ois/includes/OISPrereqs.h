@@ -34,6 +34,7 @@ restrictions:
 #include <vector>
 #include <string>
 #include <map>
+#include <cstddef>
 #include "OISConfig.h"
 
 // Default is blank for most OS's

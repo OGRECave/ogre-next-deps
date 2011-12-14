@@ -61,24 +61,48 @@ if (WIN32)
 	list(APPEND OIS_PLATFORM_SOURCES src/win32/Win32JoyStick.old.cpp)
   endif ()
 elseif (APPLE)
-  set(OIS_PLATFORM_HEADERS
-    includes/mac/MacHelpers.h
-    includes/mac/MacHIDManager.h
-    includes/mac/MacInputManager.h
-    includes/mac/MacJoyStick.h
-    includes/mac/MacKeyboard.h
-    includes/mac/MacMouse.h
-    includes/mac/MacPrereqs.h
-  )
-  set(OIS_PLATFORM mac)
-  set(OIS_PLATFORM_SOURCES
-    src/mac/MacHelpers.cpp
-    src/mac/MacHIDManager.cpp
-    src/mac/MacInputManager.cpp
-    src/mac/MacJoyStick.cpp
-    src/mac/MacKeyboard.cpp
-    src/mac/MacMouse.cpp
-  )
+  if(OGRE_BUILD_PLATFORM_APPLE_IOS)
+    set(OIS_PLATFORM_HEADERS
+      includes/iphone/iPhoneAccelerometer.h
+      includes/iphone/iPhoneHelpers.h
+      includes/iphone/iPhoneInputManager.h
+      includes/iphone/iPhoneMultiTouch.h
+      includes/iphone/iPhonePrereqs.h
+    )
+    set(OIS_PLATFORM iphone)
+    set(OIS_PLATFORM_SOURCES
+      src/iphone/iPhoneAccelerometer.mm
+      src/iphone/iPhoneInputManager.mm
+      src/iphone/iPhoneMultiTouch.mm
+    )
+  else()
+    set(OIS_PLATFORM_HEADERS
+      includes/mac/CocoaInputManager.h
+      includes/mac/CocoaJoyStick.h
+      includes/mac/CocoaKeyBoard.h
+      includes/mac/CocoaMouse.h
+      includes/mac/MacHelpers.h
+      includes/mac/MacHIDManager.h
+      includes/mac/MacInputManager.h
+      includes/mac/MacJoyStick.h
+      includes/mac/MacKeyboard.h
+      includes/mac/MacMouse.h
+      includes/mac/MacPrereqs.h
+    )
+    set(OIS_PLATFORM mac)
+    set(OIS_PLATFORM_SOURCES
+      src/mac/CocoaInputManager.mm
+      src/mac/CocoaJoyStick.mm
+      src/mac/CocoaKeyBoard.mm
+      src/mac/CocoaMouse.mm
+      src/mac/MacHelpers.cpp
+      src/mac/MacHIDManager.cpp
+      src/mac/MacInputManager.cpp
+      src/mac/MacJoyStick.cpp
+      src/mac/MacKeyboard.cpp
+      src/mac/MacMouse.cpp
+    )
+  endif()
 else ()
   set(OIS_PLATFORM_HEADERS
     includes/linux/EventHelpers.h
@@ -100,11 +124,14 @@ else ()
   )
 endif ()
 
-
 include_directories(includes)
-add_definitions(-DOIS_NONCLIENT_BUILD -DOIS_DYNAMIC_LIB)
-
-add_library(OIS SHARED ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})
+if(NOT APPLE)
+  add_definitions(-DOIS_NONCLIENT_BUILD -DOIS_DYNAMIC_LIB)
+  add_library(OIS SHARED ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})
+else ()
+  add_definitions(-DOIS_NONCLIENT_BUILD)
+  add_library(OIS STATIC ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})
+endif ()
 
 if (MINGW)
 	  # remove lib prefix from DLL outputs
@@ -116,6 +143,23 @@ install_dep(OIS include/OIS ${OIS_HEADERS})
 if (OGREDEPS_INSTALL_DEV)
   install(FILES ${OIS_PLATFORM_HEADERS} DESTINATION include/OIS/${OIS_PLATFORM})
 endif ()
+
+if (APPLE)
+  if(OGRE_BUILD_PLATFORM_APPLE_IOS)
+    set_target_properties(OIS PROPERTIES
+      LINK_FLAGS "-framework UIKit"
+    )
+  else()
+    set_target_properties(OIS PROPERTIES
+      LINK_FLAGS "-framework IOKit -framework Cocoa -framework Carbon"
+    )
+  endif()
+endif ()
+
+if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
+  set_target_properties(OIS PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "4.0")
+  set_target_properties(OIS PROPERTIES XCODE_ATTRIBUTE_GCC_THUMB_SUPPORT "NO")
+endif()
 
 set(OIS_INCLUDE_DIR "${OIS_SOURCE_DIR}/includes" CACHE PATH "" FORCE)
 set(OIS_LIBRARY_DBG "OIS" CACHE STRING "" FORCE)

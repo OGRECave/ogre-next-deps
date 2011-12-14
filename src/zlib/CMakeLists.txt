@@ -32,6 +32,11 @@ set(zlib_SOURCES
 add_library(zlib STATIC ${zlib_SOURCES})
 install_dep(zlib include zlib.h zconf.h)
 
+if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
+  set_target_properties(zlib PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "4.0")
+  set_target_properties(zlib PROPERTIES XCODE_ATTRIBUTE_GCC_THUMB_SUPPORT "NO")
+endif()
+
 set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR}" CACHE PATH "" FORCE)
 set(ZLIB_LIBRARY_DBG "zlib" CACHE STRING "" FORCE)
 set(ZLIB_LIBRARY_REL "zlib" CACHE STRING "" FORCE)

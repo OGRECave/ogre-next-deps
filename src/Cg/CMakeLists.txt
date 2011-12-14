@@ -21,6 +21,12 @@ if (WIN32)
     file(COPY ${CG_DLL} DESTINATION ${OGREDEPS_RUNTIME_OUTPUT}/Debug)
     file(COPY ${CG_DLL} DESTINATION ${OGREDEPS_RUNTIME_OUTPUT}/Release)
   endif ()
+elseif (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
+  add_custom_target(Cg COMMAND 
+    unzip lib/Cg.framework.zip -d ${OGREDEPS_BINARY_DIR}/../${OGREDEPS_LIB_DIRECTORY}
+    WORKING_DIRECTORY ${Cg_SOURCE_DIR}
+    COMMENT "Unzipping Cg framework" VERBATIM
+  )
 elseif (UNIX)
   # manually install the correct .so
   if (OGREDEPS_PLATFORM_X64)

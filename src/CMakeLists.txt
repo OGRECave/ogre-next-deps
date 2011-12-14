@@ -1,5 +1,7 @@
 # provide configuration options to choose which of the dependencies to build
-option(OGREDEPS_BUILD_CG "Build Cg dependency" TRUE)
+if(NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
+  option(OGREDEPS_BUILD_CG "Build Cg dependency" TRUE)
+endif()
 option(OGREDEPS_BUILD_FREEIMAGE "Build FreeImage dependency" TRUE)
 option(OGREDEPS_BUILD_FREETYPE "Build FreeType dependency" TRUE)
 option(OGREDEPS_BUILD_OIS "Build OIS dependency" TRUE)
@@ -22,7 +24,9 @@ else ()
 endif ()
 
 # postfix debug libraries with a _d
+if (NOT APPLE)
 set(CMAKE_DEBUG_POSTFIX "_d")
+endif()
 
 # determine if we are compiling for a 32bit or 64bit system
 include(CheckTypeSize)
@@ -62,6 +66,14 @@ macro(install_dep LIBRARY INCLUDE_DIR)
   set_target_properties(${LIBRARY} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${OGREDEPS_RUNTIME_OUTPUT}
   )
+
+  if(APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
+    add_custom_command(TARGET ${LIBRARY} POST_BUILD
+      COMMAND lipo ARGS -create ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a -arch i386 ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a
+      -output "${OGREDEPS_BINARY_DIR}/../${OGREDEPS_LIB_DIRECTORY}/lib${LIBRARY}.a"
+    )
+  endif()
+
   # always install runtime libraries (i.e. DLL, so)
   install(TARGETS ${LIBRARY}
     RUNTIME DESTINATION "bin${OGREDEPS_RELEASE_PATH}" CONFIGURATIONS Release
@@ -73,7 +85,7 @@ macro(install_dep LIBRARY INCLUDE_DIR)
     LIBRARY DESTINATION "${OGREDEPS_LIB_DIRECTORY}${OGREDEPS_DEBUG_PATH}" CONFIGURATIONS Debug
     ARCHIVE DESTINATION "${OGREDEPS_BINARY_DIR}/notwanted" CONFIGURATIONS Debug
   )
-    
+
   if (OGREDEPS_INSTALL_DEV)
     # also install development parts
     install(TARGETS ${LIBRARY}
@@ -90,10 +102,11 @@ macro(install_dep LIBRARY INCLUDE_DIR)
   endif ()
 endmacro()
 
-
 # setup the individual dependencies
-if (OGREDEPS_BUILD_CG)
-  add_subdirectory(Cg)
+if(NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
+  if (OGREDEPS_BUILD_CG)
+    add_subdirectory(Cg)
+  endif ()
 endif ()
 if (OGREDEPS_BUILD_FREEIMAGE)
   add_subdirectory(FreeImage)
@@ -110,4 +123,3 @@ endif ()
 if (OGREDEPS_BUILD_ZZIPLIB)
   add_subdirectory(zziplib)
 endif ()
-

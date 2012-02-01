@@ -333,7 +333,6 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/Iex/IexThrowErrnoExc.cpp
 	Source/OpenEXR/Iex/IexThrowErrnoExc.h
 	Source/OpenEXR/IlmBaseConfig.h
-    Source/OpenEXR/IlmImf/b44ExpLogTable.cpp
     Source/OpenEXR/IlmImf/b44ExpLogTable.h
     Source/OpenEXR/IlmImf/ImfAcesFile.cpp
     Source/OpenEXR/IlmImf/ImfAcesFile.h

@@ -126,6 +126,12 @@ else ()
 endif ()
 
 include_directories(includes)
+
+# Treat as Objective-C++ code if under OSX
+if(APPLE)
+  set_source_files_properties(${OIS_HEADERS} ${OIS_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++")
+endif ()
+
 if(NOT APPLE)
   add_definitions(-DOIS_NONCLIENT_BUILD -DOIS_DYNAMIC_LIB)
   add_library(OIS SHARED ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})

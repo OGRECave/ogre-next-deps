@@ -123,9 +123,9 @@ InputManager* InputManager::createInputSystem( ParamList &paramList )
         id obj = (id)strtoul(i->second.c_str(), 0, 10);
         if(obj && [obj isKindOfClass:[NSWindow class]])
             im = new CocoaInputManager();
-        else
 #endif
 #ifndef __LP64__
+        else
             im = new MacInputManager();
 #endif
     }

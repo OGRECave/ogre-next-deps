@@ -81,6 +81,7 @@ elseif (APPLE)
       includes/mac/CocoaJoyStick.h
       includes/mac/CocoaKeyBoard.h
       includes/mac/CocoaMouse.h
+      includes/mac/CocoaHelpers.h
       includes/mac/MacHelpers.h
       includes/mac/MacHIDManager.h
       includes/mac/MacInputManager.h

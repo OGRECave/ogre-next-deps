@@ -87,7 +87,7 @@ std::string& CocoaKeyboard::getAsString( KeyCode key )
 {
 	getString = "";
     
-    CGKeyCode deviceKeycode;
+    CGKeyCode deviceKeycode = 0;
     
     // Convert OIS KeyCode back into device keycode
     VirtualtoOIS_KeyMap keyMap = [mResponder keyConversionMap];
@@ -103,6 +103,8 @@ std::string& CocoaKeyboard::getAsString( KeyCode key )
     CGEventSourceRef sref = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
     CGEventRef ref = CGEventCreateKeyboardEvent(sref, deviceKeycode, true);
     CGEventKeyboardGetUnicodeString(ref, sizeof(unicodeString) / sizeof(*unicodeString), &actualStringLength, unicodeString);
+    CFRelease(ref);
+    CFRelease(sref);
     getString = unicodeString[0];
 
     return getString;

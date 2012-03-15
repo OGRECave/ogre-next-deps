@@ -42,7 +42,7 @@ namespace OIS
         friend class CocoaKeyboard;
         
     public:
-        Cocoa_KeyStackEvent( KeyEvent event, MacEventType type ) : Event(event), Type(type) {}
+        Cocoa_KeyStackEvent( KeyEvent event, MacEventType type ) : Type(type), Event(event) {}
         const MacEventType type()   { return Type; }
         const KeyEvent event()      { return Event; }
     private:

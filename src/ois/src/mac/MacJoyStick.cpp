@@ -100,6 +100,13 @@ void MacJoyStick::capture()
 	{
 		switch(event.type)
 		{
+            default:
+            case kIOHIDElementTypeInput_ScanCodes:
+            case kIOHIDElementTypeOutput:
+            case kIOHIDElementTypeFeature:
+            case kIOHIDElementTypeCollection:
+                break;
+
 			case kIOHIDElementTypeInput_Button:
 			{
 				std::vector<IOHIDElementCookie>::iterator buttonIt = std::find(mCookies.buttonCookies.begin(), mCookies.buttonCookies.end(), event.elementCookie);
@@ -293,13 +300,13 @@ IOHIDQueueInterface** MacJoyStick::_createQueue(unsigned int depth)
 			std::map<IOHIDElementCookie, AxisInfo>::iterator axisIt = mCookies.axisCookies.begin();
 			for(; axisIt != mCookies.axisCookies.end(); ++axisIt)
 			{
-				result = (*queue)->addElement(queue, axisIt->first, 0);
+				(*queue)->addElement(queue, axisIt->first, 0);
 			}
 			
 			std::vector<IOHIDElementCookie>::iterator buttonIt = mCookies.buttonCookies.begin();
 			for(; buttonIt != mCookies.buttonCookies.end(); ++buttonIt)
 			{
-				result = (*queue)->addElement(queue, (*buttonIt), 0);
+				(*queue)->addElement(queue, (*buttonIt), 0);
 			}
 
 			//start data delivery to queue 

@@ -64,7 +64,7 @@ namespace OIS
         friend class MacKeyboard;
 
     private:
-        Mac_KeyStackEvent( KeyEvent event, MacEventType type ) : Event(event), Type(type) {}
+        Mac_KeyStackEvent( KeyEvent event, MacEventType type ) : Type(type), Event(event) {}
         
         MacEventType Type;
         KeyEvent Event;

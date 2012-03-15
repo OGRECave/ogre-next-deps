@@ -163,7 +163,7 @@ void MacKeyboard::capture()
 //-------------------------------------------------------------------//
 std::string& MacKeyboard::getAsString( KeyCode key )
 {
-    CGKeyCode deviceKeycode;
+    CGKeyCode deviceKeycode = 0;
     
     // Convert OIS KeyCode back into device keycode
     for(VirtualtoOIS_KeyMap::iterator it = keyConversion.begin(); it != keyConversion.end(); ++it)
@@ -180,6 +180,8 @@ std::string& MacKeyboard::getAsString( KeyCode key )
     CGEventKeyboardGetUnicodeString(ref, sizeof(unicodeString) / sizeof(*unicodeString), &actualStringLength, unicodeString);
 //    NSLog([NSString stringWithFormat:@"%C\n", unicodeString[0]]);
     getString = unicodeString[0];
+    CFRelease(ref);
+    CFRelease(sref);
 
 	return getString;
 }
@@ -196,11 +198,10 @@ void MacKeyboard::_keyDownCallback( EventRef theEvent )
 {
 	
 	UInt32 virtualKey;
-	OSStatus status;
 	
 	unsigned int time = (unsigned int)GetEventTime(theEvent);
 	
-	status = GetEventParameter(theEvent,
+	GetEventParameter(theEvent,
 					'kcod',			// get it in virtual keycode
 					typeUInt32, NULL,	// desired return type
 					sizeof(UInt32), NULL, 	// bufsize
@@ -219,7 +220,7 @@ void MacKeyboard::_keyDownCallback( EventRef theEvent )
 		UInt32 stringsize;
 		//status = GetEventParameter( theEvent, 'kuni', typeUnicodeText, NULL, 0, &stringsize, NULL);
 		//status = GetEventParameter( theEvent, 'kuni', typeUnicodeText, NULL, sizeof(UniChar)*10, NULL, &text );
-		status = GetEventParameter( theEvent, 'kuni', typeUnicodeText, NULL, sizeof(UniChar) * 10, &stringsize, &text );
+		GetEventParameter( theEvent, 'kuni', typeUnicodeText, NULL, sizeof(UniChar) * 10, &stringsize, &text );
 //		std::cout << "String length: " << stringsize << std::endl;
 		
 		//wstring unitext;
@@ -239,7 +240,7 @@ void MacKeyboard::_keyDownCallback( EventRef theEvent )
 	else if (mTextMode == Ascii)
 	{
 		 
-		status = GetEventParameter( theEvent, 'kchr', typeChar, NULL, sizeof(char), NULL, &macChar );
+		GetEventParameter( theEvent, 'kchr', typeChar, NULL, sizeof(char), NULL, &macChar );
 		injectEvent( kc, time, MAC_KEYDOWN, (unsigned int)macChar );
 	}
 	else
@@ -253,8 +254,7 @@ void MacKeyboard::_keyUpCallback( EventRef theEvent )
 {
 	UInt32 virtualKey;
 	
-	OSStatus status;
-	status = GetEventParameter( theEvent, kEventParamKeyCode, typeUInt32,
+	GetEventParameter( theEvent, kEventParamKeyCode, typeUInt32,
 								NULL, sizeof(UInt32), NULL, &virtualKey );
 	
 	KeyCode kc = keyConversion[virtualKey];
@@ -267,8 +267,7 @@ void MacKeyboard::_modChangeCallback( EventRef theEvent )
 {
 	UInt32 mods;
 	
-	OSStatus status;
-	status = GetEventParameter( theEvent, kEventParamKeyModifiers,
+	GetEventParameter( theEvent, kEventParamKeyModifiers,
 								typeUInt32, NULL, sizeof(UInt32), NULL, &mods );
 	
 	// find the changed bit

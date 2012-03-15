@@ -199,8 +199,8 @@ void MacHIDManager::iterateAndOpenDevices(io_iterator_t iterator)
 						mDeviceList.push_back(hid);
 				}
 			}
+            CFRelease(propertyMap);
 		}
-        CFRelease(propertyMap);
 	}
 	
 	IOObjectRelease(iterator);

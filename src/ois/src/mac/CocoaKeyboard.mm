@@ -47,6 +47,7 @@ CocoaKeyboard::CocoaKeyboard( InputManager* creator, bool buffered, bool repeat 
     [man->_getWindow() makeFirstResponder:mResponder];
     [mResponder setUseRepeat:repeat];
     [mResponder setOISKeyboardObj:this];
+	mModifiers = 0;
 
 	static_cast<CocoaInputManager*>(mCreator)->_setKeyboardUsed(true);
 }
@@ -337,7 +338,7 @@ void CocoaKeyboard::copyKeyStates( char keys[256] ) const
 	unsigned short virtualKey = [theEvent keyCode];
 	unsigned int time = (unsigned int)[theEvent timestamp];
 	KeyCode kc = keyConversion[virtualKey];
-    
+
 	// Record what kind of text we should pass the KeyEvent
 	unichar text[10];
 	char macChar;
@@ -367,66 +368,155 @@ void CocoaKeyboard::copyKeyStates( char keys[256] ) const
 	{
 		[self injectEvent:kc eventTime:time eventType:MAC_KEYDOWN];
 	}
+    
+    // Handle modifiers
+    NSUInteger mods = [theEvent modifierFlags];
+    unsigned int modsRef = oisKeyboardObj->_getModifiers();
+//    cout << "Modifiers before: 0x" << hex << modsRef << endl;
+    if(mods & NSShiftKeyMask)
+    {
+        modsRef |= OIS::Keyboard::Shift;
+        [self injectEvent:KC_LSHIFT eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSAlternateKeyMask)
+    {
+        modsRef |= OIS::Keyboard::Alt;
+        [self injectEvent:KC_LMENU eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSControlKeyMask)
+    {
+        modsRef |= OIS::Keyboard::Ctrl;
+        [self injectEvent:KC_LCONTROL eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSCommandKeyMask)
+    {
+        [self injectEvent:KC_LWIN eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSFunctionKeyMask)
+    {
+        [self injectEvent:KC_APPS eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSAlphaShiftKeyMask)
+    {
+        [self injectEvent:KC_CAPITAL eventTime:time eventType:MAC_KEYDOWN];
+    }
+    
+    if([theEvent keyCode] == NSClearLineFunctionKey) // numlock
+        [self injectEvent:KC_NUMLOCK eventTime:time eventType:MAC_KEYDOWN];
+    
+//    cout << "Modifiers after: 0x" << hex << modsRef << endl;
+    oisKeyboardObj->_setModifiers(modsRef);
 }
 
 - (void)keyUp:(NSEvent *)theEvent
 {
     unsigned short virtualKey = [theEvent keyCode];
+	unsigned int time = (unsigned int)[theEvent timestamp];
 
 	KeyCode kc = keyConversion[virtualKey];
     [self injectEvent:kc eventTime:[theEvent timestamp] eventType:MAC_KEYUP];
-}
 
-- (void)flagsChanged:(NSEvent *)theEvent
-{
-	NSUInteger mods = [theEvent modifierFlags];
-	
-	// Find the changed bit
-	NSUInteger change = prevModMask ^ mods;
-	MacEventType newstate = ((change & prevModMask) > 0) ? MAC_KEYUP : MAC_KEYDOWN;
-	unsigned int time = (unsigned int)[theEvent timestamp];
-	
-	//cout << "preMask: " << hex << prevModMask << endl;
-	//cout << "ModMask: " << hex << mods << endl;
-	//cout << "Change:  " << hex << (change & prevModMask) << endl << endl;
-	
-	// TODO test modifiers on a full keyboard to check if different mask for left/right
-	switch (change)
-	{
-		case (NSShiftKeyMask): // shift
-			oisKeyboardObj->_getModifiers() &= (newstate == MAC_KEYDOWN) ? OIS::Keyboard::Shift : ~OIS::Keyboard::Shift;
-            [self injectEvent:KC_LSHIFT eventTime:time eventType:newstate];
-			break;
-			
-		case (NSAlternateKeyMask): // option (alt)
-			oisKeyboardObj->_getModifiers() &= (newstate == MAC_KEYDOWN) ? OIS::Keyboard::Alt : -OIS::Keyboard::Alt;
-            [self injectEvent:KC_LMENU eventTime:time eventType:newstate];
-			break;
-			
-		case (NSControlKeyMask): // Ctrl
-			oisKeyboardObj->_getModifiers() += (newstate == MAC_KEYDOWN) ? OIS::Keyboard::Ctrl : -OIS::Keyboard::Ctrl;
-            [self injectEvent:KC_LCONTROL eventTime:time eventType:newstate];
-			break;
-            
-		case (NSCommandKeyMask): // apple
-            [self injectEvent:KC_LWIN eventTime:time eventType:newstate];
-			break;
-            
-		case (NSFunctionKeyMask): // fn key
-            [self injectEvent:KC_APPS eventTime:time eventType:newstate];
-			break;
-
-		case (NSAlphaShiftKeyMask): // caps lock
-            [self injectEvent:KC_CAPITAL eventTime:time eventType:newstate];
-			break;
-	}
+    // Handle modifiers
+    NSUInteger mods = [theEvent modifierFlags];
+    unsigned int modsRef = oisKeyboardObj->_getModifiers();
+//    cout << "Modifiers before: 0x" << hex << modsRef << endl;
+    if(mods & NSShiftKeyMask)
+    {
+        modsRef &= ~OIS::Keyboard::Shift;
+        [self injectEvent:KC_LSHIFT eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSAlternateKeyMask)
+    {
+        modsRef &= ~OIS::Keyboard::Alt;
+        [self injectEvent:KC_LMENU eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSControlKeyMask)
+    {
+        modsRef &= ~OIS::Keyboard::Ctrl;
+        [self injectEvent:KC_LCONTROL eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSCommandKeyMask)
+    {
+        [self injectEvent:KC_LWIN eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSFunctionKeyMask)
+    {
+        [self injectEvent:KC_APPS eventTime:time eventType:MAC_KEYDOWN];
+    }
+    if(mods & NSAlphaShiftKeyMask)
+    {
+        [self injectEvent:KC_CAPITAL eventTime:time eventType:MAC_KEYDOWN];
+    }
     
     if([theEvent keyCode] == NSClearLineFunctionKey) // numlock
-        [self injectEvent:KC_NUMLOCK eventTime:time eventType:newstate];
-	
-	prevModMask = mods;
+        [self injectEvent:KC_NUMLOCK eventTime:time eventType:MAC_KEYDOWN];
+    
+//    cout << "Modifiers after: 0x" << hex << modsRef << endl;
+    oisKeyboardObj->_setModifiers(modsRef);
 }
 
+//- (void)flagsChanged:(NSEvent *)theEvent
+//{
+//	NSUInteger mods = [theEvent modifierFlags];
+//	
+//	// Find the changed bit
+//	NSUInteger change = prevModMask ^ mods;
+//	MacEventType newstate = ([theEvent type] == NSKeyDown) ? MAC_KEYDOWN : MAC_KEYUP;
+//	unsigned int time = (unsigned int)[theEvent timestamp];
+//	
+//    unsigned int modsRef = oisKeyboardObj->_getModifiers();
+//    cout << "Key " << ((newstate == MAC_KEYDOWN) ? "Down" : "Up") << endl;
+//    cout << "preMask: 0x" << hex << prevModMask << endl;
+//    cout << "ModMask: 0x" << hex << mods << endl;
+//    cout << "Change:  0x" << hex << (change & prevModMask) << endl << endl;
+//
+//    cout << "Modifiers before: 0x" << hex << modsRef << endl;
+//    
+//    if(mods & NSShiftKeyMask)
+//    {
+//        if(newstate == MAC_KEYDOWN)
+//            modsRef |= OIS::Keyboard::Shift;
+//        else
+//            modsRef &= ~OIS::Keyboard::Shift;
+//        [self injectEvent:KC_LSHIFT eventTime:time eventType:newstate];
+//    }
+//    if(mods & NSAlternateKeyMask)
+//    {
+//        if(newstate == MAC_KEYDOWN)
+//            modsRef |= OIS::Keyboard::Alt;
+//        else
+//            modsRef &= ~OIS::Keyboard::Alt;
+//        [self injectEvent:KC_LMENU eventTime:time eventType:newstate];
+//    }
+//    if(mods & NSControlKeyMask)
+//    {
+//        if(newstate == MAC_KEYDOWN)
+//            modsRef |= OIS::Keyboard::Ctrl;
+//        else
+//            modsRef &= ~OIS::Keyboard::Ctrl;
+//        [self injectEvent:KC_LCONTROL eventTime:time eventType:newstate];
+//    }
+//    if(mods & NSCommandKeyMask)
+//    {
+//        [self injectEvent:KC_LWIN eventTime:time eventType:newstate];
+//    }
+//    if(mods & NSFunctionKeyMask)
+//    {
+//        [self injectEvent:KC_APPS eventTime:time eventType:newstate];
+//    }
+//    if(mods & NSAlphaShiftKeyMask)
+//    {
+//        [self injectEvent:KC_CAPITAL eventTime:time eventType:newstate];
+//    }
+//
+//    if([theEvent keyCode] == NSClearLineFunctionKey) // numlock
+//        [self injectEvent:KC_NUMLOCK eventTime:time eventType:newstate];
+//
+//    cout << "Modifiers after: 0x" << hex << modsRef << endl;
+//    oisKeyboardObj->_setModifiers(modsRef);
+//	prevModMask = mods;
+//}
+//
 - (VirtualtoOIS_KeyMap)keyConversionMap
 {
     return keyConversion;

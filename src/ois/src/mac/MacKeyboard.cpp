@@ -289,13 +289,13 @@ void MacKeyboard::_modChangeCallback( EventRef theEvent )
 			break;
 			
 		case (optionKey): // option (alt)
-			mModifiers &= (newstate == MAC_KEYDOWN) ? Alt : -Alt;
+			mModifiers &= (newstate == MAC_KEYDOWN) ? Alt : ~Alt;
 			//injectEvent( KC_RMENU, time, newstate );
 			injectEvent( KC_LMENU, time, newstate );
 			break;
 			
 		case (controlKey): // Ctrl
-			mModifiers += (newstate == MAC_KEYDOWN) ? Ctrl : -Ctrl;
+			mModifiers &= (newstate == MAC_KEYDOWN) ? Ctrl : ~Ctrl;
 			//injectEvent( KC_RCONTROL, time, newstate );
 			injectEvent( KC_LCONTROL, time, newstate );
 			break;

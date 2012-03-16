@@ -455,68 +455,75 @@ void CocoaKeyboard::copyKeyStates( char keys[256] ) const
     oisKeyboardObj->_setModifiers(modsRef);
 }
 
-//- (void)flagsChanged:(NSEvent *)theEvent
-//{
-//	NSUInteger mods = [theEvent modifierFlags];
-//	
-//	// Find the changed bit
-//	NSUInteger change = prevModMask ^ mods;
-//	MacEventType newstate = ([theEvent type] == NSKeyDown) ? MAC_KEYDOWN : MAC_KEYUP;
-//	unsigned int time = (unsigned int)[theEvent timestamp];
-//	
-//    unsigned int modsRef = oisKeyboardObj->_getModifiers();
+- (void)flagsChanged:(NSEvent *)theEvent
+{
+	NSUInteger mods = [theEvent modifierFlags];
+	
+	// Find the changed bit
+	NSUInteger change = prevModMask ^ mods;
+	MacEventType newstate = ((change & prevModMask) > 0) ? MAC_KEYUP : MAC_KEYDOWN;
+	unsigned int time = (unsigned int)[theEvent timestamp];
+    unsigned int modsRef = oisKeyboardObj->_getModifiers();
 //    cout << "Key " << ((newstate == MAC_KEYDOWN) ? "Down" : "Up") << endl;
 //    cout << "preMask: 0x" << hex << prevModMask << endl;
 //    cout << "ModMask: 0x" << hex << mods << endl;
 //    cout << "Change:  0x" << hex << (change & prevModMask) << endl << endl;
-//
+
 //    cout << "Modifiers before: 0x" << hex << modsRef << endl;
-//    
-//    if(mods & NSShiftKeyMask)
-//    {
-//        if(newstate == MAC_KEYDOWN)
-//            modsRef |= OIS::Keyboard::Shift;
-//        else
-//            modsRef &= ~OIS::Keyboard::Shift;
-//        [self injectEvent:KC_LSHIFT eventTime:time eventType:newstate];
-//    }
-//    if(mods & NSAlternateKeyMask)
-//    {
-//        if(newstate == MAC_KEYDOWN)
-//            modsRef |= OIS::Keyboard::Alt;
-//        else
-//            modsRef &= ~OIS::Keyboard::Alt;
-//        [self injectEvent:KC_LMENU eventTime:time eventType:newstate];
-//    }
-//    if(mods & NSControlKeyMask)
-//    {
-//        if(newstate == MAC_KEYDOWN)
-//            modsRef |= OIS::Keyboard::Ctrl;
-//        else
-//            modsRef &= ~OIS::Keyboard::Ctrl;
-//        [self injectEvent:KC_LCONTROL eventTime:time eventType:newstate];
-//    }
-//    if(mods & NSCommandKeyMask)
-//    {
-//        [self injectEvent:KC_LWIN eventTime:time eventType:newstate];
-//    }
-//    if(mods & NSFunctionKeyMask)
-//    {
-//        [self injectEvent:KC_APPS eventTime:time eventType:newstate];
-//    }
-//    if(mods & NSAlphaShiftKeyMask)
-//    {
-//        [self injectEvent:KC_CAPITAL eventTime:time eventType:newstate];
-//    }
-//
-//    if([theEvent keyCode] == NSClearLineFunctionKey) // numlock
-//        [self injectEvent:KC_NUMLOCK eventTime:time eventType:newstate];
-//
+    
+    if(mods & NSShiftKeyMask)
+    {
+        modsRef |= OIS::Keyboard::Shift;
+        [self injectEvent:KC_LSHIFT eventTime:time eventType:newstate];
+    }
+    else
+    {
+        modsRef &= ~OIS::Keyboard::Shift;
+        [self injectEvent:KC_LSHIFT eventTime:time eventType:newstate];
+    }
+
+    if(mods & NSAlternateKeyMask)
+    {
+        modsRef |= OIS::Keyboard::Alt;
+        [self injectEvent:KC_LMENU eventTime:time eventType:newstate];
+    }
+    else
+    {
+        modsRef &= ~OIS::Keyboard::Alt;
+        [self injectEvent:KC_LMENU eventTime:time eventType:newstate];
+    }
+
+    if(mods & NSControlKeyMask)
+    {
+        modsRef |= OIS::Keyboard::Ctrl;
+        [self injectEvent:KC_LCONTROL eventTime:time eventType:newstate];
+    }
+    else {
+        modsRef &= ~OIS::Keyboard::Ctrl;
+        [self injectEvent:KC_LCONTROL eventTime:time eventType:newstate];
+    }
+
+    if(mods & NSCommandKeyMask)
+    {
+        [self injectEvent:KC_LWIN eventTime:time eventType:newstate];
+    }
+    if(mods & NSFunctionKeyMask)
+    {
+        [self injectEvent:KC_APPS eventTime:time eventType:newstate];
+    }
+    if(mods & NSAlphaShiftKeyMask)
+    {
+        [self injectEvent:KC_CAPITAL eventTime:time eventType:newstate];
+    }
+
+    if([theEvent keyCode] == NSClearLineFunctionKey) // numlock
+        [self injectEvent:KC_NUMLOCK eventTime:time eventType:newstate];
+
 //    cout << "Modifiers after: 0x" << hex << modsRef << endl;
-//    oisKeyboardObj->_setModifiers(modsRef);
-//	prevModMask = mods;
-//}
-//
+    oisKeyboardObj->_setModifiers(modsRef);
+	prevModMask = mods;
+}
+
 - (VirtualtoOIS_KeyMap)keyConversionMap
 {
     return keyConversion;

@@ -1,5 +1,5 @@
 # provide configuration options to choose which of the dependencies to build
-if(NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
+if(WIN32)
   option(OGREDEPS_BUILD_CG "Build Cg dependency" TRUE)
 endif()
 option(OGREDEPS_BUILD_FREEIMAGE "Build FreeImage dependency" TRUE)
@@ -45,10 +45,10 @@ if (CMAKE_COMPILER_IS_GNUCXX AND NOT MINGW)
 endif ()
 
 
-# by default, install to source directory
+# by default, install to ogredeps subfolder in build directory
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if (OGREDEPS_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    set(CMAKE_INSTALL_PREFIX "${OGREDEPS_SOURCE_DIR}" CACHE PATH "OGREDEPS install prefix" FORCE)
+      set(CMAKE_INSTALL_PREFIX "${OGREDEPS_BINARY_DIR}/ogredeps" CACHE PATH "OGREDEPS install prefix" FORCE)
   endif ()
 endif ()
 

@@ -27,6 +27,7 @@ set(FreeImage_SOURCES
 	Source/FreeImage/Halftoning.cpp
 	Source/FreeImage/J2KHelper.cpp
 	Source/FreeImage/MemoryIO.cpp
+    Source/FreeImage/MNGHelper.cpp
 	Source/FreeImage/MultiPage.cpp
 	Source/FreeImage/NNQuantizer.cpp
 	Source/FreeImage/PSDParser.cpp
@@ -43,6 +44,7 @@ set(FreeImage_SOURCES
 	Source/FreeImage/PluginICO.cpp
 	Source/FreeImage/PluginIFF.cpp
 	Source/FreeImage/PluginJ2K.cpp
+    Source/FreeImage/PluginJNG.cpp
 	Source/FreeImage/PluginJP2.cpp
 	Source/FreeImage/PluginJPEG.cpp
 	Source/FreeImage/PluginKOALA.cpp
@@ -142,49 +144,10 @@ set(FreeImage_SOURCES
 	Source/LibJPEG/jversion.h
 	Source/LibJPEG/transupp.c
 	Source/LibJPEG/transupp.h
-	Source/LibMNG/libmng.h
-	Source/LibMNG/libmng_callback_xs.c
-	Source/LibMNG/libmng_chunk_descr.c
-	Source/LibMNG/libmng_chunk_descr.h
-	Source/LibMNG/libmng_chunk_io.c
-	Source/LibMNG/libmng_chunk_io.h
-	Source/LibMNG/libmng_chunk_prc.c
-	Source/LibMNG/libmng_chunk_prc.h
-	Source/LibMNG/libmng_chunk_xs.c
-	Source/LibMNG/libmng_chunks.h
-	Source/LibMNG/libmng_cms.c
-	Source/LibMNG/libmng_cms.h
-	Source/LibMNG/libmng_conf.h
-	Source/LibMNG/libmng_data.h
-	Source/LibMNG/libmng_display.c
-	Source/LibMNG/libmng_display.h
-	Source/LibMNG/libmng_dither.c
-	Source/LibMNG/libmng_dither.h
-	Source/LibMNG/libmng_error.c
-	Source/LibMNG/libmng_error.h
-	Source/LibMNG/libmng_filter.c
-	Source/LibMNG/libmng_filter.h
-	Source/LibMNG/libmng_hlapi.c
-	Source/LibMNG/libmng_jpeg.c
-	Source/LibMNG/libmng_jpeg.h
-	Source/LibMNG/libmng_memory.h
-	Source/LibMNG/libmng_object_prc.c
-	Source/LibMNG/libmng_object_prc.h
-	Source/LibMNG/libmng_objects.h
-	Source/LibMNG/libmng_pixels.c
-	Source/LibMNG/libmng_pixels.h
-	Source/LibMNG/libmng_prop_xs.c
-	Source/LibMNG/libmng_read.c
-	Source/LibMNG/libmng_read.h
-	Source/LibMNG/libmng_trace.c
-	Source/LibMNG/libmng_trace.h
-	Source/LibMNG/libmng_types.h
-	Source/LibMNG/libmng_write.c
-	Source/LibMNG/libmng_write.h
-	Source/LibMNG/libmng_zlib.c
-	Source/LibMNG/libmng_zlib.h
 	Source/LibOpenJPEG/bio.c
 	Source/LibOpenJPEG/bio.h
+    Source/LibOpenJPEG/cidx_manager.c
+    Source/LibOpenJPEG/cidx_manager.h
 	Source/LibOpenJPEG/cio.c
 	Source/LibOpenJPEG/cio.h
 	Source/LibOpenJPEG/dwt.c
@@ -194,6 +157,7 @@ set(FreeImage_SOURCES
 	Source/LibOpenJPEG/fix.h
 	Source/LibOpenJPEG/image.c
 	Source/LibOpenJPEG/image.h
+    Source/LibOpenJPEG/indexbox_manager.h
 	Source/LibOpenJPEG/int.h
 	Source/LibOpenJPEG/j2k.c
 	Source/LibOpenJPEG/j2k.h
@@ -212,8 +176,10 @@ set(FreeImage_SOURCES
     Source/LibOpenJPEG/opj_config.h
 	Source/LibOpenJPEG/opj_includes.h
 	Source/LibOpenJPEG/opj_malloc.h
+    Source/LibOpenJPEG/phix_manager.c
 	Source/LibOpenJPEG/pi.c
 	Source/LibOpenJPEG/pi.h
+    Source/LibOpenJPEG/ppix_manager.c
 	Source/LibOpenJPEG/raw.c
 	Source/LibOpenJPEG/raw.h
 	Source/LibOpenJPEG/t1.c
@@ -225,6 +191,8 @@ set(FreeImage_SOURCES
 	Source/LibOpenJPEG/tcd.h
 	Source/LibOpenJPEG/tgt.c
 	Source/LibOpenJPEG/tgt.h
+    Source/LibOpenJPEG/thix_manager.c
+    Source/LibOpenJPEG/tpix_manager.c
 	Source/LibPNG/png.c
 	Source/LibPNG/png.h
 	Source/LibPNG/pngconf.h
@@ -253,6 +221,7 @@ set(FreeImage_SOURCES
 	Source/LibRawLite/internal/dcraw_fileio.cpp
 	Source/LibRawLite/internal/defines.h
     Source/LibRawLite/internal/demosaic_packs.cpp
+    Source/LibRawLite/internal/libraw_bytebuffer.h
 	Source/LibRawLite/internal/libraw_internal_funcs.h
 	Source/LibRawLite/internal/var_defines.h
 	Source/LibRawLite/libraw/libraw.h
@@ -264,51 +233,54 @@ set(FreeImage_SOURCES
 	Source/LibRawLite/libraw/libraw_version.h
 	Source/LibRawLite/src/libraw_c_api.cpp
 	Source/LibRawLite/src/libraw_cxx.cpp
-	Source/LibTIFF/t4.h
-	Source/LibTIFF/tif_aux.c
-	Source/LibTIFF/tif_close.c
-	Source/LibTIFF/tif_codec.c
-	Source/LibTIFF/tif_color.c
-	Source/LibTIFF/tif_compress.c
-	Source/LibTIFF/tif_config.h
-	Source/LibTIFF/tif_dir.c
-	Source/LibTIFF/tif_dir.h
-	Source/LibTIFF/tif_dirinfo.c
-	Source/LibTIFF/tif_dirread.c
-	Source/LibTIFF/tif_dirwrite.c
-	Source/LibTIFF/tif_dumpmode.c
-	Source/LibTIFF/tif_error.c
-	Source/LibTIFF/tif_extension.c
-	Source/LibTIFF/tif_fax3.c
-	Source/LibTIFF/tif_fax3.h
-	Source/LibTIFF/tif_fax3sm.c
-	Source/LibTIFF/tif_flush.c
-	Source/LibTIFF/tif_getimage.c
-	Source/LibTIFF/tif_jpeg.c
-	Source/LibTIFF/tif_luv.c
-	Source/LibTIFF/tif_lzw.c
-	Source/LibTIFF/tif_next.c
-	Source/LibTIFF/tif_ojpeg.c
-	Source/LibTIFF/tif_open.c
-	Source/LibTIFF/tif_packbits.c
-	Source/LibTIFF/tif_pixarlog.c
-	Source/LibTIFF/tif_predict.c
-	Source/LibTIFF/tif_predict.h
-	Source/LibTIFF/tif_print.c
-	Source/LibTIFF/tif_read.c
-	Source/LibTIFF/tif_strip.c
-	Source/LibTIFF/tif_swab.c
-	Source/LibTIFF/tif_thunder.c
-	Source/LibTIFF/tif_tile.c
-	Source/LibTIFF/tif_version.c
-	Source/LibTIFF/tif_warning.c
-	Source/LibTIFF/tif_write.c
-	Source/LibTIFF/tif_zip.c
-	Source/LibTIFF/tiff.h
-	Source/LibTIFF/tiffio.h
-	Source/LibTIFF/tiffiop.h
-	Source/LibTIFF/tiffvers.h
-	Source/LibTIFF/uvcode.h
+    Source/LibRawLite/src/libraw_datastream.cpp
+	Source/LibTIFF4/t4.h
+	Source/LibTIFF4/tif_aux.c
+	Source/LibTIFF4/tif_close.c
+	Source/LibTIFF4/tif_codec.c
+	Source/LibTIFF4/tif_color.c
+	Source/LibTIFF4/tif_compress.c
+	Source/LibTIFF4/tif_config.h
+	Source/LibTIFF4/tif_dir.c
+	Source/LibTIFF4/tif_dir.h
+	Source/LibTIFF4/tif_dirinfo.c
+	Source/LibTIFF4/tif_dirread.c
+	Source/LibTIFF4/tif_dirwrite.c
+	Source/LibTIFF4/tif_dumpmode.c
+	Source/LibTIFF4/tif_error.c
+	Source/LibTIFF4/tif_extension.c
+	Source/LibTIFF4/tif_fax3.c
+	Source/LibTIFF4/tif_fax3.h
+	Source/LibTIFF4/tif_fax3sm.c
+	Source/LibTIFF4/tif_flush.c
+	Source/LibTIFF4/tif_getimage.c
+	Source/LibTIFF4/tif_jpeg.c
+    Source/LibTIFF4/tif_jpeg_12.c
+	Source/LibTIFF4/tif_luv.c
+    Source/LibTIFF4/tif_lzma.c
+	Source/LibTIFF4/tif_lzw.c
+	Source/LibTIFF4/tif_next.c
+	Source/LibTIFF4/tif_ojpeg.c
+	Source/LibTIFF4/tif_open.c
+	Source/LibTIFF4/tif_packbits.c
+	Source/LibTIFF4/tif_pixarlog.c
+	Source/LibTIFF4/tif_predict.c
+	Source/LibTIFF4/tif_predict.h
+	Source/LibTIFF4/tif_print.c
+	Source/LibTIFF4/tif_read.c
+	Source/LibTIFF4/tif_strip.c
+	Source/LibTIFF4/tif_swab.c
+	Source/LibTIFF4/tif_thunder.c
+	Source/LibTIFF4/tif_tile.c
+	Source/LibTIFF4/tif_version.c
+	Source/LibTIFF4/tif_warning.c
+	Source/LibTIFF4/tif_write.c
+	Source/LibTIFF4/tif_zip.c
+	Source/LibTIFF4/tiff.h
+	Source/LibTIFF4/tiffio.h
+	Source/LibTIFF4/tiffiop.h
+	Source/LibTIFF4/tiffvers.h
+	Source/LibTIFF4/uvcode.h
 	Source/Metadata/Exif.cpp
 	Source/Metadata/FIRational.cpp
 	Source/Metadata/FIRational.h
@@ -521,7 +493,6 @@ set(FreeImage_SOURCES
 	Source/ZLib/deflate.h
     Source/ZLib/gzclose.c
     Source/ZLib/gzguts.h
-	Source/ZLib/gzio.c
     Source/ZLib/gzlib.c
     Source/ZLib/gzread.c
     Source/ZLib/gzwrite.c
@@ -537,7 +508,6 @@ set(FreeImage_SOURCES
 	Source/ZLib/trees.h
 	Source/ZLib/uncompr.c
 	Source/ZLib/zconf.h
-	Source/ZLib/zconf.in.h
 	Source/ZLib/zlib.h
 	Source/ZLib/zutil.c
 	Source/ZLib/zutil.h

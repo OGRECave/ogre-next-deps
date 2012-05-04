@@ -5,6 +5,46 @@ What's New for FreeImage
 ! : changed
 + : added
 
+March 17th, 2012 - 3.15.3
+! FreeImage now uses LibPNG 1.5.9
+! FreeImage now uses LibTIFF 4.0.1
++ [Herve Drolon] added new 64-bit data types FIINT64, FIUINT64
++ [Herve Drolon] added new 64-bit metadata types to FREE_IMAGE_MDTYPE (FIDT_LONG8, FIDT_SLONG8, FIDT_IFD8)
++ [Herve Drolon] added support for 64-bit metadata types to FreeImage_TagToString
+* [Herve Drolon] fixed a regression with Fax3/Fax4 TIFF images on 64-bit OS (introduced with FI 3.15.2)
+* [Herve Drolon] fixed some gcc 4.4.6 warnings
+* [Petr Pytelka] refactored FreeImage_InsertPage and FreeImage_AppendPage
+* [Herve Drolon] fixed JP2/J2K plugins with saving of 32-bit dib with a fully opaque layer
+* [Herve Drolon] fixed loading of CMYK JPEG when using JPEG_CMYK load flag (need to invert pixels)
+* [Herve Drolon] fixed loading of CMYK PSD when using PSD_CMYK load flag
+
+February 20th, 2012 - 3.15.2
+! FreeImage now uses LibRaw 0.14.5
+! FreeImage now uses LibPNG 1.5.8
+! FreeImage now uses LibJPEG 8d
+! FreeImage now uses ZLib 1.2.6
+! FreeImage now uses OpenJPEG 1.5.0 (released version)
+! FreeImage now uses LibTIFF 4.0.0
+- [Herve Drolon] removed dependency on LibMNG 1.0.10 (MNG and JNG files are now handled internally)
++ [Herve Drolon] replaced the MNG plugin with a new MNG internal FreeImage plugin (with read support)
++ [Herve Drolon] added a new JNG internal FreeImage plugin (with read/write support)
++ [Christian Heimes] added write support to the TIFF plugin for EXIF_MAIN tags
++ [Herve Drolon] added new Exif maker note tags
++ [Herve Drolon] added TAG_COMPRESSION conversion to FreeImage_TagToString
+* [Mylek Grey] enabled the use of multi-component transforms (MCT) in J2K and JP2 saving
+* [Herve Drolon] refactored PluginICO in order to correctly support Windows Vista 256x256 icons
+* [Herve Drolon] added minor speed improvements to FreeImage_Rescale
+* [Herve Drolon] fixed dib allocation failing with very large images (i.e. more than 4GB)
+* [Herve Drolon] fixed FreeImage_CloneTag behavior with ASCII data handling
+* [Herve Drolon] improved JPEG plugin behavior with very big images
+* [Herve Drolon] improved JPEG plugin behavior with C++ exceptions
+* [Herve Drolon] fixed loading of palettized PNG with more that 256 palette entries
+* [Herve Drolon] fixed a bug inside IFF plugin occuring when loading a 24-bit dib with a palette
+* [Herve Drolon] fixed a bug with loading of PNG images containing a cHRM chunk (regression introduced by LibPNG 1.5.4 and fixed by LibPNG 1.5.5)
+* [Herve Drolon] allowed loading of PNG with benign errors (such as images with too many IDATs)
+* [Mihail Naydenov] fixed some incorrect MIME types returned by FreeImage_GetFIFMimeType
+* [Herve Drolon] fixed loading of Exif with bad thumbnail data or with a bad first offset size
+
 July 25th, 2011 - 3.15.1
 ! FreeImage now uses LibRaw 0.13.7
 ! FreeImage now uses LibPNG 1.5.4

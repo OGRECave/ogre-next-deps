@@ -6,6 +6,7 @@
  * Copyright (c) 2003-2007, Francois-Olivier Devaux and Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * Copyright (c) 2006-2007, Parvatha Elangovan
+ * Copyright (c) 2010-2011, Kaori Hagihara
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,6 +64,8 @@ typedef int opj_bool;
 #define OPJ_TRUE 1
 #define OPJ_FALSE 0
 
+/* Avoid compile-time warning because parameter is not used */
+#define OPJ_ARG_NOT_USED(x) (void)(x)
 /* 
 ==========================================================
    Useful constant definitions
@@ -137,9 +140,9 @@ Supported codec
 */
 typedef enum CODEC_FORMAT {
 	CODEC_UNKNOWN = -1,	/**< place-holder */
-	CODEC_J2K = 0,		/**< JPEG-2000 codestream : read/write */
-	CODEC_JPT = 1,		/**< JPT-stream (JPEG 2000, JPIP) : read only */
-	CODEC_JP2 = 2		/**< JPEG-2000 file format : read/write */
+	CODEC_J2K  = 0,		/**< JPEG-2000 codestream : read/write */
+	CODEC_JPT  = 1,		/**< JPT-stream (JPEG 2000, JPIP) : read only */
+	CODEC_JP2  = 2 		/**< JPEG-2000 file format : read/write */
 } OPJ_CODEC_FORMAT;
 
 /** 
@@ -344,7 +347,11 @@ typedef struct opj_cparameters {
 	char tp_flag;
 	/** MCT (multiple component transform) */
 	char tcp_mct;
+	/** Enable JPIP indexing*/
+	opj_bool jpip_on;
 } opj_cparameters_t;
+
+#define OPJ_DPARAMETERS_IGNORE_PCLR_CMAP_CDEF_FLAG	0x0001
 
 /**
 Decompression parameters
@@ -398,6 +405,7 @@ typedef struct opj_dparameters {
 	*/
 	OPJ_LIMIT_DECODING cp_limit_decoding;
 
+	unsigned int flags;
 } opj_dparameters_t;
 
 /** Common fields between JPEG-2000 compression and decompression master structs. */
@@ -583,6 +591,21 @@ typedef struct opj_packet_info {
 	double disto;
 } opj_packet_info_t;
 
+
+/* UniPG>> */
+/**
+Marker structure
+*/
+typedef struct opj_marker_info_t {
+	/** marker type */
+	unsigned short int type;
+	/** position in codestream */
+	int pos;
+	/** length, marker val included */
+	int len;
+} opj_marker_info_t;
+/* <<UniPG */
+
 /**
 Index structure : Information concerning tile-parts
 */
@@ -627,25 +650,17 @@ typedef struct opj_tile_info {
 	int numpix;
 	/** add fixed_quality */
 	double distotile;
+  	/** number of markers */
+	int marknum;
+	/** list of markers */
+	opj_marker_info_t *marker;
+	/** actual size of markers array */
+	int maxmarknum;
 	/** number of tile parts */
 	int num_tps;
 	/** information concerning tile parts */
 	opj_tp_info_t *tp;
 } opj_tile_info_t;
-
-/* UniPG>> */
-/**
-Marker structure
-*/
-typedef struct opj_marker_info_t {
-	/** marker type */
-	unsigned short int type;
-	/** position in codestream */
-	int pos;
-	/** length, marker val included */
-	int len;
-} opj_marker_info_t;
-/* <<UniPG */
 
 /**
 Index structure of the codestream
@@ -865,7 +880,7 @@ Setup the encoder parameters using the current image and using user parameters.
 OPJ_API void OPJ_CALLCONV opj_setup_encoder(opj_cinfo_t *cinfo, opj_cparameters_t *parameters, opj_image_t *image);
 /**
 Encode an image into a JPEG-2000 codestream
-@param cinfo compressor handle
+3@param cinfo compressor handle
 @param cio Output buffer stream
 @param image Image to encode
 @param index Depreacted -> Set to NULL. To extract index, used opj_encode_wci()
@@ -886,6 +901,7 @@ Destroy Codestream information after compression or decompression
 @param cstr_info Codestream information structure
 */
 OPJ_API void OPJ_CALLCONV opj_destroy_cstr_info(opj_codestream_info_t *cstr_info);
+
 
 #ifdef __cplusplus
 }

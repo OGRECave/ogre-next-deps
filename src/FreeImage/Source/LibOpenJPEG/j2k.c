@@ -6,6 +6,7 @@
  * Copyright (c) 2003-2007, Francois-Olivier Devaux and Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * Copyright (c) 2006-2007, Parvatha Elangovan
+ * Copyright (c) 2010-2011, Kaori Hagihara
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -228,6 +229,23 @@ Read an unknown marker
 @param j2k J2K handle
 */
 static void j2k_read_unk(opj_j2k_t *j2k);
+/**
+Add main header marker information
+@param cstr_info Codestream information structure
+@param type marker type
+@param pos byte offset of marker segment
+@param len length of marker segment
+ */
+static void j2k_add_mhmarker(opj_codestream_info_t *cstr_info, unsigned short int type, int pos, int len);
+/**
+Add tile header marker information
+@param tileno tile index number
+@param cstr_info Codestream information structure
+@param type marker type
+@param pos byte offset of marker segment
+@param len length of marker segment
+ */
+static void j2k_add_tlmarker( int tileno, opj_codestream_info_t *cstr_info, unsigned short int type, int pos, int len);
 
 /*@}*/
 
@@ -236,7 +254,7 @@ static void j2k_read_unk(opj_j2k_t *j2k);
 /* ----------------------------------------------------------------------- */
 typedef struct j2k_prog_order{
 	OPJ_PROG_ORDER enum_prog;
-	char str_prog[4];
+	char str_prog[5];
 }j2k_prog_order_t;
 
 j2k_prog_order_t j2k_prog_order_list[] = {
@@ -297,6 +315,9 @@ static int j2k_get_num_tp(opj_cp_t *cp,int pino,int tileno){
 /**	mem allocation for TLM marker*/
 int j2k_calculate_tp(opj_cp_t *cp,int img_numcomp,opj_image_t *image,opj_j2k_t *j2k ){
 	int pino,tileno,totnum_tp=0;
+
+	OPJ_ARG_NOT_USED(img_numcomp);
+
 	j2k->cur_totnum_tp = (int *) opj_malloc(cp->tw * cp->th * sizeof(int));
 	for (tileno = 0; tileno < cp->tw * cp->th; tileno++) {
 		int cur_totnum_tp = 0;
@@ -325,12 +346,14 @@ static void j2k_write_soc(opj_j2k_t *j2k) {
 	opj_cio_t *cio = j2k->cio;
 	cio_write(cio, J2K_MS_SOC, 2);
 
+	if(j2k->cstr_info)
+	  j2k_add_mhmarker(j2k->cstr_info, J2K_MS_SOC, cio_tell(cio), 0);
+
 /* UniPG>> */
 #ifdef USE_JPWL
 
 	/* update markers struct */
 	j2k_add_marker(j2k->cstr_info, J2K_MS_SOC, cio_tell(cio) - 2, 2);
-
 #endif /* USE_JPWL */
 /* <<UniPG */
 }
@@ -351,7 +374,7 @@ static void j2k_write_siz(opj_j2k_t *j2k) {
 	opj_cio_t *cio = j2k->cio;
 	opj_image_t *image = j2k->image;
 	opj_cp_t *cp = j2k->cp;
-	
+
 	cio_write(cio, J2K_MS_SIZ, 2);	/* SIZ */
 	lenp = cio_tell(cio);
 	cio_skip(cio, 2);
@@ -374,6 +397,9 @@ static void j2k_write_siz(opj_j2k_t *j2k) {
 	cio_seek(cio, lenp);
 	cio_write(cio, len, 2);		/* Lsiz */
 	cio_seek(cio, lenp + len);
+	
+	if(j2k->cstr_info)
+	  j2k_add_mhmarker(j2k->cstr_info, J2K_MS_SIZ, lenp, len);
 }
 
 static void j2k_read_siz(opj_j2k_t *j2k) {
@@ -604,6 +630,11 @@ static void j2k_write_com(opj_j2k_t *j2k) {
 		cio_seek(cio, lenp);
 		cio_write(cio, len, 2);
 		cio_seek(cio, lenp + len);
+
+		
+		if(j2k->cstr_info)
+		  j2k_add_mhmarker(j2k->cstr_info, J2K_MS_COM, lenp, len);
+
 	}
 }
 
@@ -647,7 +678,7 @@ static void j2k_read_cox(opj_j2k_t *j2k, int compno) {
 
 	tccp->numresolutions = cio_read(cio, 1) + 1;	/* SPcox (D) */
 
-	// If user wants to remove more resolutions than the codestream contains, return error
+	/* If user wants to remove more resolutions than the codestream contains, return error*/
 	if (cp->reduce >= tccp->numresolutions) {
 		opj_event_msg(j2k->cinfo, EVT_ERROR, "Error decoding component %d.\nThe number of resolutions to remove is higher than the number "
 					"of resolutions of this component\nModify the cp_reduce parameter.\n\n", compno);
@@ -707,6 +738,10 @@ static void j2k_write_cod(opj_j2k_t *j2k) {
 	cio_seek(cio, lenp);
 	cio_write(cio, len, 2);		/* Lcod */
 	cio_seek(cio, lenp + len);
+
+	if(j2k->cstr_info)
+	  j2k_add_mhmarker(j2k->cstr_info, J2K_MS_COD, lenp, len);
+
 }
 
 static void j2k_read_cod(opj_j2k_t *j2k) {
@@ -835,6 +870,15 @@ static void j2k_read_qcx(opj_j2k_t *j2k, int compno, int len) {
 		};
 
 	};
+
+#else
+	/* We check whether there are too many subbands */
+	if ((numbands < 0) || (numbands >= J2K_MAXBANDS)) {
+		opj_event_msg(j2k->cinfo, EVT_WARNING ,
+					"bad number of subbands in Sqcx (%d) regarding to J2K_MAXBANDS (%d) \n"
+				    "- limiting number of bands to J2K_MAXBANDS and try to move to the next markers\n", numbands, J2K_MAXBANDS);
+	}
+
 #endif /* USE_JPWL */
 
 	for (bandno = 0; bandno < numbands; bandno++) {
@@ -847,8 +891,10 @@ static void j2k_read_qcx(opj_j2k_t *j2k, int compno, int len) {
 			expn = tmp >> 11;
 			mant = tmp & 0x7ff;
 		}
-		tccp->stepsizes[bandno].expn = expn;
-		tccp->stepsizes[bandno].mant = mant;
+		if (bandno < J2K_MAXBANDS){
+			tccp->stepsizes[bandno].expn = expn;
+			tccp->stepsizes[bandno].mant = mant;
+		}
 	}
 	
 	/* Add Antonin : if scalar_derived -> compute other stepsizes */
@@ -876,6 +922,9 @@ static void j2k_write_qcd(opj_j2k_t *j2k) {
 	cio_seek(cio, lenp);
 	cio_write(cio, len, 2);			/* Lqcd */
 	cio_seek(cio, lenp + len);
+
+	if(j2k->cstr_info)
+	  j2k_add_mhmarker(j2k->cstr_info, J2K_MS_QCD, lenp, len);
 }
 
 static void j2k_read_qcd(opj_j2k_t *j2k) {
@@ -912,7 +961,7 @@ static void j2k_read_qcc(opj_j2k_t *j2k) {
 	int len, compno;
 	int numcomp = j2k->image->numcomps;
 	opj_cio_t *cio = j2k->cio;
-	
+
 	len = cio_read(cio, 2);	/* Lqcc */
 	compno = cio_read(cio, numcomp <= 256 ? 1 : 2);	/* Cqcc */
 
@@ -1197,6 +1246,10 @@ static void j2k_write_sot(opj_j2k_t *j2k) {
 	j2k_add_marker(j2k->cstr_info, J2K_MS_SOT, j2k->sot_start, len + 2);
 #endif /* USE_JPWL */
 	/* <<UniPG */
+
+	if( j2k->cstr_info && j2k->cur_tp_num==0){
+	  j2k_add_tlmarker( j2k->curtileno, j2k->cstr_info, J2K_MS_SOT, lenp, len);
+	}
 }
 
 static void j2k_read_sot(opj_j2k_t *j2k) {
@@ -1307,7 +1360,7 @@ static void j2k_read_sot(opj_j2k_t *j2k) {
     if (numparts)
       j2k->cstr_info->tile[tileno].tp = (opj_tp_info_t *) opj_realloc(j2k->cstr_info->tile[tileno].tp, numparts * sizeof(opj_tp_info_t));
     else
-      j2k->cstr_info->tile[tileno].tp = (opj_tp_info_t *) opj_realloc(j2k->cstr_info->tile[tileno].tp, 10 * sizeof(opj_tp_info_t)); // Fixme (10)
+      j2k->cstr_info->tile[tileno].tp = (opj_tp_info_t *) opj_realloc(j2k->cstr_info->tile[tileno].tp, 10 * sizeof(opj_tp_info_t)); /* Fixme (10)*/
 		j2k->cstr_info->tile[tileno].tp[partno].tp_start_pos = cio_tell(cio) - 12;
 		j2k->cstr_info->tile[tileno].tp[partno].tp_end_pos = 
 			j2k->cstr_info->tile[tileno].tp[partno].tp_start_pos + totlen - 1;
@@ -1343,6 +1396,11 @@ static void j2k_write_sod(opj_j2k_t *j2k, void *tile_coder) {
 	tcd->cur_tp_num = j2k->cur_tp_num;
 	
 	cio_write(cio, J2K_MS_SOD, 2);
+
+	if( j2k->cstr_info && j2k->cur_tp_num==0){
+	  j2k_add_tlmarker( j2k->curtileno, j2k->cstr_info, J2K_MS_SOD, cio_tell(cio), 0);
+	}
+
 	if (j2k->curtileno == 0) {
 		j2k->sod_start = cio_tell(cio) + j2k->pos_correction;
 	}
@@ -1803,13 +1861,13 @@ opj_image_t* j2k_decode(opj_j2k_t *j2k, opj_cio_t *cio, opj_codestream_info_t *c
 			return 0;
 		}
 		e = j2k_dec_mstab_lookup(id);
-		// Check if the marker is known
+		/* Check if the marker is known*/
 		if (!(j2k->state & e->states)) {
 			opj_image_destroy(image);
 			opj_event_msg(cinfo, EVT_ERROR, "%.8x: unexpected marker %x\n", cio_tell(cio) - 2, id);
 			return 0;
 		}
-		// Check if the decoding is limited to the main header
+		/* Check if the decoding is limited to the main header*/
 		if (e->id == J2K_MS_SOT && j2k->cp->limit_decoding == LIMIT_TO_MAIN_HEADER) {
 			opj_event_msg(cinfo, EVT_INFO, "Main Header decoded.\n");
 			return image;
@@ -1835,7 +1893,6 @@ opj_image_t* j2k_decode(opj_j2k_t *j2k, opj_cio_t *cio, opj_codestream_info_t *c
 	if (j2k->state != J2K_STATE_MT) {
 		opj_event_msg(cinfo, EVT_WARNING, "Incomplete bitstream\n");
 	}
-
 	return image;
 }
 
@@ -1847,9 +1904,10 @@ opj_image_t* j2k_decode_jpt_stream(opj_j2k_t *j2k, opj_cio_t *cio,  opj_codestre
 	opj_image_t *image = NULL;
 	opj_jpt_msg_header_t header;
 	int position;
-
 	opj_common_ptr cinfo = j2k->cinfo;
-	
+
+	OPJ_ARG_NOT_USED(cstr_info);
+
 	j2k->cio = cio;
 
 	/* create an empty image */
@@ -2156,10 +2214,10 @@ void j2k_setup_encoder(opj_j2k_t *j2k, opj_cparameters_t *parameters, opj_image_
 
 			if(parameters->cp_cinema)
 			{
-				//Precinct size for lowest frequency subband=128
+				/*Precinct size for lowest frequency subband=128*/
 				tccp->prcw[0] = 7;
 				tccp->prch[0] = 7;
-				//Precinct size at all other resolutions = 256
+				/*Precinct size at all other resolutions = 256*/
 				for (j = 1; j < tccp->numresolutions; j++) {
 					tccp->prcw[j] = 8;
 					tccp->prch[j] = 8;
@@ -2201,7 +2259,7 @@ void j2k_setup_encoder(opj_j2k_t *j2k, opj_cparameters_t *parameters, opj_image_
 						}
 						p++;
 						/*printf("\nsize precinct for level %d : %d,%d\n", j,tccp->prcw[j], tccp->prch[j]); */
-					}	//end for
+					}	/*end for*/
 				} else {
 					for (j = 0; j < tccp->numresolutions; j++) {
 						tccp->prcw[j] = 15;
@@ -2322,6 +2380,9 @@ opj_bool j2k_encode(opj_j2k_t *j2k, opj_cio_t *cio, opj_image_t *image, opj_code
 		/* INDEX >> */
 		if(cstr_info) {
 			cstr_info->tile[j2k->curtileno].start_pos = cio_tell(cio) + j2k->pos_correction;
+			cstr_info->tile[j2k->curtileno].maxmarknum = 10;
+			cstr_info->tile[j2k->curtileno].marker = (opj_marker_info_t *) opj_malloc(cstr_info->tile[j2k->curtileno].maxmarknum * sizeof(opj_marker_info_t));
+			cstr_info->tile[j2k->curtileno].marknum = 0;
 		}
 		/* << INDEX */
 
@@ -2431,8 +2492,43 @@ opj_bool j2k_encode(opj_j2k_t *j2k, opj_cio_t *cio, opj_image_t *image, opj_code
 	return OPJ_TRUE;
 }
 
+static void j2k_add_mhmarker(opj_codestream_info_t *cstr_info, unsigned short int type, int pos, int len) {
 
+	if (!cstr_info)
+		return;
 
+	/* expand the list? */
+	if ((cstr_info->marknum + 1) > cstr_info->maxmarknum) {
+		cstr_info->maxmarknum = 100 + (int) ((float) cstr_info->maxmarknum * 1.0F);
+		cstr_info->marker = (opj_marker_info_t*)opj_realloc(cstr_info->marker, cstr_info->maxmarknum);
+	}
 
+	/* add the marker */
+	cstr_info->marker[cstr_info->marknum].type = type;
+	cstr_info->marker[cstr_info->marknum].pos = pos;
+	cstr_info->marker[cstr_info->marknum].len = len;
+	cstr_info->marknum++;
 
+}
 
+static void j2k_add_tlmarker( int tileno, opj_codestream_info_t *cstr_info, unsigned short int type, int pos, int len) {
+
+  opj_marker_info_t *marker;
+
+	if (!cstr_info)
+		return;
+
+	/* expand the list? */
+	if ((cstr_info->tile[tileno].marknum + 1) > cstr_info->tile[tileno].maxmarknum) {
+		cstr_info->tile[tileno].maxmarknum = 100 + (int) ((float) cstr_info->tile[tileno].maxmarknum * 1.0F);
+		cstr_info->tile[tileno].marker = (opj_marker_info_t*)opj_realloc(cstr_info->tile[tileno].marker, cstr_info->maxmarknum);
+	}
+
+	marker = &(cstr_info->tile[tileno].marker[cstr_info->tile[tileno].marknum]);
+
+	/* add the marker */
+	marker->type = type;
+	marker->pos = pos;
+	marker->len = len;
+	cstr_info->tile[tileno].marknum++;
+}

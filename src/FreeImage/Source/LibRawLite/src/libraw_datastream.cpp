@@ -3,6 +3,7 @@
 #include "libraw/libraw.h"
 #include "libraw/libraw_datastream.h"
 #include "internal/libraw_bytebuffer.h"
+#include <stdexcept>
 #ifdef USE_JASPER
 #include <jasper/jasper.h>	/* Decode RED camera movies */
 #else

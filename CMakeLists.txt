@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH "${OGREDEPS_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 if (WIN32)
   # look for DirectX which is needed by OIS
   find_package(DirectX REQUIRED)
+  add_definitions(-DWINVER=0x0500)
 endif ()
 
 if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)

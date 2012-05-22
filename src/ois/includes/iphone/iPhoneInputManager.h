@@ -111,6 +111,9 @@ namespace OIS
 
         //! Used to know if we used up accelerometer
 		bool bAccelerometerUsed;
+
+        bool mIsContentScalingSupported;
+        float mContentScalingFactor;
     };
 }
 

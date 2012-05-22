@@ -99,11 +99,17 @@ void iPhoneMultiTouch::capture()
 
 void iPhoneMultiTouch::_touchBegan(UITouch *touch)
 {
-    CGPoint location = [touch locationInView:static_cast<iPhoneInputManager*>(mCreator)->_getDelegate()];
+    UIView *touchView = static_cast<iPhoneInputManager*>(mCreator)->_getDelegate();
+    CGPoint location = [touch locationInView:touchView];
+    CGFloat contentScale = 1.0;
+#if __IPHONE_4_0
+    if([touchView respondsToSelector:@selector(contentScaleFactor)])
+        contentScale = [[UIScreen mainScreen] scale];
+#endif
 
     MultiTouchState newState;
-    newState.X.abs = location.x;
-    newState.Y.abs = location.y;
+    newState.X.abs = location.x * contentScale;
+    newState.Y.abs = location.y * contentScale;
     newState.touchType |= 1 << MT_Pressed;
 
     if( mListener && mBuffered )
@@ -118,11 +124,17 @@ void iPhoneMultiTouch::_touchBegan(UITouch *touch)
 
 void iPhoneMultiTouch::_touchEnded(UITouch *touch)
 {
-    CGPoint location = [touch locationInView:static_cast<iPhoneInputManager*>(mCreator)->_getDelegate()];
+    UIView *touchView = static_cast<iPhoneInputManager*>(mCreator)->_getDelegate();
+    CGPoint location = [touch locationInView:touchView];
+    CGFloat contentScale = 1.0;
+#if __IPHONE_4_0
+    if([touchView respondsToSelector:@selector(contentScaleFactor)])
+        contentScale = [[UIScreen mainScreen] scale];
+#endif
 
     MultiTouchState newState;
-    newState.X.abs = location.x;
-    newState.Y.abs = location.y;
+    newState.X.abs = location.x * contentScale;
+    newState.Y.abs = location.y * contentScale;
     newState.touchType |= 1 << MT_Released;
 
     if( mListener && mBuffered )
@@ -137,14 +149,21 @@ void iPhoneMultiTouch::_touchEnded(UITouch *touch)
 
 void iPhoneMultiTouch::_touchMoved(UITouch *touch)
 {
-    CGPoint location = [touch locationInView:static_cast<iPhoneInputManager*>(mCreator)->_getDelegate()];
-    CGPoint previousLocation = [touch previousLocationInView:static_cast<iPhoneInputManager*>(mCreator)->_getDelegate()];
+    UIView *touchView = static_cast<iPhoneInputManager*>(mCreator)->_getDelegate();
+    CGPoint location = [touch locationInView:touchView];
+    CGPoint previousLocation = [touch previousLocationInView:touchView];
+
+    CGFloat contentScale = 1.0;
+#if __IPHONE_4_0
+    if([touchView respondsToSelector:@selector(contentScaleFactor)])
+        contentScale = [[UIScreen mainScreen] scale];
+#endif
 
     MultiTouchState newState;
-    newState.X.rel = (location.x - previousLocation.x);
-    newState.Y.rel = (location.y - previousLocation.y);
-    newState.X.abs = location.x;
-    newState.Y.abs = location.y;
+    newState.X.rel = (location.x - previousLocation.x) * contentScale;
+    newState.Y.rel = (location.y - previousLocation.y) * contentScale;
+    newState.X.abs = location.x * contentScale;
+    newState.Y.abs = location.y * contentScale;
     newState.touchType |= 1 << MT_Moved;
 
     if( mListener && mBuffered )
@@ -159,11 +178,18 @@ void iPhoneMultiTouch::_touchMoved(UITouch *touch)
 
 void iPhoneMultiTouch::_touchCancelled(UITouch *touch)
 {
-    CGPoint location = [touch locationInView:static_cast<iPhoneInputManager*>(mCreator)->_getDelegate()];
+    UIView *touchView = static_cast<iPhoneInputManager*>(mCreator)->_getDelegate();
+    CGPoint location = [touch locationInView:touchView];
+
+    CGFloat contentScale = 1.0;
+#if __IPHONE_4_0
+    if([touchView respondsToSelector:@selector(contentScaleFactor)])
+        contentScale = [[UIScreen mainScreen] scale];
+#endif
 
     MultiTouchState newState;
-    newState.X.abs = location.x;
-    newState.Y.abs = location.y;
+    newState.X.abs = location.x * contentScale;
+    newState.Y.abs = location.y * contentScale;
     newState.touchType |= 1 << MT_Cancelled;
 
     if( mListener && mBuffered )

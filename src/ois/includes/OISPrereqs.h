@@ -34,7 +34,6 @@ restrictions:
 #include <vector>
 #include <string>
 #include <map>
-#include <cstddef>
 #include "OISConfig.h"
 
 // Default is blank for most OS's
@@ -90,6 +89,7 @@ restrictions:
 #   define _OISExport __attribute__((visibility("default")))
 #else //Probably Linux
 #	define OIS_LINUX_PLATFORM
+#	include <unistd.h>
 #endif
 
 //Is Processor 32 or 64 bits...
@@ -101,9 +101,9 @@ restrictions:
 
 //-------------- Common Classes, Enums, and Typdef's -------------------------//
 #define OIS_VERSION_MAJOR 1
-#define OIS_VERSION_MINOR 3
+#define OIS_VERSION_MINOR 4
 #define OIS_VERSION_PATCH 0
-#define OIS_VERSION_NAME "1.3.0"
+#define OIS_VERSION_NAME "1.4.0"
 
 #define OIS_VERSION ((OIS_VERSION_MAJOR << 16) | (OIS_VERSION_MINOR << 8) | OIS_VERSION_PATCH)
 

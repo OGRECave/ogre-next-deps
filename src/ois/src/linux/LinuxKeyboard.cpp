@@ -283,8 +283,7 @@ void LinuxKeyboard::capture()
 
 	while( XPending(display) > 0 )
 	{
-		XNextEvent(display, &event);
-
+		XNextEvent(display, &event);
 		if(KeyPress == event.type)
 		{
 			unsigned int character = 0;
@@ -324,8 +323,7 @@ void LinuxKeyboard::capture()
 				event.xkey.state &= ~LockMask;
 
 				XLookupString(&event.xkey,NULL,0,&key,NULL);
-				_injectKeyUp(key);
-			}
+				_injectKeyUp(key);			}
 		}
 	}
 

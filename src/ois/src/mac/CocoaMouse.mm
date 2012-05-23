@@ -97,26 +97,30 @@ void CocoaMouse::capture()
         CGPoint warpPoint;
 		warpPoint.x = (((frame.origin.x + frame.size.width) - frame.origin.x) / 2) + frame.origin.x;
 		warpPoint.y = (((frame.origin.y + frame.size.height) - frame.origin.y) / 2) - frame.origin.y;
-//        warpPoint = CGPointMake(clipRect.size.height, clipRect.size.width);
         CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, warpPoint);
 
         // Use NSTrackingArea to track mouse move events
         NSTrackingAreaOptions trackingOptions = 
-            NSTrackingMouseMoved | NSTrackingEnabledDuringMouseDrag | 
-            NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp;
-        
+        NSTrackingMouseMoved | NSTrackingActiveAlways | NSTrackingInVisibleRect;
         NSDictionary *trackerData = [NSDictionary dictionaryWithObjectsAndKeys:
                                      [NSNumber numberWithInt:0], @"OISMouseTrackingKey", nil];
-        NSTrackingArea *trackingArea = [[NSTrackingArea alloc]
-                                        initWithRect:[self frame]// in our case track the entire view
-                                        options:trackingOptions
-                                        owner:self
-                                        userInfo:trackerData];
-        [self addTrackingArea:trackingArea];
+        mTrackingArea = [[NSTrackingArea alloc]
+                                    initWithRect:[self frame]// in our case track the entire view
+                                    options:trackingOptions
+                                    owner:self
+                                    userInfo:trackerData];
+        [self addTrackingArea:mTrackingArea];
         [[self window] setAcceptsMouseMovedEvents:YES];
-        [trackingArea release];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [super dealloc];
+    
+    [mTrackingArea release];
+    mTrackingArea = 0;
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent

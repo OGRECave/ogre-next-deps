@@ -61,6 +61,7 @@ namespace OIS
 
 @interface CocoaMouseView : NSView
 {
+    NSTrackingArea *mTrackingArea;
     CocoaMouse *oisMouseObj;
     MouseState mTempState;
     bool mNeedsToRegainFocus;

@@ -68,7 +68,11 @@ void Win32InputManager::_initialize( ParamList &paramList )
 		OIS_EXCEPT( E_InvalidParam, "Win32InputManager::Win32InputManager >> No HWND found!" );
 
 	// Get number as 64 bit and then convert. Handles the case of 32 or 64 bit HWND
+#ifdef _MSC_VER
 	unsigned __int64 handle = _strtoui64(i->second.c_str(), 0, 10);
+#else
+    unsigned __int64 handle = strtoull(i->second.c_str(), 0, 10);
+#endif
 	hWnd  = (HWND)handle;
 
 	if( IsWindow(hWnd) == 0 )

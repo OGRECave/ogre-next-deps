@@ -1,4 +1,4 @@
-if (APPLE)
+if (APPLE AND NOT ANDROID)
   cmake_minimum_required(VERSION 2.8.8)
   SET(CMAKE_SIZEOF_VOID_P 4)
 else()
@@ -28,5 +28,10 @@ elseif (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
     set(CMAKE_OSX_ARCHITECTURES ${ARCHS_STANDARD_32_64_BIT})
   endif()
 endif ()
+
+if (ANDROID)
+  SET(TargetPlatform "Android")
+  SET(OGRE_PLATFORM OGRE_PLATFORM_ANDROID)
+endif()
 
 add_subdirectory(src)

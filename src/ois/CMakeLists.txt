@@ -104,7 +104,9 @@ elseif (APPLE)
       src/mac/MacMouse.cpp
     )
   endif()
-else ()
+elseif (ANDROID)
+  set(OIS_PLATFORM android)
+else()
   set(OIS_PLATFORM_HEADERS
     includes/linux/EventHelpers.h
     includes/linux/LinuxForceFeedback.h
@@ -132,7 +134,7 @@ if(APPLE)
   set_source_files_properties(${OIS_HEADERS} ${OIS_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++")
 endif ()
 
-if(NOT APPLE)
+if(NOT APPLE AND NOT ANDROID)
   add_definitions(-DOIS_NONCLIENT_BUILD -DOIS_DYNAMIC_LIB)
   add_library(OIS SHARED ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})
 else ()

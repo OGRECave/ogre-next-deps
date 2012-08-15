@@ -87,6 +87,8 @@ restrictions:
 #   endif
 #   undef _OISExport
 #   define _OISExport __attribute__((visibility("default")))
+#elif defined( ANDROID )
+#	define OIS_ANDROID_PLATFORM
 #else //Probably Linux
 #	define OIS_LINUX_PLATFORM
 #	include <unistd.h>

@@ -534,9 +534,13 @@ add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_L
 add_library(FreeImage STATIC ${FreeImage_SOURCES})
 install_dep(FreeImage include Source/FreeImage.h)
 
-if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
-  set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "4.0")
+if (APPLE)
+ set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
+
+ if(OGRE_BUILD_PLATFORM_APPLE_IOS)
+  set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "5.0")
   set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_GCC_THUMB_SUPPORT "NO")
+ endif()
 endif()
 
 set(FreeImage_INCLUDE_DIR "${FreeImage_SOURCE_DIR}/Source" CACHE PATH "" FORCE)

@@ -69,8 +69,11 @@ macro(install_dep LIBRARY INCLUDE_DIR)
 
   if(APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
     add_custom_command(TARGET ${LIBRARY} POST_BUILD
+      COMMAND mkdir -p "${OGREDEPS_BINARY_DIR}/${OGREDEPS_LIB_DIRECTORY}"
+    )
+    add_custom_command(TARGET ${LIBRARY} POST_BUILD
       COMMAND if [[ -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a && -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ]] \; then lipo ARGS -create ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a -arch i386 ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a
-      -output "${OGREDEPS_BINARY_DIR}/../${OGREDEPS_LIB_DIRECTORY}/lib${LIBRARY}.a"\; fi
+      -output "${OGREDEPS_BINARY_DIR}/${OGREDEPS_LIB_DIRECTORY}/lib${LIBRARY}.a"\; fi
     )
   endif()
 

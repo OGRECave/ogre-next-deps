@@ -1,4 +1,4 @@
-/* $Id: tif_ojpeg.c,v 1.2 2012/02/25 17:48:20 drolon Exp $ */
+/* $Id: tif_ojpeg.c,v 1.4 2012/10/07 15:54:03 drolon Exp $ */
 
 /* WARNING: The type of JPEG encapsulation defined by the TIFF Version 6.0
    specification is now totally obsolete and deprecated for new applications and
@@ -1146,7 +1146,9 @@ OJPEGWriteHeaderInfo(TIFF* tif)
 	OJPEGState* sp=(OJPEGState*)tif->tif_data;
 	uint8** m;
 	uint32 n;
-	assert(sp->libjpeg_session_active==0);
+	/* if a previous attempt failed, don't try again */
+	if (sp->libjpeg_session_active != 0) 
+		return 0;
 	sp->out_state=ososSoi;
 	sp->restart_index=0;
 	jpeg_std_error(&(sp->libjpeg_jpeg_error_mgr));
@@ -1954,6 +1956,11 @@ OJPEGReadBufferFill(OJPEGState* sp)
 			case osibsJpegInterchangeFormat:
 				sp->in_buffer_source=osibsStrile;
 			case osibsStrile:
+				if (!_TIFFFillStriles( sp->tif ) 
+				    || sp->tif->tif_dir.td_stripoffset == NULL
+				    || sp->tif->tif_dir.td_stripbytecount == NULL)
+					return 0;
+
 				if (sp->in_buffer_next_strile==sp->in_buffer_strile_count)
 					sp->in_buffer_source=osibsEof;
 				else

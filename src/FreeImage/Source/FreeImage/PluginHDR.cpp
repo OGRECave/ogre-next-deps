@@ -661,7 +661,9 @@ static BOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	if(!dib) return FALSE;
 
-	if(FreeImage_GetImageType(dib) != FIT_RGBF) {
+	FREE_IMAGE_TYPE src_type = FreeImage_GetImageType(dib);
+	if(src_type != FIT_RGBF) {
+		FreeImage_OutputMessageProc(s_format_id, "FREE_IMAGE_TYPE: Unable to convert from type %d to type %d.\n No such conversion exists.", src_type, FIT_RGBF);
 		return FALSE;
 	}
 

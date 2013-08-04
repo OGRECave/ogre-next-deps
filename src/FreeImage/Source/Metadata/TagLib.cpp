@@ -537,6 +537,7 @@ static TagInfo
     {  0x3015, (char *) "ColorMode", (char *) NULL},
     {  0x3016, (char *) "Enhancement", (char *) NULL},
     {  0x3017, (char *) "ColorFilter", (char *) NULL},
+	{  0x301B, (char *) "ArtMode", (char *) NULL},
     {  0x301C, (char *) "SequenceNumber", (char *) NULL},
     {  0x301D, (char *) "BracketSequence", (char *) NULL},
     {  0x3020, (char *) "ImageStabilization", (char *) NULL},

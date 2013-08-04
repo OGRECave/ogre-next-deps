@@ -1,5 +1,5 @@
 /*
- * $Id: indexbox_manager.h,v 1.1 2012/02/11 19:46:26 drolon Exp $
+ * $Id: indexbox_manager.h,v 1.2 2012/09/23 12:44:41 drolon Exp $
  *
  * Copyright (c) 2002-2011, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
  * Copyright (c) 2002-2011, Professor Benoit Macq

@@ -1,3 +1,206 @@
+2012-09-22  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* libtiff 4.0.3 released.
+
+2012-09-20  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* Makefile.am: Update to Automake 1.12.4
+
+2012-08-19  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* Makefile.in: Update to Automake 1.12.3
+
+	* libtiff{tiff.h, tif_print.c, tif_dirinfo.c, tif_dirread.c}: Add
+	some TIFF/FX support in libtiff.  Add the tag definitions to
+	tiff.h.  Add the related TIFF field definitions to tif_dirinfo.c,
+	and also fixes an error in a comment.  Adds the photometric values
+	to tif_print.c, and fixes a bug.  These changes are by Steve
+	Underwood.
+
+2012-08-13  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_write.c: Fix bug rewriting image tiles in a
+	compressed file: http://trac.osgeo.org/gdal/ticket/4771
+
+2012-08-02  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_dirread.c: report error in case of mismatch value 
+	counts for tags (ie. DotRange).
+
+2012-07-26  Tom Lane  <tgl@sss.pgh.pa.us>
+
+	* libtiff/{tiffio.h, tif_dirinfo.c, libtiff.def}: Add six new
+ 	functions TIFFFieldTag(), TIFFFieldName(), TIFFFieldDataType(),
+	TIFFFieldPassCount(), TIFFFieldReadCount(), TIFFFieldWriteCount()
+	as external accessors for the opaque type TIFFField.
+
+	* tools/tiffset.c: Make tiffset use the above functions instead of
+	relying on library private headers.
+
+2012-07-19  Tom Lane  <tgl@sss.pgh.pa.us>
+
+	* tools/tiff2pdf.c: Fix two places where t2p_error didn't get set
+	after a malloc failure.  No crash risk AFAICS, but the program
+	might not report exit code 1 as desired.  h/t mancha@mac.hush.com
+
+2012-07-18  Tom Lane  <tgl@sss.pgh.pa.us>
+
+	* tools/tiff2pdf.c: Fail when TIFFSetDirectory() fails.  This
+	prevents core dumps or perhaps even arbitrary code execution when
+	processing a corrupt input file (CVE-2012-3401).
+
+2012-07-06  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* test/raw_decode.c (main): Test fixes to work with IJG JPEG 7+.
+	IJG JPEG 7+ uses a different upsampling algorithm which produces
+	different numeric results.
+
+	* libtiff/tif_jpeg.c (JPEGPreDecode): Patch from Even Rouault to
+	work with IJG JPEG 7+.
+
+2012-07-04  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* test/raw_decode.c: Add changes so that test can run with build
+	directory outside of source directory.
+
+2012-07-02  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_jpeg.c: Fix handling when writing RGBA jpeg compressed
+	imagery (http://trac.osgeo.org/gdal/ticket/4732)
+
+2012-06-20  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_fax3.c: fix memory initialization of runs, only
+	partly done.
+
+	* libtiff/tif_pixarlog.c: Make sure tbuf is large enough for one
+	full "stride" past the end.
+
+2012-06-19  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_packbits.c: fix read past end of data buffer. 
+
+2012-06-15  Frank Warmerdam  <warmerdam@google.com>
+
+	*  libtiff 4.0.2 released.
+
+	* tools/tif2pdf.c, tools/tifdump.c: avoid unitialized variable
+	warnings with clang.
+
+2012-06-15  Tom Lane  <tgl@sss.pgh.pa.us>
+
+	* tools/tiff2pdf.c: Defend against integer overflows while
+	calculating required buffer sizes (CVE-2012-2113).
+
+2012-06-12  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_print.c: Be careful about printing corrupt inknames.
+
+	* libtiff/tif_fax3.c: Ensure runs array is initialized to zeros.
+
+2012-06-07  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_print.c: avoid pretty printing other fields when
+	we don't have the proper amount and type of data or if the field
+	is actually autodefined.
+
+2012-06-05  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_tile.c, libtiff/tif_strip.c: Ensure that illegal
+	ycbcrsubsampling values result in a runtime error, not just an
+	assertion.
+
+	* tests/custom_dir.c: Add testing of EXIF and custom directory
+	reading and writing.
+
+	* libtiff/tif_dir.c, libtiff/tiffio.h: Add TIFFCreateCustomDirectory()
+	and TIFFCreateEXIFDirectory() functions.
+
+	* libtiff/tif_dir.c, tif_print.c : Remove FIELD_CUSTOM handling for
+	PAGENUMBER, HALFTONEHINTS, and YCBCRSUBSAMPLING.  Implement DOTRANGE
+	differently.  This is to avoid using special TIFFGetField/TIFFSetField 
+	rules for these fields in non-image directories (like EXIF).
+
+2012-06-04  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_jpeg.c: Remove code for fixing up h_sampling and v_sampling
+	in JPEGPreDecode().  If a fixup will be done it needs to be done sooner
+	in JPEGFixupTagsSubsampling() or else buffer sized may be wrong.
+
+2012-06-01  Frank Warmerdam  <warmerdam@google.com>
+
+	* tools/tiffinfo.c: Do not try to read image data in EXIF directories.
+
+	* libtiff/tif_getimage.c: added support for _SEPARATED CMYK images.
+	http://bugzilla.maptools.org/show_bug.cgi?id=2379
+
+	* libtiff/tif_unix.c: use strerror() to return a more specific error message
+	on failed open.
+	http://bugzilla.maptools.org/show_bug.cgi?id=2341
+
+	* libtiff/tif_jpeg.c: Fix JPEGDecodeRaw() bugs.
+	http://bugzilla.maptools.org/show_bug.cgi?id=2386
+
+	* tests/decode_raw.c, tests/images/quad-tile.jpg.tiff: add limited support
+	for testing jpeg in tiff image decoding including the "raw" decode interface.
+
+2012-05-31  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_jpeg.c: avoid overrunning the end of the output buffer in
+	JPEGDecodeRaw() - mostly likely to occur when there is confusion about
+	sampling values.
+
+	* libtiff/tif_read.c: Make sure tif_rawdatasize is cleared when tif_rawdata is freed.
+
+	* libtiff/tif_getimage.c: Add support for greyscale+alpha c/o Jérémie Laval.
+	http://bugzilla.maptools.org/show_bug.cgi?id=2398
+
+2012-05-29  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_dir.c: avoid using specific set/get logic to process fields in custom directories,
+	like EXIF directories.  This fixes problems like a tag "320" existing in a custom directory getting
+	processed as if it were a colormap when it isn't really.  Damn the wide variety of argument formulations
+	to get/set functions for different tags!
+
+	* libtiff/tif_dir.c: Ensure that we keep track of when tif_rawdata
+	is a pointer into an mmap()ed file via TIFF_BUFFERMMAP flag.
+
+2012-05-24  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_pixarlog.c: Allocate working buffer one word larger since we "forward
+	accumulate" and overwrite the end by one word in at least some cases.
+
+2012-05-23  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_pixarlog.c: avoid accessing out of the lookup arrays for out of range inputs.
+
+	* tools/tiffinfo.c: initialize h=0 to avoid undefined variable for degenerate files.
+
+	* libtiff/tif_ojpeg.c: if OJPEGWriteHeader() fails once do not bother trying again on
+	the same image.
+
+	* libtiff/tif_ojpeg.c: make things more resilient in the face of files without
+	stripbytecounts or stripoffsets or where loading these fails.
+
+	* libtiff/tif_print.c: be careful about whether min/max values are singular
+	or one per sample.
+
+	* libtiff/tif_print.c: Avoid confusion about count size when printing custom fields.
+	May affect things like ISOSpeedRatings.
+
+	* libtiff/tif_dir.c: avoid one byte past end of ink names reading
+	in some cases.
+
+2012-05-19  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* man/TIFFGetField.3tiff: Correct the 'count' field type in the
+	example for how to retreive the value of unsupported tags.
+
+2012-03-30  Frank Warmerdam  <warmerdam@google.com>
+
+	* tif_getimage.c: Fix size overflow (zdi-can-1221,CVE-2012-1173)
+	care of Tom Lane @ Red Hat.
+
 2012-02-18  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
 
 	* libtiff 4.0.1 released.
@@ -26,6 +229,7 @@
 2011-12-22  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
 
 	* libtiff/tif_win32.c: Eliminate some minor 64-bit warnings in
+
 	tif_win32.c.  Patch by Edward Lam.
 
 	* configure.ac: Add libtiff private dependency on -llzma for

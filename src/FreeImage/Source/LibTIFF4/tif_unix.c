@@ -1,4 +1,4 @@
-/* $Id: tif_unix.c,v 1.2 2012/02/25 17:48:20 drolon Exp $ */
+/* $Id: tif_unix.c,v 1.4 2012/10/07 15:54:03 drolon Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -186,7 +186,11 @@ TIFFOpen(const char* name, const char* mode)
 
 	fd = open(name, m, 0666);
 	if (fd < 0) {
-		TIFFErrorExt(0, module, "%s: Cannot open", name);
+		if (errno > 0 && strerror(errno) != NULL ) {
+			TIFFErrorExt(0, module, "%s: %s", name, strerror(errno) );
+		} else {
+			TIFFErrorExt(0, module, "%s: Cannot open", name);
+		}
 		return ((TIFF *)0);
 	}
 

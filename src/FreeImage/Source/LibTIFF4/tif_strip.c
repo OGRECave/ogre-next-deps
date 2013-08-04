@@ -1,4 +1,4 @@
-/* $Id: tif_strip.c,v 1.2 2012/02/25 17:48:20 drolon Exp $ */
+/* $Id: tif_strip.c,v 1.4 2012/10/07 15:54:03 drolon Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -107,11 +107,13 @@ TIFFVStripSize64(TIFF* tif, uint32 nrows)
 		}
 		TIFFGetFieldDefaulted(tif,TIFFTAG_YCBCRSUBSAMPLING,ycbcrsubsampling+0,
 		    ycbcrsubsampling+1);
-		if (((ycbcrsubsampling[0]!=1)&&(ycbcrsubsampling[0]!=2)&&(ycbcrsubsampling[0]!=4)) ||
-		    ((ycbcrsubsampling[1]!=1)&&(ycbcrsubsampling[1]!=2)&&(ycbcrsubsampling[1]!=4)))
+		if ((ycbcrsubsampling[0] != 1 && ycbcrsubsampling[0] != 2 && ycbcrsubsampling[0] != 4)
+		    ||(ycbcrsubsampling[1] != 1 && ycbcrsubsampling[1] != 2 && ycbcrsubsampling[1] != 4))
 		{
 			TIFFErrorExt(tif->tif_clientdata,module,
-			    "Invalid YCbCr subsampling");
+				     "Invalid YCbCr subsampling (%dx%d)", 
+				     ycbcrsubsampling[0], 
+				     ycbcrsubsampling[1] );
 			return 0;
 		}
 		samplingblock_samples=ycbcrsubsampling[0]*ycbcrsubsampling[1]+2;

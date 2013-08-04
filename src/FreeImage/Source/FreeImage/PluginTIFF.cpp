@@ -153,7 +153,7 @@ _tiffWriteProc(thandle_t handle, void *buf, tmsize_t size) {
 static toff_t
 _tiffSeekProc(thandle_t handle, toff_t off, int whence) {
 	fi_TIFFIO *fio = (fi_TIFFIO*)handle;
-	fio->io->seek_proc(fio->handle, off, whence);
+	fio->io->seek_proc(fio->handle, (long)off, whence);
 	return fio->io->tell_proc(fio->handle);
 }
 
@@ -746,13 +746,20 @@ WriteCompression(TIFF *tiff, uint16 bitspersample, uint16 samplesperpixel, uint1
 			TIFFSetField(tiff, TIFFTAG_PREDICTOR, 1);
 		}
 	}
-	else if(compression == COMPRESSION_CCITTFAX3) {
-		// try to be compliant with the TIFF Class F specification
-		// that documents the TIFF tags specific to FAX applications
-		// see http://palimpsest.stanford.edu/bytopic/imaging/std/tiff-f.html
-		uint32 group3options = GROUP3OPT_2DENCODING | GROUP3OPT_FILLBITS;	
-		TIFFSetField(tiff, TIFFTAG_GROUP3OPTIONS, group3options);	// 2d-encoded, has aligned EOL
-		TIFFSetField(tiff, TIFFTAG_FILLORDER, FILLORDER_LSB2MSB);	// lsb-to-msb fillorder
+	else if((compression == COMPRESSION_CCITTFAX3) || (compression == COMPRESSION_CCITTFAX4)) {
+		uint32 imageLength = 0;
+		TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &imageLength);
+		// overwrite previous RowsPerStrip
+		TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, imageLength);
+
+		if(compression == COMPRESSION_CCITTFAX3) {
+			// try to be compliant with the TIFF Class F specification
+			// that documents the TIFF tags specific to FAX applications
+			// see http://palimpsest.stanford.edu/bytopic/imaging/std/tiff-f.html
+			uint32 group3options = GROUP3OPT_2DENCODING | GROUP3OPT_FILLBITS;	
+			TIFFSetField(tiff, TIFFTAG_GROUP3OPTIONS, group3options);	// 2d-encoded, has aligned EOL
+			TIFFSetField(tiff, TIFFTAG_FILLORDER, FILLORDER_LSB2MSB);	// lsb-to-msb fillorder
+		}
 	}
 }
 
@@ -986,16 +993,21 @@ MimeType() {
 
 static BOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {	
-	BYTE tiff_id1[] = { 0x49, 0x49, 0x2A, 0x00 };
-	BYTE tiff_id2[] = { 0x4D, 0x4D, 0x00, 0x2A };
+	BYTE tiff_id1[] = { 0x49, 0x49, 0x2A, 0x00 };	// Classic TIFF, little-endian
+	BYTE tiff_id2[] = { 0x4D, 0x4D, 0x00, 0x2A };	// Classic TIFF, big-endian
+	BYTE tiff_id3[] = { 0x49, 0x49, 0x2B, 0x00 };	// Big TIFF, little-endian
+	BYTE tiff_id4[] = { 0x4D, 0x4D, 0x00, 0x2B };	// Big TIFF, big-endian
 	BYTE signature[4] = { 0, 0, 0, 0 };
 
 	io->read_proc(signature, 1, 4, handle);
 
 	if(memcmp(tiff_id1, signature, 4) == 0)
 		return TRUE;
-
 	if(memcmp(tiff_id2, signature, 4) == 0)
+		return TRUE;
+	if(memcmp(tiff_id3, signature, 4) == 0)
+		return TRUE;
+	if(memcmp(tiff_id4, signature, 4) == 0)
 		return TRUE;
 
 	return FALSE;

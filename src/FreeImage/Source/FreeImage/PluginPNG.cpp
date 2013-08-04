@@ -758,17 +758,27 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				bit_depth = 16;
 			}
 
+			// check for transparent images
+			BOOL bIsTransparent = 
+				(image_type == FIT_BITMAP) && FreeImage_IsTransparent(dib) && (FreeImage_GetTransparencyCount(dib) > 0) ? TRUE : FALSE;
+
 			switch (FreeImage_GetColorType(dib)) {
 				case FIC_MINISWHITE:
-					// Invert monochrome files to have 0 as black and 1 as white (no break here)
-					png_set_invert_mono(png_ptr);
+					if(!bIsTransparent) {
+						// Invert monochrome files to have 0 as black and 1 as white (no break here)
+						png_set_invert_mono(png_ptr);
+					}
+					// (fall through)
 
 				case FIC_MINISBLACK:
-					png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, 
-						PNG_COLOR_TYPE_GRAY, interlace_type, 
-						PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-					break;
+					if(!bIsTransparent) {
+						png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, 
+							PNG_COLOR_TYPE_GRAY, interlace_type, 
+							PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+						break;
+					}
+					// If a monochrome image is transparent, save it with a palette
+					// (fall through)
 
 				case FIC_PALETTE:
 				{
@@ -846,7 +856,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// set the transparency table
 
-			if (FreeImage_IsTransparent(dib) && (FreeImage_GetTransparencyCount(dib) > 0)) {
+			if (bIsTransparent) {
 				png_set_tRNS(png_ptr, info_ptr, FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), NULL);
 			}
 

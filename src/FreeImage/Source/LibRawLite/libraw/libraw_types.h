@@ -69,13 +69,16 @@ extern "C" {
 #include "libraw_const.h"
 #include "libraw_version.h"
 
-#ifdef WIN32
-typedef __int64 INT64;
-typedef unsigned __int64 UINT64;
+#ifndef _MSC_VER
+// define portable types for 32-bit / 64-bit OS
+#include <inttypes.h>
+typedef int64_t INT64;
+typedef uint64_t UINT64;
 #else
-typedef long long INT64;
-typedef unsigned long long UINT64;
-#endif
+// MS is not C99 ISO compliant
+typedef signed __int64 INT64;
+typedef unsigned __int64 UINT64;
+#endif // _MSC_VER
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;

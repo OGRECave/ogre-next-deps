@@ -1319,13 +1319,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				cinfo.do_fancy_upsampling = FALSE;
 			}
 
+			if ((flags & JPEG_GREYSCALE) == JPEG_GREYSCALE) {
+				// force loading as a 8-bit greyscale image
+				cinfo.out_color_space = JCS_GRAYSCALE;
+			}
+
 			// step 5a: start decompressor and calculate output width and height
 
 			jpeg_start_decompress(&cinfo);
 
 			// step 5b: allocate dib and init header
 
-			if((cinfo.num_components == 4) && (cinfo.out_color_space == JCS_CMYK)) {
+			if((cinfo.output_components == 4) && (cinfo.out_color_space == JCS_CMYK)) {
 				// CMYK image
 				if((flags & JPEG_CMYK) == JPEG_CMYK) {
 					// load as CMYK
@@ -1339,10 +1344,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 			} else {
 				// RGB or greyscale image
-				dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 8 * cinfo.num_components, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 8 * cinfo.output_components, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 				if(!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 
-				if (cinfo.num_components == 1) {
+				if (cinfo.output_components == 1) {
 					// build a greyscale palette
 					RGBQUAD *colors = FreeImage_GetPalette(dib);
 

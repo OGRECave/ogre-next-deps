@@ -1,4 +1,4 @@
-/* $Header: /cvsroot/freeimage/FreeImage/Source/LibTIFF4/tif_error.c,v 1.2 2012/02/25 17:48:19 drolon Exp $ */
+/* $Header: /cvsroot/freeimage/FreeImage/Source/LibTIFF4/tif_error.c,v 1.4 2012/10/07 15:54:03 drolon Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

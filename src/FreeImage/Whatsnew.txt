@@ -5,6 +5,35 @@ What's New for FreeImage
 ! : changed
 + : added
 
+October 27th, 2012 - 3.15.4
+! FreeImage now uses LibPNG 1.5.13
+! FreeImage now uses LibRaw 0.14.7
+! FreeImage now uses ZLib 1.2.7
+! FreeImage now uses LibTIFF 4.0.3
+! FreeImage now uses OpenJPEG 1.5.1
+! FreeImage now uses OpenEXR 1.7.1
++ [Herve Drolon] improved the speed of RAW files detection in FreeImage_GetFileType* functions
++ [Herve Drolon] added JPEG_GREYSCALE load flag to the JPEG plugin (force to load as 8-bit greyscale)
++ [Herve Drolon] added 64-bit RGBA to 24-bit conversion support in FreeImage_ConvertTo24Bits
++ [Carsten Klein] improved the speed of FreeImage_Rescale for FIT_BITMAP & UINT16, RGB[A]16 types
++ [Carsten Klein] improved the speed of FreeImage_ConvertToGreyscale
+* [Carsten Klein] updated makefile for building FreeImage with MinGW
+* [Herve Drolon] fixed BigTIFF signature validation in FreeImage_GetFileType* functions
+* [Carsten Klein] fixed handling of RGB-565 16-bit images (needed for conversion from HBITMAP to FIBITMAP)
+* [Herve Drolon] fixed loading of JPEG with invalid IPTC marker
+* [Herve Drolon] changed default TIF RowsPerStrips to image height when saving as TIF G3 or TIF G4 (improved compression)
+* [Herve Drolon] improved the memory behavior of the RAW plugin (do not allocate huge variables on the stack)
+* [Herve Drolon] fixed FreeImage_AllocateT so that it returns NULL with images with a zero width and/or height
+* [Herve Drolon] replaced FIUINT64/FIINT64 with standard types UINT64/INT64
+* [Rustam Abdullaev] fixed PNG plugin with saving of transparent monochrome images
+* [Floris van den Berg] improved plugin registering when replacing an existing internal plugin with a new equivalent plugin
+* [Herve Drolon] fixed a crash when calling FreeImage_GetColorType on a 32-bit RGBA images loaded with the FIF_LOAD_NOPIXELS flag
+* [Herve Drolon] fixed FreeImage_SetTransparencyTable falsely setting a dib to 'transparent' when called with a count of 0
+* [Carsten Klein] fixed storing of RGB masks for 16-bit RGB standard images in order to be in a MSDN compatible way
+* [Herve Drolon] added an error handling message inside HDR plugin when trying to save an unsupported format
+* [Corey Taylor] fixed DDS plugin color channel swapping for RGB color order, when using FREEIMAGE_COLORORDER_RGB color order
+* [Herve Drolon] fixed internal TagLib singleton initialization against double-checked locking so that it is multi-thread safe
+
 March 17th, 2012 - 3.15.3
 ! FreeImage now uses LibPNG 1.5.9
 ! FreeImage now uses LibTIFF 4.0.1

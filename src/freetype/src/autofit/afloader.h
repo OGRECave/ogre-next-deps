@@ -25,24 +25,11 @@
 
 FT_BEGIN_HEADER
 
-  typedef struct AF_ModuleRec_*  AF_Module;
-
-  /*
-   *  The autofitter module's (global) data structure to communicate with
-   *  actual fonts.  If necessary, `local' data like the current face, the
-   *  current face's auto-hint data, or the current glyph's parameters
-   *  relevant to auto-hinting are `swapped in'.  Cf. functions like
-   *  `af_loader_reset' and `af_loader_load_g'.
-   */
-
-  typedef struct  AF_LoaderRec_
+  typedef struct AF_LoaderRec_
   {
-    /* current face data */
-    FT_Face           face;
-    AF_FaceGlobals    globals;
-
-    /* current glyph data */
-    FT_GlyphLoader    gloader;
+    FT_Face           face;           /* current face */
+    AF_FaceGlobals    globals;        /* current face globals */
+    FT_GlyphLoader    gloader;        /* glyph loader */
     AF_GlyphHintsRec  hints;
     AF_ScriptMetrics  metrics;
     FT_Bool           transformed;
@@ -56,20 +43,21 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  af_loader_init( AF_Module  module );
+  af_loader_init( AF_Loader  loader,
+                  FT_Memory  memory );
 
 
   FT_LOCAL( FT_Error )
-  af_loader_reset( AF_Module  module,
+  af_loader_reset( AF_Loader  loader,
                    FT_Face    face );
 
 
   FT_LOCAL( void )
-  af_loader_done( AF_Module  module );
+  af_loader_done( AF_Loader  loader );
 
 
   FT_LOCAL( FT_Error )
-  af_loader_load_glyph( AF_Module  module,
+  af_loader_load_glyph( AF_Loader  loader,
                         FT_Face    face,
                         FT_UInt    gindex,
                         FT_Int32   load_flags );

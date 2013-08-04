@@ -61,7 +61,7 @@
     {
       FT_ERROR(( "tt_face_load_kern:"
                  " kerning table is too small - ignored\n" ));
-      error = FT_THROW( Table_Missing );
+      error = SFNT_Err_Table_Missing;
       goto Exit;
     }
 

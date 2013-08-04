@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    FreeType internal cache interface (specification).                   */
 /*                                                                         */
-/*  Copyright 2000-2007, 2009-2011, 2013 by                                */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009, 2010,   */
+/*            2011 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -84,6 +85,12 @@ FT_BEGIN_HEADER
                              FT_PtrDist  hash );
 #define FTC_NODE__TOP_FOR_HASH( cache, hash )            \
         ftc_get_top_node_for_hash( ( cache ), ( hash ) )
+#endif
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+  FT_BASE( void )
+  ftc_node_destroy( FTC_Node     node,
+                    FTC_Manager  manager );
 #endif
 
 
@@ -216,7 +223,7 @@ FT_BEGIN_HEADER
     FT_Bool               _list_changed = FALSE;                         \
                                                                          \
                                                                          \
-    error = FT_Err_Ok;                                                   \
+    error = FTC_Err_Ok;                                                  \
     node  = NULL;                                                        \
                                                                          \
     /* Go to the `top' node of the list sharing same masked hash */      \
@@ -321,7 +328,7 @@ FT_BEGIN_HEADER
 
 
 #define FTC_CACHE_TRYLOOP_END( list_changed )                     \
-      if ( !error || FT_ERR_NEQ( error, Out_Of_Memory ) )         \
+      if ( !error || error != FTC_Err_Out_Of_Memory )             \
         break;                                                    \
                                                                   \
       _try_done = FTC_Manager_FlushN( _try_manager, _try_count ); \

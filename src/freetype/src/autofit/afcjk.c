@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (body).                  */
 /*                                                                         */
-/*  Copyright 2006-2013 by                                                 */
+/*  Copyright 2006-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -67,7 +67,8 @@
 
   FT_LOCAL_DEF( void )
   af_cjk_metrics_init_widths( AF_CJKMetrics  metrics,
-                              FT_Face        face )
+                              FT_Face        face,
+                              FT_ULong       charcode )
   {
     /* scan the array of segments in each direction */
     AF_GlyphHintsRec  hints[1];
@@ -86,8 +87,7 @@
       AF_Scaler         scaler = &dummy->root.scaler;
 
 
-      glyph_index = FT_Get_Char_Index( face,
-                                       metrics->root.clazz->standard_char );
+      glyph_index = FT_Get_Char_Index( face, charcode );
       if ( glyph_index == 0 )
         goto Exit;
 
@@ -150,10 +150,7 @@
           }
         }
 
-        /* this also replaces multiple almost identical stem widths */
-        /* with a single one (the value 100 is heuristic) */
-        af_sort_and_quantize_widths( &num_widths, axis->widths,
-                                     dummy->units_per_em / 100 );
+        af_sort_widths( num_widths, axis->widths );
         axis->width_count = num_widths;
       }
 
@@ -481,8 +478,7 @@
         FT_Bool  under_ref = FT_BOOL( shoot < ref );
 
 
-        if ( ( AF_CJK_BLUE_TOP == bb   ||
-               AF_CJK_BLUE_RIGHT == bb ) ^ under_ref )
+        if ( (AF_CJK_BLUE_TOP == bb || AF_CJK_BLUE_RIGHT == bb) ^ under_ref )
           *blue_shoot = *blue_ref = ( shoot + ref ) / 2;
       }
 
@@ -560,14 +556,14 @@
       face->charmap = NULL;
     else
     {
-      af_cjk_metrics_init_widths( metrics, face );
+      af_cjk_metrics_init_widths( metrics, face, 0x7530 );
       af_cjk_metrics_init_blues( metrics, face, af_cjk_hani_blue_chars );
       af_cjk_metrics_check_digits( metrics, face );
     }
 
     FT_Set_Charmap( face, oldmap );
 
-    return FT_Err_Ok;
+    return AF_Err_Ok;
   }
 
 
@@ -703,7 +699,7 @@
     {
       AF_Point  pt   = seg->first;
       AF_Point  last = seg->last;
-      AF_Flags  f0   = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
+      AF_Flags  f0   = (AF_Flags)(pt->flags & AF_FLAG_CONTROL);
       AF_Flags  f1;
 
 
@@ -712,7 +708,7 @@
       for ( ; pt != last; f0 = f1 )
       {
         pt = pt->next;
-        f1 = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
+        f1 = (AF_Flags)(pt->flags & AF_FLAG_CONTROL);
 
         if ( !f0 && !f1 )
           break;
@@ -722,7 +718,7 @@
       }
     }
 
-    return FT_Err_Ok;
+    return AF_Err_Ok;
   }
 
 
@@ -896,7 +892,7 @@
                               AF_Dimension   dim )
   {
     AF_AxisHints  axis   = &hints->axis[dim];
-    FT_Error      error  = FT_Err_Ok;
+    FT_Error      error  = AF_Err_Ok;
     FT_Memory     memory = hints->memory;
     AF_CJKAxis    laxis  = &((AF_CJKMetrics)hints->metrics)->axis[dim];
 
@@ -966,15 +962,14 @@
           /* can make a single edge.                                 */
           if ( link )
           {
-            AF_Segment  seg1  = edge->first;
+            AF_Segment  seg1 = edge->first;
+            AF_Segment  link1;
             FT_Pos      dist2 = 0;
 
 
             do
             {
-              AF_Segment  link1 = seg1->link;
-
-
+              link1 = seg1->link;
               if ( link1 )
               {
                 dist2 = AF_SEGMENT_DIST( link, link1 );
@@ -2195,7 +2190,6 @@
 
   static const AF_Script_UniRangeRec  af_cjk_uniranges[] =
   {
-    AF_UNIRANGE_REC(  0x1100UL,  0x11FFUL ),  /* Hangul Jamo                             */
     AF_UNIRANGE_REC(  0x2E80UL,  0x2EFFUL ),  /* CJK Radicals Supplement                 */
     AF_UNIRANGE_REC(  0x2F00UL,  0x2FDFUL ),  /* Kangxi Radicals                         */
     AF_UNIRANGE_REC(  0x2FF0UL,  0x2FFFUL ),  /* Ideographic Description Characters      */
@@ -2234,7 +2228,6 @@
   AF_DEFINE_SCRIPT_CLASS( af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
-    0x7530, /* 田 */
 
     sizeof ( AF_CJKMetricsRec ),
 
@@ -2257,7 +2250,6 @@
   AF_DEFINE_SCRIPT_CLASS( af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
-    0,
 
     sizeof ( AF_CJKMetricsRec ),
 

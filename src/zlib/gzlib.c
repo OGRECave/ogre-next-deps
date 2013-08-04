@@ -1,5 +1,5 @@
 /* gzlib.c -- zlib functions common to reading and writing gzip files
- * Copyright (C) 2004, 2010, 2011, 2012, 2013 Mark Adler
+ * Copyright (C) 2004, 2010, 2011, 2012 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -108,7 +108,7 @@ local gzFile gz_open(path, fd, mode)
         return NULL;
 
     /* allocate gzFile structure to return */
-    state = (gz_statep)malloc(sizeof(gz_state));
+    state = malloc(sizeof(gz_state));
     if (state == NULL)
         return NULL;
     state->size = 0;            /* no buffers allocated yet */
@@ -162,10 +162,8 @@ local gzFile gz_open(path, fd, mode)
                 break;
             case 'F':
                 state->strategy = Z_FIXED;
-                break;
             case 'T':
                 state->direct = 1;
-                break;
             default:        /* could consider as an error, but just ignore */
                 ;
             }
@@ -196,8 +194,8 @@ local gzFile gz_open(path, fd, mode)
     }
     else
 #endif
-        len = strlen((const char *)path);
-    state->path = (char *)malloc(len + 1);
+        len = strlen(path);
+    state->path = malloc(len + 1);
     if (state->path == NULL) {
         free(state);
         return NULL;
@@ -210,11 +208,7 @@ local gzFile gz_open(path, fd, mode)
             *(state->path) = 0;
     else
 #endif
-#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
-        snprintf(state->path, len + 1, "%s", (const char *)path);
-#else
         strcpy(state->path, path);
-#endif
 
     /* compute the flags for open() */
     oflag =
@@ -242,7 +236,7 @@ local gzFile gz_open(path, fd, mode)
 #ifdef _WIN32
         fd == -2 ? _wopen(path, oflag, 0666) :
 #endif
-        open((const char *)path, oflag, 0666));
+        open(path, oflag, 0666));
     if (state->fd == -1) {
         free(state->path);
         free(state);
@@ -288,13 +282,9 @@ gzFile ZEXPORT gzdopen(fd, mode)
     char *path;         /* identifier for error messages */
     gzFile gz;
 
-    if (fd == -1 || (path = (char *)malloc(7 + 3 * sizeof(int))) == NULL)
+    if (fd == -1 || (path = malloc(7 + 3 * sizeof(int))) == NULL)
         return NULL;
-#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
-    snprintf(path, 7 + 3 * sizeof(int), "<fd:%d>", fd); /* for debugging */
-#else
     sprintf(path, "<fd:%d>", fd);   /* for debugging */
-#endif
     gz = gz_open(path, fd, mode);
     free(path);
     return gz;
@@ -541,8 +531,7 @@ const char * ZEXPORT gzerror(file, errnum)
     /* return error information */
     if (errnum != NULL)
         *errnum = state->err;
-    return state->err == Z_MEM_ERROR ? "out of memory" :
-                                       (state->msg == NULL ? "" : state->msg);
+    return state->msg == NULL ? "" : state->msg;
 }
 
 /* -- see zlib.h -- */
@@ -593,24 +582,21 @@ void ZLIB_INTERNAL gz_error(state, err, msg)
     if (msg == NULL)
         return;
 
-    /* for an out of memory error, return literal string when requested */
-    if (err == Z_MEM_ERROR)
-        return;
-
-    /* construct error message with path */
-    if ((state->msg = (char *)malloc(strlen(state->path) + strlen(msg) + 3)) ==
-            NULL) {
-        state->err = Z_MEM_ERROR;
+    /* for an out of memory error, save as static string */
+    if (err == Z_MEM_ERROR) {
+        state->msg = (char *)msg;
         return;
     }
-#if !defined(NO_snprintf) && !defined(NO_vsnprintf)
-    snprintf(state->msg, strlen(state->path) + strlen(msg) + 3,
-             "%s%s%s", state->path, ": ", msg);
-#else
+
+    /* construct error message with path */
+    if ((state->msg = malloc(strlen(state->path) + strlen(msg) + 3)) == NULL) {
+        state->err = Z_MEM_ERROR;
+        state->msg = (char *)"out of memory";
+        return;
+    }
     strcpy(state->msg, state->path);
     strcat(state->msg, ": ");
     strcat(state->msg, msg);
-#endif
     return;
 }
 

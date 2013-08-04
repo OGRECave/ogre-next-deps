@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2013 by                                                 */
+/*  Copyright 2000-2011 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -205,13 +205,7 @@
     if ( decoder->seac )
     {
       FT_ERROR(( "t1operator_seac: invalid nested seac\n" ));
-      return FT_THROW( Syntax_Error );
-    }
-
-    if ( decoder->builder.metrics_only )
-    {
-      FT_ERROR(( "t1operator_seac: unexpected seac\n" ));
-      return FT_THROW( Syntax_Error );
+      return PSaux_Err_Syntax_Error;
     }
 
     /* seac weirdness */
@@ -228,7 +222,7 @@
     {
       FT_ERROR(( "t1operator_seac:"
                  " glyph names table not available in this font\n" ));
-      return FT_THROW( Syntax_Error );
+      return PSaux_Err_Syntax_Error;
     }
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
@@ -249,7 +243,7 @@
     {
       FT_ERROR(( "t1operator_seac:"
                  " invalid seac character code arguments\n" ));
-      return FT_THROW( Syntax_Error );
+      return PSaux_Err_Syntax_Error;
     }
 
     /* if we are trying to load a composite glyph, do not load the */
@@ -415,7 +409,7 @@
     limit = zone->limit  = charstring_base + charstring_len;
     ip    = zone->cursor = zone->base;
 
-    error = FT_Err_Ok;
+    error = PSaux_Err_Ok;
 
     x = orig_x = builder->pos_x;
     y = orig_y = builder->pos_y;
@@ -565,10 +559,10 @@
           goto Syntax_Error;
         }
 
-        value = (FT_Int32)( ( (FT_UInt32)ip[0] << 24 ) |
-                            ( (FT_UInt32)ip[1] << 16 ) |
-                            ( (FT_UInt32)ip[2] << 8  ) |
-                              (FT_UInt32)ip[3]         );
+        value = (FT_Int32)( ( (FT_Long)ip[0] << 24 ) |
+                            ( (FT_Long)ip[1] << 16 ) |
+                            ( (FT_Long)ip[2] << 8  ) |
+                                       ip[3]         );
         ip += 4;
 
         /* According to the specification, values > 32000 or < -32000 must */
@@ -591,7 +585,7 @@
         else
         {
           if ( !large_int )
-            value = (FT_Int32)( (FT_UInt32)value << 16 );
+            value <<= 16;
         }
 
         break;
@@ -611,13 +605,13 @@
             }
 
             if ( ip[-2] < 251 )
-              value =    ( ( ip[-2] - 247 ) * 256 ) + ip[-1] + 108;
+              value =  ( ( (FT_Int32)ip[-2] - 247 ) << 8 ) + ip[-1] + 108;
             else
-              value = -( ( ( ip[-2] - 251 ) * 256 ) + ip[-1] + 108 );
+              value = -( ( ( (FT_Int32)ip[-2] - 251 ) << 8 ) + ip[-1] + 108 );
           }
 
           if ( !large_int )
-            value = (FT_Int32)( (FT_UInt32)value << 16 );
+            value <<= 16;
         }
         else
         {
@@ -756,9 +750,9 @@
           decoder->flex_state        = 1;
           decoder->num_flex_vectors  = 0;
           if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
+                 != PSaux_Err_Ok                                   ||
                ( error = t1_builder_check_points( builder, 6 ) )
-                 != FT_Err_Ok                                   )
+                 != PSaux_Err_Ok                                   )
             goto Fail;
           break;
 
@@ -1129,7 +1123,7 @@
           FT_TRACE4(( "\n" ));
 
           /* return now! */
-          return FT_Err_Ok;
+          return PSaux_Err_Ok;
 
         case op_hsbw:
           FT_TRACE4(( " hsbw" ));
@@ -1149,7 +1143,7 @@
           /* the glyph's metrics (lsb + advance width), not load the   */
           /* rest of it; so exit immediately                           */
           if ( builder->metrics_only )
-            return FT_Err_Ok;
+            return PSaux_Err_Ok;
 
           break;
 
@@ -1178,7 +1172,7 @@
           /* the glyph's metrics (lsb + advance width), not load the   */
           /* rest of it; so exit immediately                           */
           if ( builder->metrics_only )
-            return FT_Err_Ok;
+            return PSaux_Err_Ok;
 
           break;
 
@@ -1197,7 +1191,7 @@
           FT_TRACE4(( " hlineto" ));
 
           if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok )
+                 != PSaux_Err_Ok )
             goto Fail;
 
           x += top[0];
@@ -1219,9 +1213,9 @@
           FT_TRACE4(( " hvcurveto" ));
 
           if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
+                 != PSaux_Err_Ok                                   ||
                ( error = t1_builder_check_points( builder, 3 ) )
-                 != FT_Err_Ok                                   )
+                 != PSaux_Err_Ok                                   )
             goto Fail;
 
           x += top[0];
@@ -1237,7 +1231,7 @@
           FT_TRACE4(( " rlineto" ));
 
           if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok )
+                 != PSaux_Err_Ok )
             goto Fail;
 
           x += top[0];
@@ -1245,7 +1239,7 @@
 
         Add_Line:
           if ( ( error = t1_builder_add_point1( builder, x, y ) )
-                 != FT_Err_Ok )
+                 != PSaux_Err_Ok )
             goto Fail;
           break;
 
@@ -1266,9 +1260,9 @@
           FT_TRACE4(( " rrcurveto" ));
 
           if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
+                 != PSaux_Err_Ok                                   ||
                ( error = t1_builder_check_points( builder, 3 ) )
-                 != FT_Err_Ok                                   )
+                 != PSaux_Err_Ok                                   )
             goto Fail;
 
           x += top[0];
@@ -1288,9 +1282,9 @@
           FT_TRACE4(( " vhcurveto" ));
 
           if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
+                 != PSaux_Err_Ok                                   ||
                ( error = t1_builder_check_points( builder, 3 ) )
-                 != FT_Err_Ok                                   )
+                 != PSaux_Err_Ok                                   )
             goto Fail;
 
           y += top[0];
@@ -1306,7 +1300,7 @@
           FT_TRACE4(( " vlineto" ));
 
           if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok )
+                 != PSaux_Err_Ok )
             goto Fail;
 
           y += top[0];
@@ -1545,10 +1539,10 @@
     return error;
 
   Syntax_Error:
-    return FT_THROW( Syntax_Error );
+    return PSaux_Err_Syntax_Error;
 
   Stack_Underflow:
-    return FT_THROW( Stack_Underflow );
+    return PSaux_Err_Stack_Underflow;
   }
 
 
@@ -1585,7 +1579,7 @@
       {
         FT_ERROR(( "t1_decoder_init:"
                    " the `psnames' module is not available\n" ));
-        return FT_THROW( Unimplemented_Feature );
+        return PSaux_Err_Unimplemented_Feature;
       }
 
       decoder->psnames = psnames;
@@ -1605,7 +1599,7 @@
 
     decoder->funcs          = t1_decoder_funcs;
 
-    return FT_Err_Ok;
+    return PSaux_Err_Ok;
   }
 
 

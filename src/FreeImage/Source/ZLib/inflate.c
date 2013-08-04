@@ -1,5 +1,5 @@
 /* inflate.c -- zlib decompression
- * Copyright (C) 1995-2012 Mark Adler
+ * Copyright (C) 1995-2011 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -519,6 +519,11 @@ unsigned out;
         bits -= bits & 7; \
     } while (0)
 
+/* Reverse the bytes in a 32-bit value */
+#define REVERSE(q) \
+    ((((q) >> 24) & 0xff) + (((q) >> 8) & 0xff00) + \
+     (((q) & 0xff00) << 8) + (((q) & 0xff) << 24))
+
 /*
    inflate() uses a state machine to process as much input data and generate as
    much output data as possible before returning.  The state machine is
@@ -812,7 +817,7 @@ int flush;
 #endif
         case DICTID:
             NEEDBITS(32);
-            strm->adler = state->check = ZSWAP32(hold);
+            strm->adler = state->check = REVERSE(hold);
             INITBITS();
             state->mode = DICT;
         case DICT:
@@ -1184,7 +1189,7 @@ int flush;
 #ifdef GUNZIP
                      state->flags ? hold :
 #endif
-                     ZSWAP32(hold)) != state->check) {
+                     REVERSE(hold)) != state->check) {
                     strm->msg = (char *)"incorrect data check";
                     state->mode = BAD;
                     break;
@@ -1270,7 +1275,7 @@ const Bytef *dictionary;
 uInt dictLength;
 {
     struct inflate_state FAR *state;
-    unsigned long dictid;
+    unsigned long id;
     unsigned char *next;
     unsigned avail;
     int ret;
@@ -1281,11 +1286,11 @@ uInt dictLength;
     if (state->wrap != 0 && state->mode != DICT)
         return Z_STREAM_ERROR;
 
-    /* check for correct dictionary identifier */
+    /* check for correct dictionary id */
     if (state->mode == DICT) {
-        dictid = adler32(0L, Z_NULL, 0);
-        dictid = adler32(dictid, dictionary, dictLength);
-        if (dictid != state->check)
+        id = adler32(0L, Z_NULL, 0);
+        id = adler32(id, dictionary, dictLength);
+        if (id != state->check)
             return Z_DATA_ERROR;
     }
 

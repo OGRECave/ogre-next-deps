@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (specification).         */
 /*                                                                         */
-/*  Copyright 2006, 2007, 2011, 2012 by                                    */
+/*  Copyright 2006, 2007, 2011 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -28,7 +28,7 @@ FT_BEGIN_HEADER
 
   /* the CJK-specific script class */
 
-  AF_DECLARE_SCRIPT_CLASS( af_cjk_script_class )
+  AF_DECLARE_SCRIPT_CLASS(af_cjk_script_class)
 
   /* CJK (global) metrics management */
 
@@ -103,7 +103,6 @@ FT_BEGIN_HEADER
   } AF_CJKMetricsRec, *AF_CJKMetrics;
 
 
-#ifdef AF_CONFIG_OPTION_CJK
   FT_LOCAL( FT_Error )
   af_cjk_metrics_init( AF_CJKMetrics  metrics,
                        FT_Face        face );
@@ -121,15 +120,15 @@ FT_BEGIN_HEADER
                       FT_Outline*    outline,
                       AF_CJKMetrics  metrics );
 
-  /* shared; called from afindic.c */
+  /* Shared. called from afindic.c */
   FT_LOCAL( void )
   af_cjk_metrics_check_digits( AF_CJKMetrics  metrics,
                                FT_Face        face );
 
   FT_LOCAL( void )
   af_cjk_metrics_init_widths( AF_CJKMetrics  metrics,
-                              FT_Face        face );
-#endif /* AF_CONFIG_OPTION_CJK */
+                              FT_Face        face,
+                              FT_ULong       charcode );
 
 
 /* */

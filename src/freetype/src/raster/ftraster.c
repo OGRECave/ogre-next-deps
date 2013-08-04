@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2003, 2005, 2007-2013 by                                */
+/*  Copyright 1996-2003, 2005, 2007-2012 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -60,7 +60,7 @@
 
 #include <ft2build.h>
 #include "ftraster.h"
-#include FT_INTERNAL_CALC_H   /* for FT_MulDiv and FT_MulDiv_No_Round */
+#include FT_INTERNAL_CALC_H   /* for FT_MulDiv only */
 
 #include "rastpic.h"
 
@@ -179,9 +179,6 @@
 
 #ifdef _STANDALONE_
 
-  /* Auxiliary macros for token concatenation. */
-#define FT_ERR_XCAT( x, y )  x ## y
-#define FT_ERR_CAT( x, y )   FT_ERR_XCAT( x, y )
 
   /* This macro is used to indicate that a function parameter is unused. */
   /* Its purpose is simply to reduce compiler warnings.  Note also that  */
@@ -190,7 +187,7 @@
 #define FT_UNUSED( x )  (x) = (x)
 
   /* Disable the tracing mechanism for simplicity -- developers can      */
-  /* activate it easily by redefining these macros.                      */
+  /* activate it easily by redefining these two macros.                  */
 #ifndef FT_ERROR
 #define FT_ERROR( x )  do { } while ( 0 )     /* nothing */
 #endif
@@ -199,10 +196,6 @@
 #define FT_TRACE( x )   do { } while ( 0 )    /* nothing */
 #define FT_TRACE1( x )  do { } while ( 0 )    /* nothing */
 #define FT_TRACE6( x )  do { } while ( 0 )    /* nothing */
-#endif
-
-#ifndef FT_THROW
-#define FT_THROW( e )  FT_ERR_CAT( Raster_Err_, e )
 #endif
 
 #define Raster_Err_None          0
@@ -231,11 +224,11 @@
 
 
 #include FT_INTERNAL_OBJECTS_H
-#include FT_INTERNAL_DEBUG_H       /* for FT_TRACE, FT_ERROR, and FT_THROW */
+#include FT_INTERNAL_DEBUG_H        /* for FT_TRACE() and FT_ERROR() */
 
 #include "rasterrs.h"
 
-#define Raster_Err_None         FT_Err_Ok
+#define Raster_Err_None         Raster_Err_Ok
 #define Raster_Err_Not_Ini      Raster_Err_Raster_Uninitialized
 #define Raster_Err_Overflow     Raster_Err_Raster_Overflow
 #define Raster_Err_Neg_Height   Raster_Err_Raster_Negative_Height
@@ -262,8 +255,7 @@
   /* On the other hand, SMulDiv means `Slow MulDiv', and is used typically */
   /* for clipping computations.  It simply uses the FT_MulDiv() function   */
   /* defined in `ftcalc.h'.                                                */
-#define SMulDiv           FT_MulDiv
-#define SMulDiv_No_Round  FT_MulDiv_No_Round
+#define SMulDiv  FT_MulDiv
 
   /* The rasterizer is a very general purpose component; please leave */
   /* the following redefinitions there (you never know your target    */
@@ -310,7 +302,6 @@
   typedef short           Short;
   typedef unsigned short  UShort, *PUShort;
   typedef long            Long, *PLong;
-  typedef unsigned long   ULong;
 
   typedef unsigned char   Byte, *PByte;
   typedef char            Bool;
@@ -449,14 +440,12 @@
 
 #define FLOOR( x )    ( (x) & -ras.precision )
 #define CEILING( x )  ( ( (x) + ras.precision - 1 ) & -ras.precision )
-#define TRUNC( x )    ( (Long)(x) >> ras.precision_bits )
+#define TRUNC( x )    ( (signed long)(x) >> ras.precision_bits )
 #define FRAC( x )     ( (x) & ( ras.precision - 1 ) )
-#define SCALED( x )   ( ( (ULong)(x) << ras.scale_shift ) - ras.precision_half )
+#define SCALED( x )   ( ( (x) << ras.scale_shift ) - ras.precision_half )
 
-#define IS_BOTTOM_OVERSHOOT( x ) \
-          (Bool)( CEILING( x ) - x >= ras.precision_half )
-#define IS_TOP_OVERSHOOT( x )    \
-          (Bool)( x - FLOOR( x ) >= ras.precision_half )
+#define IS_BOTTOM_OVERSHOOT( x )  ( CEILING( x ) - x >= ras.precision_half )
+#define IS_TOP_OVERSHOOT( x )     ( x - FLOOR( x ) >= ras.precision_half )
 
   /* The most used variables are positioned at the top of the structure. */
   /* Thus, their offset can be coded with less opcodes, resulting in a   */
@@ -665,7 +654,7 @@
   /*    Set precision variables according to param flag.                   */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    High :: Set to True for high precision (typically for ppem < 24),  */
+  /*    High :: Set to True for high precision (typically for ppem < 18),  */
   /*            false otherwise.                                           */
   /*                                                                       */
   static void
@@ -745,7 +734,7 @@
 
     if ( ras.top >= ras.maxBuff )
     {
-      ras.error = FT_THROW( Overflow );
+      ras.error = Raster_Err_Overflow;
       return FAILURE;
     }
 
@@ -775,7 +764,7 @@
 
     default:
       FT_ERROR(( "New_Profile: invalid profile direction\n" ));
-      ras.error = FT_THROW( Invalid );
+      ras.error = Raster_Err_Invalid;
       return FAILURE;
     }
 
@@ -808,7 +797,8 @@
   static Bool
   End_Profile( RAS_ARGS Bool  overshoot )
   {
-    Long  h;
+    Long      h;
+    PProfile  oldProfile;
 
 
     h = (Long)( ras.top - ras.cProfile->offset );
@@ -816,15 +806,12 @@
     if ( h < 0 )
     {
       FT_ERROR(( "End_Profile: negative height encountered\n" ));
-      ras.error = FT_THROW( Neg_Height );
+      ras.error = Raster_Err_Neg_Height;
       return FAILURE;
     }
 
     if ( h > 0 )
     {
-      PProfile  oldProfile;
-
-
       FT_TRACE6(( "Ending profile %p, start = %ld, height = %ld\n",
                   ras.cProfile, ras.cProfile->start, h ));
 
@@ -852,7 +839,7 @@
     if ( ras.top >= ras.maxBuff )
     {
       FT_TRACE1(( "overflow in End_Profile\n" ));
-      ras.error = FT_THROW( Overflow );
+      ras.error = Raster_Err_Overflow;
       return FAILURE;
     }
 
@@ -881,7 +868,7 @@
   Insert_Y_Turn( RAS_ARGS Int  y )
   {
     PLong  y_turns;
-    Int    n;
+    Int    y2, n;
 
 
     n       = ras.numTurns - 1;
@@ -895,9 +882,7 @@
     if ( n >= 0 && y > y_turns[n] )
       while ( n >= 0 )
       {
-        Int  y2 = (Int)y_turns[n];
-
-
+        y2 = (Int)y_turns[n];
         y_turns[n] = y;
         y = y2;
         n--;
@@ -908,7 +893,7 @@
       ras.maxBuff--;
       if ( ras.maxBuff <= ras.top )
       {
-        ras.error = FT_THROW( Overflow );
+        ras.error = Raster_Err_Overflow;
         return FAILURE;
       }
       ras.numTurns++;
@@ -933,6 +918,7 @@
   static Bool
   Finalize_Profile_Table( RAS_ARG )
   {
+    Int       bottom, top;
     UShort    n;
     PProfile  p;
 
@@ -944,9 +930,6 @@
     {
       while ( n > 0 )
       {
-        Int  bottom, top;
-
-
         if ( n > 1 )
           p->link = (PProfile)( p->offset + p->height );
         else
@@ -1161,20 +1144,20 @@
     size = e2 - e1 + 1;
     if ( ras.top + size >= ras.maxBuff )
     {
-      ras.error = FT_THROW( Overflow );
+      ras.error = Raster_Err_Overflow;
       return FAILURE;
     }
 
     if ( Dx > 0 )
     {
-      Ix = SMulDiv_No_Round( ras.precision, Dx, Dy );
+      Ix = SMulDiv( ras.precision, Dx, Dy);
       Rx = ( ras.precision * Dx ) % Dy;
       Dx = 1;
     }
     else
     {
-      Ix = -SMulDiv_No_Round( ras.precision, -Dx, Dy );
-      Rx = ( ras.precision * -Dx ) % Dy;
+      Ix = SMulDiv( ras.precision, -Dx, Dy) * -1;
+      Rx =    ( ras.precision * -Dx ) % Dy;
       Dx = -1;
     }
 
@@ -1336,7 +1319,7 @@
     if ( ( top + TRUNC( e2 - e ) + 1 ) >= ras.maxBuff )
     {
       ras.top   = top;
-      ras.error = FT_THROW( Overflow );
+      ras.error = Raster_Err_Overflow;
       return FAILURE;
     }
 
@@ -2011,7 +1994,7 @@
     return SUCCESS;
 
   Invalid_Outline:
-    ras.error = FT_THROW( Invalid );
+    ras.error = Raster_Err_Invalid;
 
   Fail:
     return FAILURE;
@@ -2040,6 +2023,8 @@
     int       i;
     unsigned  start;
 
+    PProfile  lastProfile;
+
 
     ras.fProfile = NULL;
     ras.joint    = FALSE;
@@ -2057,8 +2042,7 @@
 
     for ( i = 0; i < ras.outline.n_contours; i++ )
     {
-      PProfile  lastProfile;
-      Bool      o;
+      Bool  o;
 
 
       ras.state    = Unknown_State;
@@ -2282,6 +2266,8 @@
                                 PProfile    right )
   {
     Long   e1, e2;
+    int    c1, c2;
+    Byte   f1, f2;
     Byte*  target;
 
     FT_UNUSED( y );
@@ -2300,10 +2286,6 @@
 
     if ( e2 >= 0 && e1 < ras.bWidth )
     {
-      int   c1, c2;
-      Byte  f1, f2;
-
-
       if ( e1 < 0 )
         e1 = 0;
       if ( e2 >= ras.bWidth )
@@ -2527,24 +2509,21 @@
                                   PProfile    left,
                                   PProfile    right )
   {
+    Long   e1, e2;
+    PByte  bits;
+    Byte   f1;
+
     FT_UNUSED( left );
     FT_UNUSED( right );
 
 
     if ( x2 - x1 < ras.precision )
     {
-      Long  e1, e2;
-
-
       e1 = CEILING( x1 );
       e2 = FLOOR  ( x2 );
 
       if ( e1 == e2 )
       {
-        Byte   f1;
-        PByte  bits;
-
-
         bits = ras.bTarget + ( y >> 3 );
         f1   = (Byte)( 0x80 >> ( y & 7 ) );
 
@@ -2741,6 +2720,8 @@
   static void
   Vertical_Gray_Sweep_Step( RAS_ARG )
   {
+    Int     c1, c2;
+    PByte   pix, bit, bit2;
     short*  count = (short*)count_table;
     Byte*   grays;
 
@@ -2749,9 +2730,6 @@
 
     if ( ras.traceOfs > ras.gray_width )
     {
-      PByte  pix;
-
-
       pix   = ras.gTarget + ras.traceG + ras.gray_min_x * 4;
       grays = ras.grays;
 
@@ -2761,9 +2739,6 @@
         Int   last_cell  = last_pixel >> 2;
         Int   last_bit   = last_pixel & 3;
         Bool  over       = 0;
-
-        Int    c1, c2;
-        PByte  bit, bit2;
 
 
         if ( ras.gray_max_x >= last_cell && last_bit != 3 )
@@ -2857,6 +2832,7 @@
   {
     Long   e1, e2;
     PByte  pixel;
+    Byte   color;
 
 
     /* During the horizontal sweep, we only take care of drop-outs */
@@ -2910,9 +2886,6 @@
 
     if ( e1 >= 0 )
     {
-      Byte  color;
-
-
       if ( x2 - x1 >= ras.precision_half )
         color = ras.grays[2];
       else
@@ -2990,7 +2963,7 @@
     /* check the Y-turns */
     if ( ras.numTurns == 0 )
     {
-      ras.error = FT_THROW( Invalid );
+      ras.error = Raster_Err_Invalid;
       return FAILURE;
     }
 
@@ -3231,7 +3204,7 @@
         if ( ras.band_top >= 7 || k < i )
         {
           ras.band_top = 0;
-          ras.error    = FT_THROW( Invalid );
+          ras.error    = Raster_Err_Invalid;
 
           return ras.error;
         }
@@ -3420,7 +3393,7 @@
   {
     FT_UNUSED_RASTER;
 
-    return FT_THROW( Unsupported );
+    return Raster_Err_Unsupported;
   }
 
 #endif /* !FT_RASTER_OPTION_ANTI_ALIASING */
@@ -3525,8 +3498,7 @@
 
 
         raster->buffer      = pool_base + ( ( sizeof ( *worker ) + 7 ) & ~7 );
-        raster->buffer_size = (long)( pool_base + pool_size -
-                                        (char*)raster->buffer );
+        raster->buffer_size = pool_base + pool_size - (char*)raster->buffer;
         raster->worker      = worker;
       }
       else
@@ -3576,37 +3548,37 @@
 
 
     if ( !raster || !raster->buffer || !raster->buffer_size )
-      return FT_THROW( Not_Ini );
+      return Raster_Err_Not_Ini;
 
     if ( !outline )
-      return FT_THROW( Invalid );
+      return Raster_Err_Invalid;
 
     /* return immediately if the outline is empty */
     if ( outline->n_points == 0 || outline->n_contours <= 0 )
       return Raster_Err_None;
 
     if ( !outline->contours || !outline->points )
-      return FT_THROW( Invalid );
+      return Raster_Err_Invalid;
 
     if ( outline->n_points !=
            outline->contours[outline->n_contours - 1] + 1 )
-      return FT_THROW( Invalid );
+      return Raster_Err_Invalid;
 
     worker = raster->worker;
 
     /* this version of the raster does not support direct rendering, sorry */
     if ( params->flags & FT_RASTER_FLAG_DIRECT )
-      return FT_THROW( Unsupported );
+      return Raster_Err_Unsupported;
 
     if ( !target_map )
-      return FT_THROW( Invalid );
+      return Raster_Err_Invalid;
 
     /* nothing to do */
     if ( !target_map->width || !target_map->rows )
       return Raster_Err_None;
 
     if ( !target_map->buffer )
-      return FT_THROW( Invalid );
+      return Raster_Err_Invalid;
 
     ras.outline = *outline;
     ras.target  = *target_map;

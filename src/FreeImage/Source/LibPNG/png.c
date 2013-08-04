@@ -1,8 +1,8 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.5.11 [June 14, 2012]
- * Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ * Last changed in libpng 1.5.7 [December 15, 2011]
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_5_13 Your_png_h_is_not_version_1_5_13;
+typedef png_libpng_version_1_5_9 Your_png_h_is_not_version_1_5_9;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -655,14 +655,14 @@ png_get_copyright(png_const_structp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-     "libpng version 1.5.13 - September 27, 2012" PNG_STRING_NEWLINE \
-     "Copyright (c) 1998-2012 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
+     "libpng version 1.5.9 - February 18, 2012" PNG_STRING_NEWLINE \
+     "Copyright (c) 1998-2011 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
      "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
      "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
      PNG_STRING_NEWLINE;
 #  else
-      return "libpng version 1.5.13 - September 27, 2012\
-      Copyright (c) 1998-2012 Glenn Randers-Pehrson\
+      return "libpng version 1.5.9 - February 18, 2012\
+      Copyright (c) 1998-2011 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
 #  endif
@@ -969,8 +969,8 @@ int png_XYZ_from_xy(png_XYZ *XYZ, png_xy xy)
     * and it is certain that it becomes unstable where the end points are close
     * together.
     *
-    * So this code uses the perhaps slightly less optimal but more
-    * understandable and totally obvious approach of calculating color-scale.
+    * So this code uses the perhaps slighly less optimal but more understandable
+    * and totally obvious approach of calculating color-scale.
     *
     * This algorithm depends on the precision in white-scale and that is
     * (1/white-y), so we can immediately see that as white-y approaches 0 the
@@ -1467,7 +1467,7 @@ static double
 png_pow10(int power)
 {
    int recip = 0;
-   double d = 1.0;
+   double d = 1;
 
    /* Handle negative exponent with a reciprocal at the end because
     * 10 is exact whereas .1 is inexact in base 2
@@ -1481,7 +1481,7 @@ png_pow10(int power)
    if (power > 0)
    {
       /* Decompose power bitwise. */
-      double mult = 10.0;
+      double mult = 10;
       do
       {
          if (power & 1) d *= mult;
@@ -1600,8 +1600,7 @@ png_ascii_from_fp(png_structp png_ptr, png_charp ascii, png_size_t size,
             {
                double d;
 
-               fp *= 10.0;
-
+               fp *= 10;
                /* Use modf here, not floor and subtract, so that
                 * the separation is done in one step.  At the end
                 * of the loop don't break the number into parts so
@@ -1614,7 +1613,7 @@ png_ascii_from_fp(png_structp png_ptr, png_charp ascii, png_size_t size,
                {
                   d = floor(fp + .5);
 
-                  if (d > 9.0)
+                  if (d > 9)
                   {
                      /* Rounding up to 10, handle that here. */
                      if (czero > 0)
@@ -1622,10 +1621,9 @@ png_ascii_from_fp(png_structp png_ptr, png_charp ascii, png_size_t size,
                         --czero, d = 1;
                         if (cdigits == 0) --clead;
                      }
-
                      else
                      {
-                        while (cdigits > 0 && d > 9.0)
+                        while (cdigits > 0 && d > 9)
                         {
                            int ch = *--ascii;
 
@@ -1650,7 +1648,7 @@ png_ascii_from_fp(png_structp png_ptr, png_charp ascii, png_size_t size,
                          * exponent but take into account the leading
                          * decimal point.
                          */
-                        if (d > 9.0)  /* cdigits == 0 */
+                        if (d > 9)  /* cdigits == 0 */
                         {
                            if (exp_b10 == (-1))
                            {
@@ -1671,19 +1669,18 @@ png_ascii_from_fp(png_structp png_ptr, png_charp ascii, png_size_t size,
                               ++exp_b10;
 
                            /* In all cases we output a '1' */
-                           d = 1.0;
+                           d = 1;
                         }
                      }
                   }
                   fp = 0; /* Guarantees termination below. */
                }
 
-               if (d == 0.0)
+               if (d == 0)
                {
                   ++czero;
                   if (cdigits == 0) ++clead;
                }
-
                else
                {
                   /* Included embedded zeros in the digit count. */
@@ -1711,7 +1708,6 @@ png_ascii_from_fp(png_structp png_ptr, png_charp ascii, png_size_t size,
                                                                  above */
                      --exp_b10;
                   }
-
                   *ascii++ = (char)(48 + (int)d), ++cdigits;
                }
             }
@@ -2044,7 +2040,7 @@ png_muldiv_warn(png_structp png_ptr, png_fixed_point a, png_int_32 times,
 }
 #endif
 
-#ifdef PNG_READ_GAMMA_SUPPORTED /* more fixed point functions for gamma */
+#ifdef PNG_READ_GAMMA_SUPPORTED /* more fixed point functions for gammma */
 /* Calculate a reciprocal, return 0 on div-by-zero or overflow. */
 png_fixed_point
 png_reciprocal(png_fixed_point a)

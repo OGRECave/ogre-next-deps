@@ -1,8 +1,8 @@
 
 /* pngrtran.c - transforms the data in a row for PNG readers
  *
- * Last changed in libpng 1.5.11 [June 14, 2012]
- * Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ * Last changed in libpng 1.5.7 [December 15, 2011]
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -1770,8 +1770,8 @@ png_init_read_transformations(png_structp png_ptr)
          int num_palette = png_ptr->num_palette;
          int i;
 
-         /* NOTE: there are other transformations that should probably be in
-          * here too.
+         /*NOTE: there are other transformations that should probably be in here
+          * too.
           */
          for (i = 0; i < num_palette; i++)
          {
@@ -1830,14 +1830,11 @@ png_init_read_transformations(png_structp png_ptr)
 
 #ifdef PNG_READ_SHIFT_SUPPORTED
    if ((png_ptr->transformations & PNG_SHIFT) &&
-      !(png_ptr->transformations & PNG_EXPAND) &&
        (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE))
    {
       int i;
       int istop = png_ptr->num_palette;
       int shift = 8 - png_ptr->sig_bit.red;
-
-      png_ptr->transformations &= ~PNG_SHIFT;
 
       /* significant bits can be in the range 1 to 7 for a meaninful result, if
        * the number of significant bits is 0 then no shift is done (this is an
@@ -2277,7 +2274,7 @@ png_do_read_transformations(png_structp png_ptr, png_row_infop row_info)
 #endif
 
 #ifdef PNG_READ_GRAY_TO_RGB_SUPPORTED
-   /* NOTE: moved here in 1.5.4 (from much later in this list.) */
+   /*NOTE: moved here in 1.5.4 (from much later in this list.) */
    if ((png_ptr->transformations & PNG_GRAY_TO_RGB) &&
        (png_ptr->mode & PNG_BACKGROUND_IS_GRAY))
       png_do_gray_to_rgb(row_info, png_ptr->row_buf + 1);
@@ -2297,13 +2294,6 @@ png_do_read_transformations(png_structp png_ptr, png_row_infop row_info)
 #ifdef PNG_READ_PACK_SUPPORTED
    if (png_ptr->transformations & PNG_PACK)
       png_do_unpack(row_info, png_ptr->row_buf + 1);
-#endif
-
-#ifdef PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED
-   /* Added at libpng-1.5.10 */
-   if (row_info->color_type == PNG_COLOR_TYPE_PALETTE &&
-       png_ptr->num_palette_max >= 0)
-      png_do_check_palette_indexes(png_ptr, row_info);
 #endif
 
 #ifdef PNG_READ_BGR_SUPPORTED
@@ -3303,7 +3293,7 @@ png_do_rgb_to_gray(png_structp png_ptr, png_row_infop row_info, png_bytep row)
                if (red != green || red != blue)
                {
                   rgb_error |= 1;
-                  /* NOTE: this is the historical approach which simply
+                  /*NOTE: this is the historical approach which simply
                    * truncates the results.
                    */
                   *(dp++) = (png_byte)((rc*red + gc*green + bc*blue)>>15);
@@ -3705,10 +3695,8 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                         if (v == png_ptr->trans_color.gray)
                         {
                            /* Background is already in screen gamma */
-                           *sp = (png_byte)((png_ptr->background.gray >> 8)
-                                & 0xff);
-                           *(sp + 1) = (png_byte)(png_ptr->background.gray
-                                & 0xff);
+                           *sp = (png_byte)((png_ptr->background.gray >> 8) & 0xff);
+                           *(sp + 1) = (png_byte)(png_ptr->background.gray & 0xff);
                         }
 
                         else
@@ -3731,10 +3719,8 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
 
                         if (v == png_ptr->trans_color.gray)
                         {
-                           *sp = (png_byte)((png_ptr->background.gray >> 8)
-                                & 0xff);
-                           *(sp + 1) = (png_byte)(png_ptr->background.gray
-                                & 0xff);
+                           *sp = (png_byte)((png_ptr->background.gray >> 8) & 0xff);
+                           *(sp + 1) = (png_byte)(png_ptr->background.gray & 0xff);
                         }
                      }
                   }
@@ -3814,12 +3800,9 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                         /* Background is already in screen gamma */
                         *sp = (png_byte)((png_ptr->background.red >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(png_ptr->background.red & 0xff);
-                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8)
-                                & 0xff);
-                        *(sp + 3) = (png_byte)(png_ptr->background.green
-                                & 0xff);
-                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8)
-                                & 0xff);
+                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8) & 0xff);
+                        *(sp + 3) = (png_byte)(png_ptr->background.green & 0xff);
+                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8) & 0xff);
                         *(sp + 5) = (png_byte)(png_ptr->background.blue & 0xff);
                      }
 
@@ -3860,12 +3843,9 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                      {
                         *sp = (png_byte)((png_ptr->background.red >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(png_ptr->background.red & 0xff);
-                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8)
-                                & 0xff);
-                        *(sp + 3) = (png_byte)(png_ptr->background.green
-                                & 0xff);
-                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8)
-                                & 0xff);
+                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8) & 0xff);
+                        *(sp + 3) = (png_byte)(png_ptr->background.green & 0xff);
+                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8) & 0xff);
                         *(sp + 5) = (png_byte)(png_ptr->background.blue & 0xff);
                      }
                   }
@@ -3948,8 +3928,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                      else if (a == 0)
                      {
                         /* Background is already in screen gamma */
-                        *sp = (png_byte)((png_ptr->background.gray >> 8)
-                                & 0xff);
+                        *sp = (png_byte)((png_ptr->background.gray >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(png_ptr->background.gray & 0xff);
                      }
 
@@ -3979,8 +3958,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
 
                      if (a == 0)
                      {
-                        *sp = (png_byte)((png_ptr->background.gray >> 8)
-                                & 0xff);
+                        *sp = (png_byte)((png_ptr->background.gray >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(png_ptr->background.gray & 0xff);
                      }
 
@@ -4110,12 +4088,9 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                         /* Background is already in screen gamma */
                         *sp = (png_byte)((png_ptr->background.red >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(png_ptr->background.red & 0xff);
-                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8)
-                                & 0xff);
-                        *(sp + 3) = (png_byte)(png_ptr->background.green
-                                & 0xff);
-                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8)
-                                & 0xff);
+                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8) & 0xff);
+                        *(sp + 3) = (png_byte)(png_ptr->background.green & 0xff);
+                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8) & 0xff);
                         *(sp + 5) = (png_byte)(png_ptr->background.blue & 0xff);
                      }
 
@@ -4126,16 +4101,14 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                         v = gamma_16_to_1[*(sp + 1) >> gamma_shift][*sp];
                         png_composite_16(w, v, a, png_ptr->background_1.red);
                         if (!optimize)
-                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)]
-                               [w >> 8];
+                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)][w >> 8];
                         *sp = (png_byte)((w >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(w & 0xff);
 
                         v = gamma_16_to_1[*(sp + 3) >> gamma_shift][*(sp + 2)];
                         png_composite_16(w, v, a, png_ptr->background_1.green);
                         if (!optimize)
-                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)]
-                               [w >> 8];
+                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)][w >> 8];
 
                         *(sp + 2) = (png_byte)((w >> 8) & 0xff);
                         *(sp + 3) = (png_byte)(w & 0xff);
@@ -4143,8 +4116,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                         v = gamma_16_to_1[*(sp + 5) >> gamma_shift][*(sp + 4)];
                         png_composite_16(w, v, a, png_ptr->background_1.blue);
                         if (!optimize)
-                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)]
-                               [w >> 8];
+                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)][w >> 8];
 
                         *(sp + 4) = (png_byte)((w >> 8) & 0xff);
                         *(sp + 5) = (png_byte)(w & 0xff);
@@ -4165,12 +4137,9 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structp png_ptr)
                      {
                         *sp = (png_byte)((png_ptr->background.red >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(png_ptr->background.red & 0xff);
-                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8)
-                                & 0xff);
-                        *(sp + 3) = (png_byte)(png_ptr->background.green
-                                & 0xff);
-                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8)
-                                & 0xff);
+                        *(sp + 2) = (png_byte)((png_ptr->background.green >> 8) & 0xff);
+                        *(sp + 3) = (png_byte)(png_ptr->background.green & 0xff);
+                        *(sp + 4) = (png_byte)((png_ptr->background.blue >> 8) & 0xff);
                         *(sp + 5) = (png_byte)(png_ptr->background.blue & 0xff);
                      }
 

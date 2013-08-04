@@ -51,8 +51,8 @@
 #include <Iex.h>
 #include <ImfIO.h>
 #include <ImfXdr.h>
-#include <string.h>
 #include <ImfAutoArray.h>
+#include <string.h>
 #include <assert.h>
 
 namespace Imf {

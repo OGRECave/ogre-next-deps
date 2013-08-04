@@ -197,7 +197,7 @@ ConvertAnyTag(FITAG *tag) {
 		
 		case FIDT_LONG8:	// N x 64-bit unsigned integer 
 		{
-			UINT64 *pvalue = (UINT64 *)FreeImage_GetTagValue(tag);
+			FIUINT64 *pvalue = (FIUINT64 *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%ld", pvalue[0]);
 			buffer += format;
@@ -210,7 +210,7 @@ ConvertAnyTag(FITAG *tag) {
 
 		case FIDT_IFD8:		// N x 64-bit unsigned integer (offset)
 		{
-			UINT64 *pvalue = (UINT64 *)FreeImage_GetTagValue(tag);
+			FIUINT64 *pvalue = (FIUINT64 *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%X", pvalue[0]);
 			buffer += format;
@@ -223,7 +223,7 @@ ConvertAnyTag(FITAG *tag) {
 
 		case FIDT_SLONG8:	// N x 64-bit signed integer
 		{
-			INT64 *pvalue = (INT64 *)FreeImage_GetTagValue(tag);
+			FIINT64 *pvalue = (FIINT64 *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%ld", pvalue[0]);
 			buffer += format;

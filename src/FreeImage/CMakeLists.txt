@@ -198,6 +198,7 @@ set(FreeImage_SOURCES
 	Source/LibPNG/pngconf.h
     Source/LibPNG/pngdebug.h
 	Source/LibPNG/pngerror.c
+	Source/LibPNG/pnggccrd.c
 	Source/LibPNG/pngget.c
     Source/LibPNG/pnginfo.h
     Source/LibPNG/pnglibconf.h
@@ -211,6 +212,7 @@ set(FreeImage_SOURCES
 	Source/LibPNG/pngset.c
     Source/LibPNG/pngstruct.h
 	Source/LibPNG/pngtrans.c
+	Source/LibPNG/pngvcrd.c
 	Source/LibPNG/pngwio.c
 	Source/LibPNG/pngwrite.c
 	Source/LibPNG/pngwtran.c

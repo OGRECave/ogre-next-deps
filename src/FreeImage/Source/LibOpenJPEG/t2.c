@@ -64,7 +64,7 @@ static int t2_encode_packet(opj_tcd_tile_t *tile, opj_tcp_t *tcp, opj_pi_iterato
 @param cblksty
 @param first
 */
-static opj_bool t2_init_seg(opj_tcd_cblk_dec_t* cblk, int index, int cblksty, int first);
+static void t2_init_seg(opj_tcd_cblk_dec_t* cblk, int index, int cblksty, int first);
 /**
 Decode a packet of a tile from a source buffer
 @param t2 T2 handle
@@ -296,17 +296,9 @@ static int t2_encode_packet(opj_tcd_tile_t * tile, opj_tcp_t * tcp, opj_pi_itera
 	return (c - dest);
 }
 
-static opj_bool t2_init_seg(opj_tcd_cblk_dec_t* cblk, int index, int cblksty, int first) {
+static void t2_init_seg(opj_tcd_cblk_dec_t* cblk, int index, int cblksty, int first) {
 	opj_tcd_seg_t* seg;
-    opj_tcd_seg_t* segs;
-    segs = (opj_tcd_seg_t*) opj_realloc(cblk->segs, (index + 1) * sizeof(opj_tcd_seg_t));
-
-    if (segs == NULL)
-    {
-        return OPJ_FALSE;
-    }
-    cblk->segs = segs;
-
+	cblk->segs = (opj_tcd_seg_t*) opj_realloc(cblk->segs, (index + 1) * sizeof(opj_tcd_seg_t));
 	seg = &cblk->segs[index];
 	seg->data = NULL;
 	seg->dataindex = 0;
@@ -324,8 +316,6 @@ static opj_bool t2_init_seg(opj_tcd_cblk_dec_t* cblk, int index, int cblksty, in
 	} else {
 		seg->maxpasses = 109;
 	}
-
-    return OPJ_TRUE;
 }
 
 static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_tile_t *tile, 
@@ -472,22 +462,12 @@ static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_t
 			cblk->numlenbits += increment;
 			segno = 0;
 			if (!cblk->numsegs) {
-                if (!t2_init_seg(cblk, segno, tcp->tccps[compno].cblksty, 1))
-                {
-                    opj_event_msg(t2->cinfo, EVT_ERROR, "Out of memory\n");
-                    bio_destroy(bio);
-                    return -999;
-                }
+				t2_init_seg(cblk, segno, tcp->tccps[compno].cblksty, 1);
 			} else {
 				segno = cblk->numsegs - 1;
 				if (cblk->segs[segno].numpasses == cblk->segs[segno].maxpasses) {
 					++segno;
-                    if (!t2_init_seg(cblk, segno, tcp->tccps[compno].cblksty, 0))
-                    {
-                        opj_event_msg(t2->cinfo, EVT_ERROR, "Out of memory\n");
-                        bio_destroy(bio);
-                        return -999;
-                    }
+					t2_init_seg(cblk, segno, tcp->tccps[compno].cblksty, 0);
 				}
 			}
 			n = cblk->numnewpasses;
@@ -498,12 +478,7 @@ static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_t
 				n -= cblk->segs[segno].numnewpasses;
 				if (n > 0) {
 					++segno;
-                    if (!t2_init_seg(cblk, segno, tcp->tccps[compno].cblksty, 0))
-                    {
-                        opj_event_msg(t2->cinfo, EVT_ERROR, "Out of memory\n");
-                        bio_destroy(bio);
-                        return -999;
-                    }
+					t2_init_seg(cblk, segno, tcp->tccps[compno].cblksty, 0);
 				}
 			} while (n > 0);
 		}
@@ -739,11 +714,7 @@ int t2_decode_packets(opj_t2_t *t2, unsigned char *src, int len, int tileno, opj
 			} else {
 				e = 0;
 			}
-            if(e == -999)
-            {
-                pi_destroy(pi, cp, tileno);
-                return -999;
-            }
+			if(e == -999) return -999;
 			/* progression in resolution */
 			image->comps[pi[pino].compno].resno_decoded =	
 				(e > 0) ? 

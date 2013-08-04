@@ -83,10 +83,8 @@ Allocate memory aligned to a 16 byte boundry
 #else /* Not _WIN32 */
 	#if defined(__sun)
 		#define HAVE_MEMALIGN
-  #elif defined(__FreeBSD__)
-    #define HAVE_POSIX_MEMALIGN
 	/* Linux x86_64 and OSX always align allocations to 16 bytes */
-	#elif !defined(__amd64__) && !defined(__APPLE__) && !defined(_AIX)
+	#elif !defined(__amd64__) && !defined(__APPLE__)	
 		#define HAVE_MEMALIGN
 		#include <malloc.h>			
 	#endif

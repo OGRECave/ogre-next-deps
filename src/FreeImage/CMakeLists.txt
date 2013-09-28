@@ -538,7 +538,6 @@ if (APPLE)
  set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
 
  if(OGRE_BUILD_PLATFORM_APPLE_IOS)
-  set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "5.0")
   set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_GCC_THUMB_SUPPORT "NO")
  endif()
 endif()

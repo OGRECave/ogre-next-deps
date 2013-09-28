@@ -123,6 +123,7 @@ void iPhoneInputManager::_initialize( ParamList &paramList )
     [mDelegate setMultipleTouchEnabled:YES];
     [mDelegate setExclusiveTouch:YES];
     [mDelegate becomeFirstResponder];
+    [mDelegate setContentScaleFactor:mContentScalingFactor];
 
     [mWindow addSubview:mDelegate];
 }
@@ -148,6 +149,14 @@ void iPhoneInputManager::_parseConfigSettings( ParamList &paramList )
 	
 	if(mWindow == nil)
 		OIS_EXCEPT( E_General, "iPhoneInputManager::_parseConfigSettings >> Unable to find a window or event target" );
+
+    i = paramList.find("VIEW");
+	if(i != paramList.end())
+	{
+		UIView *view = (UIView *)strtoul(i->second.c_str(), 0, 10);
+		if(view != 0)
+			mContentScalingFactor = [view contentScaleFactor];
+    }
 }
 
 //--------------------------------------------------------------------------------//

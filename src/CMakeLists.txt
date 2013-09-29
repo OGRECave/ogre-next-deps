@@ -44,6 +44,15 @@ if (CMAKE_COMPILER_IS_GNUCXX AND NOT MINGW)
   endif ()
 endif ()
 
+if(XCODE_VERSION VERSION_LESS 5.0.0)
+  set(MIN_IOS_VERSION "5.0")
+else()
+  set(MIN_IOS_VERSION "6.0")
+endif()
+
+macro(set_xcode_property targ xc_prop_name xc_prop_val)
+  set_property( TARGET ${targ} PROPERTY XCODE_ATTRIBUTE_${xc_prop_name} ${xc_prop_val} )
+endmacro(set_xcode_property)
 
 # by default, install to ogredeps subfolder in build directory
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -68,10 +77,13 @@ macro(install_dep LIBRARY INCLUDE_DIR)
   )
 
   if(APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
+    set_xcode_property( ${LIBRARY} IPHONEOS_DEPLOYMENT_TARGET ${MIN_IOS_VERSION} )
+    set_property( TARGET ${LIBRARY} PROPERTY XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET[arch=arm64] "7.0" )
+
     add_custom_command(TARGET ${LIBRARY} POST_BUILD
       COMMAND mkdir -p "${OGREDEPS_BINARY_DIR}/${OGREDEPS_LIB_DIRECTORY}/$(CONFIGURATION)"
       COMMAND mkdir -p "${CMAKE_INSTALL_PREFIX}/${OGREDEPS_LIB_DIRECTORY}/$(CONFIGURATION)"
-      COMMAND if [[ -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a && -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ]] \; then lipo ARGS -create ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a -arch i386 ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a
+      COMMAND if [[ -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a && -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ]] \; then lipo ARGS -create ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a
       -output "${CMAKE_INSTALL_PREFIX}/${OGREDEPS_LIB_DIRECTORY}/$(CONFIGURATION)/lib${LIBRARY}.a"\; fi
     )
   endif()

@@ -104,7 +104,7 @@ void iPhoneMultiTouch::_touchBegan(UITouch *touch)
     CGFloat contentScale = 1.0;
 #if __IPHONE_4_0
     if([touchView respondsToSelector:@selector(contentScaleFactor)])
-        contentScale = [[UIScreen mainScreen] scale];
+        contentScale = [touchView contentScaleFactor];
 #endif
 
     MultiTouchState newState;
@@ -129,7 +129,7 @@ void iPhoneMultiTouch::_touchEnded(UITouch *touch)
     CGFloat contentScale = 1.0;
 #if __IPHONE_4_0
     if([touchView respondsToSelector:@selector(contentScaleFactor)])
-        contentScale = [[UIScreen mainScreen] scale];
+        contentScale = [touchView contentScaleFactor];
 #endif
 
     MultiTouchState newState;
@@ -156,7 +156,7 @@ void iPhoneMultiTouch::_touchMoved(UITouch *touch)
     CGFloat contentScale = 1.0;
 #if __IPHONE_4_0
     if([touchView respondsToSelector:@selector(contentScaleFactor)])
-        contentScale = [[UIScreen mainScreen] scale];
+        contentScale = [touchView contentScaleFactor];
 #endif
 
     MultiTouchState newState;
@@ -184,7 +184,7 @@ void iPhoneMultiTouch::_touchCancelled(UITouch *touch)
     CGFloat contentScale = 1.0;
 #if __IPHONE_4_0
     if([touchView respondsToSelector:@selector(contentScaleFactor)])
-        contentScale = [[UIScreen mainScreen] scale];
+        contentScale = [touchView contentScaleFactor];
 #endif
 
     MultiTouchState newState;

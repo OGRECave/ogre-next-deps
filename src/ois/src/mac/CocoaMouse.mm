@@ -101,7 +101,7 @@ void CocoaMouse::capture()
 
         // Use NSTrackingArea to track mouse move events
         NSTrackingAreaOptions trackingOptions = 
-        NSTrackingMouseMoved | NSTrackingActiveAlways | NSTrackingInVisibleRect;
+        NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways | NSTrackingAssumeInside;
         NSDictionary *trackerData = [NSDictionary dictionaryWithObjectsAndKeys:
                                      [NSNumber numberWithInt:0], @"OISMouseTrackingKey", nil];
         mTrackingArea = [[NSTrackingArea alloc]

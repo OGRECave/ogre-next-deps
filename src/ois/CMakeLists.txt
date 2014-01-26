@@ -79,7 +79,7 @@ elseif (APPLE)
     set(OIS_PLATFORM_HEADERS
       includes/mac/CocoaInputManager.h
       includes/mac/CocoaJoyStick.h
-      includes/mac/CocoaKeyBoard.h
+      includes/mac/CocoaKeyboard.h
       includes/mac/CocoaMouse.h
       includes/mac/CocoaHelpers.h
       includes/mac/MacHelpers.h
@@ -94,7 +94,7 @@ elseif (APPLE)
     set(OIS_PLATFORM_SOURCES
       src/mac/CocoaInputManager.mm
       src/mac/CocoaJoyStick.mm
-      src/mac/CocoaKeyBoard.mm
+      src/mac/CocoaKeyboard.mm
       src/mac/CocoaMouse.mm
       src/mac/MacHelpers.cpp
       src/mac/MacHIDManager.cpp

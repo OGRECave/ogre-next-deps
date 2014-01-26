@@ -295,8 +295,8 @@ namespace OIS
 		virtual void copyKeyStates(char keys[256]) const = 0;
 		
 	protected:
-		Keyboard(const std::string &vendor, bool buffered, int devID, InputManager* creator)
-			: Object(vendor, OISKeyboard, buffered, devID, creator),
+		Keyboard(const std::string &inVendor, bool inBuffered, int devID, InputManager* creator)
+			: Object(inVendor, OISKeyboard, inBuffered, devID, creator),
 			mModifiers(0), mListener(0), mTextMode(Unicode) {}
 
 		//! Bit field that holds status of Alt, Ctrl, Shift

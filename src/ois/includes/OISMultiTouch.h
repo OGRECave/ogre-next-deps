@@ -145,10 +145,10 @@ namespace OIS
 
         /** @remarks Returns the first n touch states.  Useful if you know your app only needs to 
          process n touches.  The return value is a vector to allow random access */
-        const std::vector<MultiTouchState> getMultiTouchStatesOfType(MultiTypeEventTypeID type) {
+        const std::vector<MultiTouchState> getMultiTouchStatesOfType(MultiTypeEventTypeID evtType) {
             std::vector<MultiTouchState> states;
             for( unsigned int i = 0; i < mStates.size(); i++ ) {
-                if(mStates[i].touchIsType(type)) {
+                if(mStates[i].touchIsType(evtType)) {
                     states.push_back(mStates[i]);
                 }
             }
@@ -156,8 +156,8 @@ namespace OIS
         }
         
 	protected:
-		MultiTouch(const std::string &vendor, bool buffered, int devID, InputManager* creator)
-			: Object(vendor, OISMultiTouch, buffered, devID, creator), mListener(0) {}
+		MultiTouch(const std::string &inVendor, bool inBuffered, int devID, InputManager* creator)
+			: Object(inVendor, OISMultiTouch, inBuffered, devID, creator), mListener(0) {}
 
 		//! The state of the touch device, implemented in a vector to store the state from each finger touch
         std::vector<MultiTouchState> mStates;

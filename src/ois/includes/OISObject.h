@@ -68,11 +68,11 @@ namespace OIS
 		virtual void _initialize() = 0;
 
 	protected:
-		Object(const std::string &vendor, Type iType, bool buffered,
+		Object(const std::string &inVendor, Type iType, bool inBuffered,
 			   int devID, InputManager* creator) :
-					mVendor(vendor),
+					mVendor(inVendor),
 					mType(iType),
-					mBuffered(buffered),
+					mBuffered(inBuffered),
 					mDevID(devID),
 					mCreator(creator) {}
 

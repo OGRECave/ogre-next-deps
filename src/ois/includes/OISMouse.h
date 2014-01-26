@@ -125,8 +125,8 @@ namespace OIS
 		const MouseState& getMouseState() const { return mState; }
 
 	protected:
-		Mouse(const std::string &vendor, bool buffered, int devID, InputManager* creator)
-			: Object(vendor, OISMouse, buffered, devID, creator), mListener(0) {}
+		Mouse(const std::string &inVendor, bool inBuffered, int devID, InputManager* creator)
+			: Object(inVendor, OISMouse, inBuffered, devID, creator), mListener(0) {}
 
 		//! The state of the mouse
 		MouseState mState;

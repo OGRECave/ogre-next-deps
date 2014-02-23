@@ -106,6 +106,8 @@ elseif (APPLE)
   endif()
 elseif (ANDROID)
   set(OIS_PLATFORM android)
+elseif (EMSCRIPTEN)
+  set(OIS_PLATFORM emscripten)
 else()
   set(OIS_PLATFORM_HEADERS
     includes/linux/EventHelpers.h

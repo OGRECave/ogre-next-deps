@@ -39,4 +39,11 @@ if (ANDROID)
   SET(OGRE_PLATFORM OGRE_PLATFORM_ANDROID)
 endif()
 
+if (EMSCRIPTEN)
+  set(TargetPlatform "Emscripten")
+  set(OGRE_PLATFORM OGRE_PLATFORM_EMSCRIPTEN)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-warn-absolute-paths -Werror=implicit-function-declaration")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-warn-absolute-paths -Werror=implicit-function-declaration")
+endif()
+
 add_subdirectory(src)

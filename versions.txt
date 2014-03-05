@@ -5,6 +5,6 @@ INCLUDED LIBRARY VERSIONS
 * FreeImage 3.15.3
 * freetype 2.4.9
 * OIS 1.4
-* zlib 1.2.7
+* zlib 1.2.8
 * zziplib 0.13.62
 

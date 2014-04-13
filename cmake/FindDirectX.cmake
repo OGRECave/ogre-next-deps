@@ -37,6 +37,19 @@ if(WIN32) # The only platform it makes sense to check for DirectX SDK
     "C:/Program Files/Microsoft DirectX SDK*"
 	"$ENV{ProgramFiles}/Microsoft DirectX SDK*"
   )
+  
+  # Windows 8 SDK has custom layout
+  set(DirectX_INC_SEARCH_PATH 
+    "C:/Program Files (x86)/Windows Kits/8.1/Include/shared"
+    "C:/Program Files (x86)/Windows Kits/8.1/Include/um"
+    "C:/Program Files (x86)/Windows Kits/8.0/Include/shared"
+    "C:/Program Files (x86)/Windows Kits/8.0/Include/um"
+  )
+  set(DirectX_LIB_SEARCH_PATH 
+    "C:/Program Files (x86)/Windows Kits/8.1/Lib/winv6.3/um"
+    "C:/Program Files (x86)/Windows Kits/8.0/Lib/win8/um"
+  )
+  
   create_search_paths(DirectX)
   # redo search if prefix path changed
   clear_if_changed(DirectX_PREFIX_PATH

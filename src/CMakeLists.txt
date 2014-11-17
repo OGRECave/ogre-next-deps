@@ -31,7 +31,7 @@ set(CMAKE_DEBUG_POSTFIX "_d")
 endif()
 
 if (OGRE_BUILD_PLATFORM_APPLE_IOS)
-set(OGREDEPS_BUILD_ZLIB FALSE)
+#set(OGREDEPS_BUILD_ZLIB FALSE)
 endif()
 
 # determine if we are compiling for a 32bit or 64bit system

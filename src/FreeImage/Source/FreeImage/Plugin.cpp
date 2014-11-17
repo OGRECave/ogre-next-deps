@@ -221,6 +221,13 @@ FreeImage_Initialise(BOOL load_local_plugins_only) {
 			The order used to initialize internal plugins below MUST BE the same order 
 			as the one used to define the FREE_IMAGE_FORMAT enum. 
 			*/
+#ifdef __EMSCRTIPEN__
+			s_plugins->AddNode(InitJPEG);
+			s_plugins->AddNode(InitPNG);
+			s_plugins->AddNode(InitTARGA);
+			s_plugins->AddNode(InitTIFF);
+	        s_plugins->AddNode(InitGIF);
+#else
 			s_plugins->AddNode(InitBMP);
 			s_plugins->AddNode(InitICO);
 			s_plugins->AddNode(InitJPEG);
@@ -255,8 +262,8 @@ FreeImage_Initialise(BOOL load_local_plugins_only) {
 			s_plugins->AddNode(InitJP2);
 			s_plugins->AddNode(InitPFM);
 			s_plugins->AddNode(InitPICT);
-			s_plugins->AddNode(InitRAW);
-			
+			//s_plugins->AddNode(InitRAW);
+#endif
 			// external plugin initialization
 
 #ifdef _WIN32

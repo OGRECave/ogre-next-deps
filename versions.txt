@@ -8,3 +8,6 @@ INCLUDED LIBRARY VERSIONS
 * zlib 1.2.8
 * zziplib 0.13.62
 
+CUSTOM OGRE CHANGES
+===========================
+* /src/zlib/gzguts.h (lines 32-34): added "unistd.h" include on non-Windows platforms for Ogre's Emscripten support

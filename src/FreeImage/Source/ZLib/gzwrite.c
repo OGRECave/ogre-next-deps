@@ -14,6 +14,10 @@ disable warning "The POSIX name for this item is deprecated. Instead, use the IS
 #pragma warning(disable : 4996)
 #endif /* _MSC_VER */
 
+#ifndef _WIN32
+#  include <unistd.h>
+#endif
+
 /* Local functions */
 local int gz_init OF((gz_statep));
 local int gz_comp OF((gz_statep, int));

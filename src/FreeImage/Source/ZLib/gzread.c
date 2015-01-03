@@ -14,6 +14,10 @@ disable warning "The POSIX name for this item is deprecated. Instead, use the IS
 #pragma warning(disable : 4996)
 #endif /* _MSC_VER */
 
+#ifndef _WIN32
+#  include <unistd.h>
+#endif
+
 /* Local functions */
 local int gz_load OF((gz_statep, unsigned char *, unsigned, unsigned *));
 local int gz_avail OF((gz_statep));

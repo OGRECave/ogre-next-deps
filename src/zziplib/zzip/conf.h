@@ -22,7 +22,7 @@
 #define _ZZIP_CONF_H 1
 
 #if !defined ZZIP_OMIT_CONFIG_H
-# if defined _MSC_VER || defined __BORLANDC__ || defined __WATCOMC__
+# if defined _MSC_VER || defined __BORLANDC__ || defined __WATCOMC__ || defined _WIN32
 # include <zzip/_msvc.h>
 # elif defined ZZIP_1_H
 # include "zzip-1.h"
@@ -159,11 +159,11 @@
 #define _zzip_inline static
 #endif
 
-#if defined _MSC_VER || defined __WATCOMC__
+#if defined _MSC_VER || defined __WATCOMC__ || defined _WIN32
 #include <io.h>
 #endif
 
-#ifdef _MSC_VER
+#if defined _MSC_VER || defined _WIN32
 # if !__STDC__
 #  ifndef _zzip_lseek
 #  define _zzip_lseek _lseek
@@ -183,7 +183,7 @@
 #endif
   /*MSVC*/
 
-#if defined _MSC_VER || defined __WATCOMC__
+#if defined _MSC_VER || defined __WATCOMC__ || defined _WIN32
 #  ifndef strcasecmp
 #  define strcasecmp _stricmp
 #  endif

@@ -89,7 +89,7 @@ macro(install_dep LIBRARY INCLUDE_DIR)
     add_custom_command(TARGET ${LIBRARY} POST_BUILD
       COMMAND mkdir -p "${OGREDEPS_BINARY_DIR}/${OGREDEPS_LIB_DIRECTORY}/$(CONFIGURATION)"
       COMMAND mkdir -p "${CMAKE_INSTALL_PREFIX}/${OGREDEPS_LIB_DIRECTORY}/$(CONFIGURATION)"
-      COMMAND if ( -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a && -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ) \; then lipo ARGS -create ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a
+      COMMAND if [ -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a ] && [ -e ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ] \; then lipo ARGS -create ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphoneos/lib${LIBRARY}.a ${OGREDEPS_BINARY_DIR}/src/${LIBRARY}/$(CONFIGURATION)-iphonesimulator/lib${LIBRARY}.a
       -output "${CMAKE_INSTALL_PREFIX}/${OGREDEPS_LIB_DIRECTORY}/$(CONFIGURATION)/lib${LIBRARY}.a" \; fi
     )
   endif()

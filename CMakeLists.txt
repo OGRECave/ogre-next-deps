@@ -1,15 +1,11 @@
-if (APPLE AND NOT ANDROID)
-  cmake_minimum_required(VERSION 2.8.8)
-else()
-  cmake_minimum_required(VERSION 2.6)
-endif ()
+cmake_minimum_required(VERSION 2.8.10)
 
 project(OGREDEPS)
 set(CMAKE_MODULE_PATH "${OGREDEPS_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 
 if (WIN32)
-  # look for DirectX which is needed by OIS
-  find_package(DirectX REQUIRED)
+  # Look for DirectX which is needed by OIS.
+  find_package(DirectX)
   add_definitions(-DWINVER=0x0500)
 endif ()
 

@@ -1,16 +1,22 @@
+include(ExternalProject)
+
 # provide configuration options to choose which of the dependencies to build
-if(WIN32)
+if (WIN32)
   option(OGREDEPS_BUILD_CG "Build Cg dependency" TRUE)
   option(OGREDEPS_BUILD_AMD_QBS "Build AMD Quad Buffer SDK dependency" TRUE)
   option(OGREDEPS_BUILD_NVIDIA_NVAPI "Build NVIDIA NVAPI dependency" TRUE)
-endif()
+  option(OGREDEPS_BUILD_SDL2 "Build SDL2 dependency" TRUE)
+endif ()
 option(OGREDEPS_BUILD_FREEIMAGE "Build FreeImage dependency" TRUE)
 option(OGREDEPS_BUILD_FREETYPE "Build FreeType dependency" TRUE)
-option(OGREDEPS_BUILD_OIS "Build OIS dependency" TRUE)
+if ((NOT WIN32) OR DirectX_FOUND)
+  option(OGREDEPS_BUILD_OIS "Build OIS dependency" TRUE)
+endif ()
 option(OGREDEPS_BUILD_ZLIB "Build zlib dependency" TRUE)
 option(OGREDEPS_BUILD_ZZIPLIB "Build zziplib dependency" TRUE)
 option(OGREDEPS_INSTALL_DEV "Install development headers and libraries" TRUE)
-set(OGREDEPS_LIB_DIRECTORY "lib${LIB_SUFFIX}" CACHE STRING "Install path for libraries, e.g. 'lib64' on some 64-bit Linux distros.")
+set(OGREDEPS_LIB_DIRECTORY "lib${LIB_SUFFIX}" CACHE STRING
+  "Install path for libraries, e.g. 'lib64' on some 64-bit Linux distros.")
 mark_as_advanced(OGREDEPS_LIB_DIRECTORY)
 
 # choose paths to build and install dependencies to
@@ -142,6 +148,38 @@ if (OGREDEPS_BUILD_FREETYPE)
 endif ()
 if (OGREDEPS_BUILD_OIS)
   add_subdirectory(ois)
+endif ()
+if (OGREDEPS_BUILD_SDL2)
+  set(SDL2_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}")
+  if (MINGW)
+    list(APPEND SDL2_CMAKE_ARGS "-DDIRECTX=0")
+    set(SDL2_BIN_NAME "libSDL2.dll")
+    # set(SDL2_LIB_NAME "libSDL2.a")
+  else ()
+    set(SDL2_BIN_NAME "SDL2.dll")
+    # set(SDL2_LIB_NAME "SDL2.lib")
+  endif ()
+  ExternalProject_Add(
+    SDL2
+    # Configure step.
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDL2
+    CMAKE_ARGS ${SDL2_CMAKE_ARGS}
+  )
+  ExternalProject_Add_Step(
+    SDL2
+    MoveInstallFiles
+    COMMENT "Move SDL2 install files into the Release and Debug folders."
+    DEPENDEES install
+    WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+    # For MinGW, the Release & Debug directories may not yet exist.
+    COMMAND ${CMAKE_COMMAND} -E make_directory bin/Release
+    COMMAND ${CMAKE_COMMAND} -E make_directory bin/Debug
+    # COMMAND ${CMAKE_COMMAND} -E make_directory lib/Release
+    COMMAND ${CMAKE_COMMAND} -E copy bin/${SDL2_BIN_NAME} bin/Debug/SDL2.dll
+    COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Release/SDL2.dll
+    # COMMAND ${CMAKE_COMMAND} -E rename lib/${SDL2_LIB_NAME} lib/Release/${SDL2_LIB_NAME}
+    LOG 1
+  )
 endif ()
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)

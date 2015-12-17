@@ -143,6 +143,9 @@ else ()
   add_definitions(-DOIS_NONCLIENT_BUILD)
   add_library(OIS STATIC ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})
 endif ()
+if (OGRE_PROJECT_FOLDERS)
+	set_property(TARGET OIS PROPERTY FOLDER Dependencies)
+endif ()
 
 if (MINGW)
 	  # remove lib prefix from DLL outputs

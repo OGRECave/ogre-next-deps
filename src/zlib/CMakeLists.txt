@@ -36,6 +36,9 @@ set(zlib_SOURCES
 
 add_library(zlib STATIC ${zlib_SOURCES})
 install_dep(zlib include zlib.h zconf.h)
+if (OGRE_PROJECT_FOLDERS)
+	set_property(TARGET zlib PROPERTY FOLDER Dependencies)
+endif ()
 
 if (APPLE)
  set_target_properties(zlib PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")

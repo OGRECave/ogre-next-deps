@@ -532,6 +532,10 @@ include_directories(Source/ZLib)
 
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS)
 add_library(FreeImage STATIC ${FreeImage_SOURCES})
+if (OGRE_PROJECT_FOLDERS)
+	set_property(TARGET FreeImage PROPERTY FOLDER Dependencies)
+endif ()
+
 install_dep(FreeImage include Source/FreeImage.h)
 
 if (APPLE)

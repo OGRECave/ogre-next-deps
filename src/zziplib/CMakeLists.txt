@@ -49,6 +49,9 @@ endif ()
 
 add_library(zziplib STATIC ${zziplib_SOURCES})
 install_dep(zziplib include/zzip zzip/_config.h zzip/conf.h zzip/types.h zzip/zzip.h zzip/plugin.h zzip/_msvc.h)
+if (OGRE_PROJECT_FOLDERS)
+	set_property(TARGET zziplib PROPERTY FOLDER Dependencies)
+endif ()
 
 if (APPLE)
  set_target_properties(zziplib PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")

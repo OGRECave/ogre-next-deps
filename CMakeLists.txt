@@ -25,8 +25,8 @@ if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
   endif()
   add_definitions(-DHAVE_UNISTD_H=1)
 elseif (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
-  # Set 10.5 as the base SDK by default
-  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.6)
+  # 10.7 is the minimum for libc++ support
+  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
 
   if (NOT CMAKE_OSX_ARCHITECTURES)
     set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD_32_64_BIT)")

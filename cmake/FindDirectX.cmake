@@ -41,12 +41,18 @@ if(WIN32) # The only platform it makes sense to check for DirectX SDK
   if (NOT MINGW)
     # Windows 8 SDK has custom layout
     set(DirectX_INC_SEARCH_PATH
+      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10586.0/shared"
+      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10586.0/um"
+      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/shared"
+      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/um"
       "C:/Program Files (x86)/Windows Kits/8.1/Include/shared"
       "C:/Program Files (x86)/Windows Kits/8.1/Include/um"
       "C:/Program Files (x86)/Windows Kits/8.0/Include/shared"
       "C:/Program Files (x86)/Windows Kits/8.0/Include/um"
       )
     set(DirectX_LIB_SEARCH_PATH 
+      "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.10586.0/um"
+      "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.10240.0/um"
       "C:/Program Files (x86)/Windows Kits/8.1/Lib/winv6.3/um"
       "C:/Program Files (x86)/Windows Kits/8.0/Lib/win8/um"
       )

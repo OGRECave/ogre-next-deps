@@ -15,6 +15,9 @@
 # DirectX_LIBRARY
 # DirectX_ROOT_DIR
 
+# earliest version that provides CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION
+cmake_minimum_required(VERSION 3.4.0)
+
 if(WIN32) # The only platform it makes sense to check for DirectX SDK
   include(FindPkgMacros)
   findpkg_begin(DirectX)
@@ -39,23 +42,29 @@ if(WIN32) # The only platform it makes sense to check for DirectX SDK
   )
   
   if (NOT MINGW)
-    # Windows 8 SDK has custom layout
-    set(DirectX_INC_SEARCH_PATH
-      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10586.0/shared"
-      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10586.0/um"
-      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/shared"
-      "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/um"
-      "C:/Program Files (x86)/Windows Kits/8.1/Include/shared"
-      "C:/Program Files (x86)/Windows Kits/8.1/Include/um"
-      "C:/Program Files (x86)/Windows Kits/8.0/Include/shared"
-      "C:/Program Files (x86)/Windows Kits/8.0/Include/um"
-      )
-    set(DirectX_LIB_SEARCH_PATH 
-      "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.10586.0/um"
-      "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.10240.0/um"
-      "C:/Program Files (x86)/Windows Kits/8.1/Lib/winv6.3/um"
-      "C:/Program Files (x86)/Windows Kits/8.0/Lib/win8/um"
-      )
+    # hardwiring SDK path isn't good but not sure how else to do it
+    set(SDKPATH "C:/Program Files (x86)/Windows Kits")
+    if(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+      # implies CMake 3.4.0+, MSVC14, and Windows 10 SDK target
+      set(SDKINC "${SDKPATH}/10/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+      set(SDKLIB "${SDKPATH}/10/Lib/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+      set(DirectX_INC_SEARCH_PATH "${SDKINC}/shared" "${SDKINC}/um")
+      set(DirectX_LIB_SEARCH_PATH "${SDKLIB}/um")
+    else()
+      # likely earlier than Windows 10 SDK desired
+      # could be earlier MSVC and Windows 10 SDK desired, but blow that off
+      # Windows 8 SDK has custom layout
+      set(DirectX_INC_SEARCH_PATH
+        "${SDKPATH}/8.1/Include/shared"
+        "${SDKPATH}/8.1/Include/um"
+        "${SDKPATH}/8.0/Include/shared"
+        "${SDKPATH}/8.0/Include/um"
+        )
+      set(DirectX_LIB_SEARCH_PATH 
+        "${SDKPATH}/8.1/Lib/winv6.3/um"
+        "${SDKPATH}/8.0/Lib/win8/um"
+        )
+     endif()
   endif()
   
   create_search_paths(DirectX)
@@ -103,7 +112,7 @@ if(WIN32) # The only platform it makes sense to check for DirectX SDK
 
   # look for D3D10 and D3D10.1 components
   if (DirectX_FOUND)
-    find_path(DirectX_D3D10_INCLUDE_DIR NAMES D3D10_1shader.h HINTS ${DirectX_INC_SEARCH_PATH})
+    find_path(DirectX_D3D10_INCLUDE_DIR NAMES d3d10_1shader.h HINTS ${DirectX_INC_SEARCH_PATH})
 	get_filename_component(DirectX_LIBRARY_DIR "${DirectX_LIBRARY}" PATH)
 	message(STATUS "DX lib dir: ${DirectX_LIBRARY_DIR}")
     find_library(DirectX_D3D10_LIBRARY NAMES d3d10 HINTS ${DirectX_LIB_SEARCH_PATH} PATH_SUFFIXES ${DirectX_LIBPATH_SUFFIX})
@@ -124,7 +133,7 @@ if(WIN32) # The only platform it makes sense to check for DirectX SDK
 
   # look for D3D11 components
   if (DirectX_FOUND)
-    find_path(DirectX_D3D11_INCLUDE_DIR NAMES D3D11Shader.h HINTS ${DirectX_INC_SEARCH_PATH})
+    find_path(DirectX_D3D11_INCLUDE_DIR NAMES d3d11shader.h HINTS ${DirectX_INC_SEARCH_PATH})
 	get_filename_component(DirectX_LIBRARY_DIR "${DirectX_LIBRARY}" PATH)
 	message(STATUS "DX lib dir: ${DirectX_LIBRARY_DIR}")
     find_library(DirectX_D3D11_LIBRARY NAMES d3d11 HINTS ${DirectX_LIB_SEARCH_PATH} PATH_SUFFIXES ${DirectX_LIBPATH_SUFFIX})

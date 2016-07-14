@@ -45,7 +45,7 @@ if(WIN32) # The only platform it makes sense to check for DirectX SDK
     # hardwiring SDK path isn't good but not sure how else to do it
     set(SDKPATH "C:/Program Files (x86)/Windows Kits")
     
-    if(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION AND MSVC14)
+    if(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
       # implies CMake 3.4.0+, MSVC14 and Windows 10 SDK target
       set(SDKINC "${SDKPATH}/10/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
       set(SDKLIB "${SDKPATH}/10/Lib/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")

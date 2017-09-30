@@ -10,9 +10,9 @@ add_library( Remotery STATIC ${Remotery_SOURCES} )
 
 install_dep( Remotery include src/Remotery.h src/RemoteryConfig.h )
 
-unset( RMT_USE_OPENGL )
-unset( RMT_USE_D3D11 )
-unset( RMT_USE_METAL )
+set( RMT_USE_OPENGL 0 )
+set( RMT_USE_D3D11 0 )
+set( RMT_USE_METAL 0 )
 if( UNIX OR WIN32 )
 	set( RMT_USE_OPENGL 1 )
 endif()

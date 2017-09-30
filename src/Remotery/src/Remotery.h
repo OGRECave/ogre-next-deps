@@ -41,6 +41,7 @@ documented just below this comment.
 #ifndef RMT_INCLUDED_H
 #define RMT_INCLUDED_H
 
+#include "RemoteryConfig.h"
 
 // Set to 0 to not include any bits of Remotery in your build
 #ifndef RMT_ENABLED

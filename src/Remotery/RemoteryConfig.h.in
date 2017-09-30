@@ -1,0 +1,4 @@
+
+#cmakedefine RMT_USE_OPENGL
+#cmakedefine RMT_USE_D3D11
+#cmakedefine RMT_USE_METAL

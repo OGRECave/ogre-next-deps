@@ -54,13 +54,6 @@
   #pragma comment(lib, "ws2_32.lib")
 #endif
 
-#define RMT_GPU_CPU_SYNC_NUM_ITERATIONS 16
-// Time in seconds between each resync to compensate for drifting between GPU & CPU timers,
-// effects of power saving, etc. Resyncs can cause stutter, lag spikes, stalls.
-// Set to 0 for never.
-#define RMT_GPU_CPU_SYNC_SECONDS 30
-#define RMT_D3D11_RESYNC_ON_DISJOINT 1
-
 #if RMT_ENABLED
 
 

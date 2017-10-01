@@ -5959,6 +5959,8 @@ typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTUIVPROC) (GLuint id, GLenum pname,
 typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTI64VPROC) (GLuint id, GLenum pname, GLint64* params);
 typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTUI64VPROC) (GLuint id, GLenum pname, GLuint64* params);
 typedef void (GLAPIENTRY * PFNGLQUERYCOUNTERPROC) (GLuint id, GLenum target);
+typedef void (GLAPIENTRY * PFNGLGETINTEGER64VPROC) (GLenum pname, GLint64 *data);
+typedef void (GLAPIENTRY * PFNGLFINISHPROC) (void);
 
 #define GL_NO_ERROR 0
 #define GL_QUERY_RESULT 0x8866
@@ -5977,6 +5979,8 @@ typedef void (GLAPIENTRY * PFNGLQUERYCOUNTERPROC) (GLuint id, GLenum target);
 #define rmtglGetQueryObjecti64v RMT_GL_GET_FUN(__glGetQueryObjecti64v)
 #define rmtglGetQueryObjectui64v RMT_GL_GET_FUN(__glGetQueryObjectui64v)
 #define rmtglQueryCounter RMT_GL_GET_FUN(__glQueryCounter)
+#define rmtglGetInteger64v RMT_GL_GET_FUN(__glGetInteger64v)
+#define rmtglFinish RMT_GL_GET_FUN(__glFinish)
 
 
 struct OpenGL_t
@@ -5994,6 +5998,8 @@ struct OpenGL_t
     PFNGLGETQUERYOBJECTI64VPROC __glGetQueryObjecti64v;
     PFNGLGETQUERYOBJECTUI64VPROC __glGetQueryObjectui64v;
     PFNGLQUERYCOUNTERPROC __glQueryCounter;
+    PFNGLGETINTEGER64VPROC __glGetInteger64v;
+    PFNGLFINISHPROC __glFinish;
 
     // Queue to the OpenGL main update thread
     // Given that BeginSample/EndSample need to be called from the same thread that does the update, there
@@ -6002,6 +6008,8 @@ struct OpenGL_t
 
     // Mark the first time so that remaining timestamps are offset from this
     rmtU64 first_timestamp;
+    // Last time in us (CPU time, via usTimer_Get) since we last resync'ed CPU & GPU
+    rmtU64 last_resync;
 };
 
 
@@ -6077,9 +6085,12 @@ static rmtError OpenGL_Create(OpenGL** opengl)
     (*opengl)->__glGetQueryObjecti64v = NULL;
     (*opengl)->__glGetQueryObjectui64v = NULL;
     (*opengl)->__glQueryCounter = NULL;
+    (*opengl)->__glGetInteger64v = NULL;
+    (*opengl)->__glFinish = NULL;
 
     (*opengl)->mq_to_opengl_main = NULL;
     (*opengl)->first_timestamp = 0;
+    (*opengl)->last_resync = 0;
 
     New_1(rmtMessageQueue, (*opengl)->mq_to_opengl_main, g_Settings.messageQueueSizeInBytes);
     return error;
@@ -6092,6 +6103,44 @@ static void OpenGL_Destructor(OpenGL* opengl)
     Delete(rmtMessageQueue, opengl->mq_to_opengl_main);
 }
 
+#define RMT_GPU_CPU_SYNC_NUM_ITERATIONS 16
+// Time in seconds between each resync to compensate for drifting between GPU & CPU timers,
+// effects of power saving, etc. Resyncs can cause stutter, lag spikes, stalls.
+// Set to 0 for never.
+#define RMT_GPU_CPU_SYNC_SECONDS 30
+
+static void SyncOpenGLCpuGpuTimes(rmtU64* out_first_timestamp, rmtU64* out_last_resync)
+{
+    rmtU64 cpuTimeStart = 0;
+    rmtU64 cpuTimeStop = 0;
+    rmtU64 averageHalfRTT = 0; //RTT = Rountrip Time.
+    rmtU64 gpuBase = 0;
+
+    rmtglFinish();
+
+    int i;
+    for (i=0; i<RMT_GPU_CPU_SYNC_NUM_ITERATIONS; ++i)
+    {
+        rmtglFinish();
+        cpuTimeStart = usTimer_Get(&g_Remotery->timer);
+        rmtglGetInteger64v(GL_TIMESTAMP, &gpuBase);
+        cpuTimeStop = usTimer_Get(&g_Remotery->timer);
+        //Average the time it takes a roundtrip from CPU to GPU
+        //while doing nothing other than getting timestamps
+        rmtU64 halfRTT = (cpuTimeStop - cpuTimeStart) >> 1ULL;
+        if( i == 0 )
+            averageHalfRTT = halfRTT;
+        else
+            averageHalfRTT = (averageHalfRTT + halfRTT) >> 1ULL;
+    }
+
+    // All GPU times are offset from gpuBase, and then taken to
+    // the same relative origin CPU timestamps are based on.
+    // CPU is in us, we must translate it to ns.
+    *out_first_timestamp = gpuBase - (cpuTimeStart + averageHalfRTT) * 1000ULL;
+    *out_last_resync = cpuTimeStop;
+}
+
 
 typedef struct OpenGLTimestamp
 {
@@ -6100,6 +6149,7 @@ typedef struct OpenGLTimestamp
 
     // Pair of timestamp queries that wrap the sample
     GLuint queries[2];
+    rmtU64 cpuTimestamp;
 } OpenGLTimestamp;
 
 
@@ -6113,6 +6163,7 @@ static rmtError OpenGLTimestamp_Constructor(OpenGLTimestamp* stamp)
 
     // Set defaults
     stamp->queries[0] = stamp->queries[1] = 0;
+    stamp->cpuTimestamp = 0;
 
     // Create start/end timestamp queries
     assert(g_Remotery != NULL);
@@ -6146,6 +6197,7 @@ static void OpenGLTimestamp_Begin(OpenGLTimestamp* stamp)
 
     // First query
     assert(g_Remotery != NULL);
+    stamp->cpuTimestamp = usTimer_Get(&g_Remotery->timer);
     rmtglQueryCounter(stamp->queries[0], GL_TIMESTAMP);
 }
 
@@ -6159,8 +6211,7 @@ static void OpenGLTimestamp_End(OpenGLTimestamp* stamp)
     rmtglQueryCounter(stamp->queries[1], GL_TIMESTAMP);
 }
 
-
-static rmtBool OpenGLTimestamp_GetData(OpenGLTimestamp* stamp, rmtU64* out_start, rmtU64* out_end, rmtU64* out_first_timestamp)
+static rmtBool OpenGLTimestamp_GetData(OpenGLTimestamp* stamp, rmtU64* out_start, rmtU64* out_end, rmtU64* out_first_timestamp, rmtU64* out_last_resync)
 {
     GLuint64 start = 0, end = 0;
     GLint startAvailable = 0, endAvailable = 0;
@@ -6191,10 +6242,11 @@ static rmtBool OpenGLTimestamp_GetData(OpenGLTimestamp* stamp, rmtU64* out_start
     error = rmtglGetError();
     assert(error == GL_NO_ERROR);
 
-    // Mark the first timestamp
+    // Mark the first timestamp. We may resync if we detect the GPU timestamp is in the
+    // past (i.e. happened before the CPU command) since it should be impossible.
     assert(out_first_timestamp != NULL);
-    if (*out_first_timestamp == 0)
-        *out_first_timestamp = start;
+    if (*out_first_timestamp == 0 || ((start - *out_first_timestamp) / 1000ULL) < stamp->cpuTimestamp)
+        SyncOpenGLCpuGpuTimes(out_first_timestamp, out_last_resync);
 
     // Calculate start and end timestamps (we want us, the queries give us ns)
     *out_start = (rmtU64)(start - *out_first_timestamp) / 1000ULL;
@@ -6236,7 +6288,6 @@ static void OpenGLSample_Destructor(OpenGLSample* sample)
     Sample_Destructor((Sample*)sample);
 }
 
-
 RMT_API void _rmt_BindOpenGL()
 {
     if (g_Remotery != NULL)
@@ -6260,6 +6311,8 @@ RMT_API void _rmt_BindOpenGL()
         opengl->__glGetQueryObjecti64v = (PFNGLGETQUERYOBJECTI64VPROC)rmtglGetProcAddress(opengl, "glGetQueryObjecti64v");
         opengl->__glGetQueryObjectui64v = (PFNGLGETQUERYOBJECTUI64VPROC)rmtglGetProcAddress(opengl, "glGetQueryObjectui64v");
         opengl->__glQueryCounter = (PFNGLQUERYCOUNTERPROC)rmtglGetProcAddress(opengl, "glQueryCounter");
+        opengl->__glGetInteger64v = (PFNGLGETINTEGER64VPROC)rmtglGetProcAddress(opengl, "glGetInteger64v");
+        opengl->__glFinish = (PFNGLFINISHPROC)rmtglGetProcAddress(opengl, "glFinish");
     }
 }
 
@@ -6325,7 +6378,7 @@ RMT_API void _rmt_BeginOpenGLSample(rmtPStr name, rmtU32* hash_cache)
 }
 
 
-static rmtBool GetOpenGLSampleTimes(Sample* sample, rmtU64* out_first_timestamp)
+static rmtBool GetOpenGLSampleTimes(Sample* sample, rmtU64* out_first_timestamp, rmtU64* out_last_resync)
 {
     Sample* child;
 
@@ -6334,7 +6387,15 @@ static rmtBool GetOpenGLSampleTimes(Sample* sample, rmtU64* out_first_timestamp)
     assert(sample != NULL);
     if (ogl_sample->timestamp != NULL)
     {
-        if (!OpenGLTimestamp_GetData(ogl_sample->timestamp, &sample->us_start, &sample->us_end, out_first_timestamp))
+        if (RMT_GPU_CPU_SYNC_SECONDS > 0)
+        {
+            assert(out_last_resync != NULL);
+            rmtU64 timeDiff = (ogl_sample->timestamp->cpuTimestamp - *out_last_resync) / 1000000ULL;
+            if (timeDiff > RMT_GPU_CPU_SYNC_SECONDS)
+                SyncOpenGLCpuGpuTimes(out_first_timestamp, out_last_resync);
+        }
+
+        if (!OpenGLTimestamp_GetData(ogl_sample->timestamp, &sample->us_start, &sample->us_end, out_first_timestamp, out_last_resync))
             return RMT_FALSE;
 
         sample->us_length = sample->us_end - sample->us_start;
@@ -6343,7 +6404,7 @@ static rmtBool GetOpenGLSampleTimes(Sample* sample, rmtU64* out_first_timestamp)
     // Get child sample times
     for (child = sample->first_child; child != NULL; child = child->next_sibling)
     {
-        if (!GetOpenGLSampleTimes(child, out_first_timestamp))
+        if (!GetOpenGLSampleTimes(child, out_first_timestamp, out_last_resync))
             return RMT_FALSE;
     }
 
@@ -6381,7 +6442,7 @@ static void UpdateOpenGLFrame(void)
 
         // Retrieve timing of all OpenGL samples
         // If they aren't ready leave the message unconsumed, holding up later frames and maintaining order
-        if (!GetOpenGLSampleTimes(sample, &opengl->first_timestamp))
+        if (!GetOpenGLSampleTimes(sample, &opengl->first_timestamp,&opengl->last_resync))
             break;
 
         // Pass samples onto the remotery thread for sending to the viewer

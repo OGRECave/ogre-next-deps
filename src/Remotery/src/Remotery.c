@@ -5508,8 +5508,6 @@ typedef struct D3D11
     rmtU64 first_timestamp;
     // Last time in us (CPU time, via usTimer_Get) since we last resync'ed CPU & GPU
     rmtU64 last_resync;
-    // Frequency from the first non-disjoint query
-    double frequency;
 } D3D11;
 
 
@@ -5549,7 +5547,7 @@ static void D3D11_Destructor(D3D11* d3d11)
     Delete(rmtMessageQueue, d3d11->mq_to_d3d11_main);
 }
 
-static HRESULT rmtD3D11Finish(UINT64 *out_timestamp, double *out_frequency)
+static HRESULT rmtD3D11Finish(rmtU64 *out_timestamp, double *out_frequency)
 {
     HRESULT result;
     ID3D11Device* device = g_Remotery->d3d11->device;
@@ -5584,19 +5582,22 @@ static HRESULT rmtD3D11Finish(UINT64 *out_timestamp, double *out_frequency)
 
     while( result == S_FALSE )
     {
-        result = ID3D11DeviceContext_GetData(context, (ID3D11Asynchronous*)full_stall_fence, &timestamp, sizeof(timestamp), 0);
-        if (result != S_OK && result != S_FALSE)
-        {
-            ID3D11Query_Release(full_stall_fence);
-            ID3D11Query_Release(query_disjoint);
-            return result;
-        }
         result = ID3D11DeviceContext_GetData(context, (ID3D11Asynchronous*)query_disjoint, &disjoint, sizeof(disjoint), 0);
         if (result != S_OK && result != S_FALSE)
         {
             ID3D11Query_Release(full_stall_fence);
             ID3D11Query_Release(query_disjoint);
             return result;
+        }
+        if( result == S_OK )
+        {
+            result = ID3D11DeviceContext_GetData(context, (ID3D11Asynchronous*)full_stall_fence, &timestamp, sizeof(timestamp), 0);
+            if (result != S_OK && result != S_FALSE)
+            {
+                ID3D11Query_Release(full_stall_fence);
+                ID3D11Query_Release(query_disjoint);
+                return result;
+            }
         }
         //Give HyperThreading threads a breath on this spinlock.
         YieldProcessor();
@@ -5618,7 +5619,7 @@ static HRESULT rmtD3D11Finish(UINT64 *out_timestamp, double *out_frequency)
     return result;
 }
 
-static HRESULT SyncD3D11CpuGpuTimes(rmtU64* out_first_timestamp, rmtU64* out_last_resync, double *out_frequency)
+static HRESULT SyncD3D11CpuGpuTimes(rmtU64* out_first_timestamp, rmtU64* out_last_resync)
 {
     rmtU64 cpu_time_start = 0;
     rmtU64 cpu_time_stop = 0;
@@ -5661,7 +5662,6 @@ static HRESULT SyncD3D11CpuGpuTimes(rmtU64* out_first_timestamp, rmtU64* out_las
     // CPU is in us, we must translate it to ns.
     *out_first_timestamp = gpu_base - (rmtU64)((cpu_time_start + average_half_RTT) * frequency);
     *out_last_resync = cpu_time_stop;
-    *out_frequency = frequency;
 
     return result;
 }
@@ -5705,8 +5705,6 @@ static rmtError D3D11Timestamp_Constructor(D3D11Timestamp* stamp)
     device = g_Remotery->d3d11->device;
     last_error = &g_Remotery->d3d11->last_error;
 
-    stamp->cpu_timestamp = usTimer_Get(&g_Remotery->timer);
-
     // Create start/end timestamp queries
     timestamp_desc.Query = D3D11_QUERY_TIMESTAMP;
     timestamp_desc.MiscFlags = 0;
@@ -5747,6 +5745,7 @@ static void D3D11Timestamp_Begin(D3D11Timestamp* stamp, ID3D11DeviceContext* con
     assert(stamp != NULL);
 
     // Start of disjoint and first query
+    stamp->cpu_timestamp = usTimer_Get(&g_Remotery->timer);
     ID3D11DeviceContext_Begin(context, (ID3D11Asynchronous*)stamp->query_disjoint);
     ID3D11DeviceContext_End(context, (ID3D11Asynchronous*)stamp->query_start);
 }
@@ -5762,7 +5761,7 @@ static void D3D11Timestamp_End(D3D11Timestamp* stamp, ID3D11DeviceContext* conte
 }
 
 
-static HRESULT D3D11Timestamp_GetData(D3D11Timestamp* stamp, ID3D11DeviceContext* context, rmtU64* out_start, rmtU64* out_end, rmtU64* out_first_timestamp, rmtU64* out_last_resync, double *out_frequency)
+static HRESULT D3D11Timestamp_GetData(D3D11Timestamp* stamp, ID3D11DeviceContext* context, rmtU64* out_start, rmtU64* out_end, rmtU64* out_first_timestamp, rmtU64* out_last_resync)
 {
     ID3D11Asynchronous* query_start;
     ID3D11Asynchronous* query_end;
@@ -5799,7 +5798,7 @@ static HRESULT D3D11Timestamp_GetData(D3D11Timestamp* stamp, ID3D11DeviceContext
         assert(out_first_timestamp != NULL);
         if (*out_first_timestamp == 0 || ((start - *out_first_timestamp) / frequency) < stamp->cpu_timestamp)
         {
-            result = SyncD3D11CpuGpuTimes(out_first_timestamp, out_last_resync, out_frequency);
+            result = SyncD3D11CpuGpuTimes(out_first_timestamp, out_last_resync);
             if (result != S_OK)
                 return result;
         }
@@ -5811,7 +5810,7 @@ static HRESULT D3D11Timestamp_GetData(D3D11Timestamp* stamp, ID3D11DeviceContext
     else
     {
 #if RMT_D3D11_RESYNC_ON_DISJOINT
-        result = SyncD3D11CpuGpuTimes(out_first_timestamp, out_last_resync, out_frequency);
+        result = SyncD3D11CpuGpuTimes(out_first_timestamp, out_last_resync);
         if (result != S_OK)
             return result;
 #endif
@@ -5933,7 +5932,7 @@ RMT_API void _rmt_BeginD3D11Sample(rmtPStr name, rmtU32* hash_cache)
 }
 
 
-static rmtBool GetD3D11SampleTimes(Sample* sample, rmtU64* out_first_timestamp, rmtU64* out_last_resync, double *out_frequency)
+static rmtBool GetD3D11SampleTimes(Sample* sample, rmtU64* out_first_timestamp, rmtU64* out_last_resync)
 {
     Sample* child;
 
@@ -5948,7 +5947,6 @@ static rmtBool GetD3D11SampleTimes(Sample* sample, rmtU64* out_first_timestamp, 
         assert(d3d11 != NULL);
 
         assert(out_last_resync != NULL);
-        assert(out_frequency != NULL);
 
         if (RMT_GPU_CPU_SYNC_SECONDS > 0 && *out_last_resync < d3d_sample->timestamp->cpu_timestamp)
         {
@@ -5956,7 +5954,7 @@ static rmtBool GetD3D11SampleTimes(Sample* sample, rmtU64* out_first_timestamp, 
             rmtU64 time_diff = (d3d_sample->timestamp->cpu_timestamp - *out_last_resync) / 1000000ULL;
             if (time_diff > RMT_GPU_CPU_SYNC_SECONDS)
             {
-                result = SyncD3D11CpuGpuTimes(out_first_timestamp, out_last_resync, out_frequency);
+                result = SyncD3D11CpuGpuTimes(out_first_timestamp, out_last_resync);
                 if (result != S_OK)
                 {
                     d3d11->last_error = result;
@@ -5971,8 +5969,7 @@ static rmtBool GetD3D11SampleTimes(Sample* sample, rmtU64* out_first_timestamp, 
             &sample->us_start,
             &sample->us_end,
             out_first_timestamp,
-            out_last_resync,
-            out_frequency);
+            out_last_resync);
 
         if (result != S_OK)
         {
@@ -5986,7 +5983,7 @@ static rmtBool GetD3D11SampleTimes(Sample* sample, rmtU64* out_first_timestamp, 
     // Get child sample times
     for (child = sample->first_child; child != NULL; child = child->next_sibling)
     {
-        if (!GetD3D11SampleTimes(child, out_first_timestamp, out_last_resync, out_frequency))
+        if (!GetD3D11SampleTimes(child, out_first_timestamp, out_last_resync))
             return RMT_FALSE;
     }
 
@@ -6024,7 +6021,7 @@ static void UpdateD3D11Frame(void)
 
         // Retrieve timing of all D3D11 samples
         // If they aren't ready leave the message unconsumed, holding up later frames and maintaining order
-        if (!GetD3D11SampleTimes(sample, &d3d11->first_timestamp, &d3d11->last_resync, &d3d11->frequency))
+        if (!GetD3D11SampleTimes(sample, &d3d11->first_timestamp, &d3d11->last_resync))
             break;
 
         // Pass samples onto the remotery thread for sending to the viewer

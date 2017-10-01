@@ -5549,7 +5549,7 @@ static void D3D11_Destructor(D3D11* d3d11)
     Delete(rmtMessageQueue, d3d11->mq_to_d3d11_main);
 }
 
-static HRESULT rmtD3D11Finsh(UINT64 *out_timestamp, double *out_frequency)
+static HRESULT rmtD3D11Finish(UINT64 *out_timestamp, double *out_frequency)
 {
     HRESULT result;
     ID3D11Device* device = g_Remotery->d3d11->device;
@@ -5579,6 +5579,8 @@ static HRESULT rmtD3D11Finsh(UINT64 *out_timestamp, double *out_frequency)
     ID3D11DeviceContext_Begin(context, (ID3D11Asynchronous*)query_disjoint);
     ID3D11DeviceContext_End(context, (ID3D11Asynchronous*)full_stall_fence);
     ID3D11DeviceContext_End(context, (ID3D11Asynchronous*)query_disjoint);
+
+    result = S_FALSE;
 
     while( result == S_FALSE )
     {
@@ -5623,18 +5625,18 @@ static HRESULT SyncD3D11CpuGpuTimes(rmtU64* out_first_timestamp, rmtU64* out_las
     rmtU64 average_half_RTT = 0; //RTT = Rountrip Time.
     UINT64 gpu_base = 0;
     double frequency = 1;
+    int i;
 
     HRESULT result;
-    result = rmtD3D11Finsh(&gpu_base, &frequency);
+    result = rmtD3D11Finish(&gpu_base, &frequency);
     if (result != S_OK && result != S_FALSE)
         return result;
 
-    int i;
     for (i=0; i<RMT_GPU_CPU_SYNC_NUM_ITERATIONS; ++i)
     {
         rmtU64 half_RTT;
         cpu_time_start = usTimer_Get(&g_Remotery->timer);
-        result = rmtD3D11Finsh(&gpu_base, &frequency);
+        result = rmtD3D11Finish(&gpu_base, &frequency);
         cpu_time_stop = usTimer_Get(&g_Remotery->timer);
 
         if (result != S_OK && result != S_FALSE)
@@ -5657,9 +5659,11 @@ static HRESULT SyncD3D11CpuGpuTimes(rmtU64* out_first_timestamp, rmtU64* out_las
     // All GPU times are offset from gpu_base, and then taken to
     // the same relative origin CPU timestamps are based on.
     // CPU is in us, we must translate it to ns.
-    *out_first_timestamp = gpu_base - (cpu_time_start + average_half_RTT) * frequency;
+    *out_first_timestamp = gpu_base - (rmtU64)((cpu_time_start + average_half_RTT) * frequency);
     *out_last_resync = cpu_time_stop;
     *out_frequency = frequency;
+
+    return result;
 }
 
 typedef struct D3D11Timestamp
@@ -5946,9 +5950,10 @@ static rmtBool GetD3D11SampleTimes(Sample* sample, rmtU64* out_first_timestamp, 
         assert(out_last_resync != NULL);
         assert(out_frequency != NULL);
 
-        if (RMT_GPU_CPU_SYNC_SECONDS > 0)
+        if (RMT_GPU_CPU_SYNC_SECONDS > 0 && *out_last_resync < d3d_sample->timestamp->cpu_timestamp)
         {
-            rmtU64 time_diff = (d3d_sample->timestamp->cpu_timestamp - *out_last_resync) / *out_frequency;
+            //Convert from us to seconds.
+            rmtU64 time_diff = (d3d_sample->timestamp->cpu_timestamp - *out_last_resync) / 1000000ULL;
             if (time_diff > RMT_GPU_CPU_SYNC_SECONDS)
             {
                 result = SyncD3D11CpuGpuTimes(out_first_timestamp, out_last_resync, out_frequency);
@@ -6269,10 +6274,10 @@ static void SyncOpenGLCpuGpuTimes(rmtU64* out_first_timestamp, rmtU64* out_last_
     rmtU64 cpu_time_stop = 0;
     rmtU64 average_half_RTT = 0; //RTT = Rountrip Time.
     rmtU64 gpu_base = 0;
+    int i;
 
     rmtglFinish();
 
-    int i;
     for (i=0; i<RMT_GPU_CPU_SYNC_NUM_ITERATIONS; ++i)
     {
         rmtU64 half_RTT;
@@ -6468,7 +6473,7 @@ RMT_API void _rmt_BindOpenGL()
         opengl->__glGetQueryObjectui64v = (PFNGLGETQUERYOBJECTUI64VPROC)rmtglGetProcAddress(opengl, "glGetQueryObjectui64v");
         opengl->__glQueryCounter = (PFNGLQUERYCOUNTERPROC)rmtglGetProcAddress(opengl, "glQueryCounter");
         opengl->__glGetInteger64v = (PFNGLGETINTEGER64VPROC)rmtglGetProcAddress(opengl, "glGetInteger64v");
-        opengl->__glFinish = (PFNGLFINISHPROC)rmtglGetProcAddress(opengl, "glFinish");
+        opengl->__glFinish = (PFNGLFINISHPROC)rmtGetProcAddress(opengl->dll_handle, "glFinish");
     }
 }
 
@@ -6544,8 +6549,9 @@ static rmtBool GetOpenGLSampleTimes(Sample* sample, rmtU64* out_first_timestamp,
     if (ogl_sample->timestamp != NULL)
     {
         assert(out_last_resync != NULL);
-        if (RMT_GPU_CPU_SYNC_SECONDS > 0)
+        if (RMT_GPU_CPU_SYNC_SECONDS > 0 && *out_last_resync < ogl_sample->timestamp->cpu_timestamp)
         {
+            //Convert from us to seconds.
             rmtU64 time_diff = (ogl_sample->timestamp->cpu_timestamp - *out_last_resync) / 1000000ULL;
             if (time_diff > RMT_GPU_CPU_SYNC_SECONDS)
                 SyncOpenGLCpuGpuTimes(out_first_timestamp, out_last_resync);

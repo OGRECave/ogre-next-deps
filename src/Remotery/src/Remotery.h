@@ -37,7 +37,6 @@ documented just below this comment.
 
 */
 
-
 #ifndef RMT_INCLUDED_H
 #define RMT_INCLUDED_H
 

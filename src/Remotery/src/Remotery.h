@@ -1,7 +1,7 @@
 
 
 /*
-Copyright 2014 Celtoys Ltd
+Copyright 2014-2018 Celtoys Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ documented just below this comment.
 
 */
 
+
 #ifndef RMT_INCLUDED_H
 #define RMT_INCLUDED_H
 
@@ -45,6 +46,11 @@ documented just below this comment.
 // Set to 0 to not include any bits of Remotery in your build
 #ifndef RMT_ENABLED
 #define RMT_ENABLED 1
+#endif
+
+// Help performance of the server sending data to the client by marking this machine as little-endian 
+#ifndef RMT_ASSUME_LITTLE_ENDIAN
+#define RMT_ASSUME_LITTLE_ENDIAN 0
 #endif
 
 // Used by the Celtoys TinyCRT library (not released yet)
@@ -217,6 +223,7 @@ typedef struct Remotery Remotery;
 typedef enum rmtError
 {
     RMT_ERROR_NONE,
+    RMT_ERROR_RECURSIVE_SAMPLE,                 // Not an error but an internal message to calling code
 
     // System errors
     RMT_ERROR_MALLOC_FAIL,                      // Malloc call within remotery failed
@@ -280,10 +287,13 @@ typedef enum rmtError
 typedef enum rmtSampleFlags
 {
     // Default behaviour
-    RMTSF_None          = 0,
+    RMTSF_None = 0,
 
     // Search parent for same-named samples and merge timing instead of adding a new sample
-    RMTSF_Aggregate     = 1,
+    RMTSF_Aggregate = 1,
+
+    // Merge sample with parent if it's the same sample
+    RMTSF_Recursive = 2,
 } rmtSampleFlags;
 
 
@@ -346,6 +356,12 @@ typedef struct rmtSettings
 {
     // Which port to listen for incoming connections on
     rmtU16 port;
+
+    // When this server exits it can leave the port open in TIME_WAIT state for
+    // a while. This forces subsequent server bind attempts to fail when
+    // restarting. If you find restarts fail repeatedly with bind attempts, set
+    // this to true to forcibly reuse the open port.
+    rmtBool reuse_open_port;
 
     // Only allow connections on localhost?
     // For dev builds you may want to access your game from other devices but if

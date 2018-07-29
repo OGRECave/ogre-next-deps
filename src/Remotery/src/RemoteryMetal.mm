@@ -20,6 +20,10 @@
 
 #import <Metal/Metal.h>
 
+extern "C"
+{
+	void rmtMetal_MeasureCommandBuffer(unsigned long long* out_start, unsigned long long* out_end, unsigned int* out_ready);
+}
 
 // Store command buffer in thread-local so that each thread can point to its own
 void SetCommandBuffer(id command_buffer)
@@ -46,9 +50,11 @@ void _rmt_UnbindMetal()
 }
 
 
-// Needs to be in the same lib for this to work
-unsigned long long rmtMetal_usGetTime();
-
+extern "C"
+{
+	// Needs to be in the same lib for this to work
+	unsigned long long rmtMetal_usGetTime();
+}
 
 static void SetTimestamp(void* data)
 {

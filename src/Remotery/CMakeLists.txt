@@ -3,7 +3,7 @@ project(Remotery)
 set( Remotery_SOURCES src/Remotery.c src/Remotery.h src/RemoteryConfig.h )
 
 if( APPLE )
-	set( Remotery_SOURCES ${Remotery_SOURCES} src/Remotery.mm )
+	set( Remotery_SOURCES ${Remotery_SOURCES} src/RemoteryMetal.mm )
 endif()
 
 if( OGRE_BUILD_PLATFORM_APPLE_IOS )

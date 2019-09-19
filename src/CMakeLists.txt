@@ -172,20 +172,28 @@ if (OGREDEPS_BUILD_REMOTERY)
   add_subdirectory(Remotery)
 endif ()
 if (OGREDEPS_BUILD_SDL2)
-  set(SDL2_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}")
+  set(SDL2_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}" "-DSDL_CMAKE_DEBUG_POSTFIX:STRING=_d")
   if (MINGW)
     list(APPEND SDL2_CMAKE_ARGS "-DDIRECTX=0")
     set(SDL2_BIN_NAME "libSDL2.dll")
     # set(SDL2_LIB_NAME "libSDL2.a")
   else ()
     set(SDL2_BIN_NAME "SDL2.dll")
-    # set(SDL2_LIB_NAME "SDL2.lib")
+    set(SDL2_LIB_NAME "SDL2.lib")
   endif ()
+  # Always build SDL2 in Release mode
   ExternalProject_Add(
     SDL2
     # Configure step.
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDL2
     CMAKE_ARGS ${SDL2_CMAKE_ARGS}
+       BUILD_COMMAND ""
+   INSTALL_COMMAND
+        ${CMAKE_COMMAND}
+        --build .
+        --target install
+        --config Release
+    BUILD_ALWAYS 1
   )
   ExternalProject_Add_Step(
     SDL2
@@ -196,12 +204,24 @@ if (OGREDEPS_BUILD_SDL2)
     # For MinGW, the Release & Debug directories may not yet exist.
     COMMAND ${CMAKE_COMMAND} -E make_directory bin/Release
     COMMAND ${CMAKE_COMMAND} -E make_directory bin/Debug
-    # COMMAND ${CMAKE_COMMAND} -E make_directory lib/Release
-    COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Debug/SDL2.dll
-    COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Release/SDL2.dll
-    # COMMAND ${CMAKE_COMMAND} -E rename lib/${SDL2_LIB_NAME} lib/Release/${SDL2_LIB_NAME}
+    COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Debug/${SDL2_BIN_NAME}
+    COMMAND ${CMAKE_COMMAND} -E copy bin/Debug/${SDL2_BIN_NAME} bin/Release/${SDL2_BIN_NAME}
     LOG 1
   )
+  if (NOT MINGW)
+      ExternalProject_Add_Step(
+        SDL2
+        MoveInstallFiles2
+        COMMENT "Move SDL2 install lib files into the Release and Debug folders."
+        DEPENDEES install
+        WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+        COMMAND ${CMAKE_COMMAND} -E make_directory lib/Release
+        COMMAND ${CMAKE_COMMAND} -E make_directory lib/Debug
+        COMMAND ${CMAKE_COMMAND} -E rename lib/${SDL2_LIB_NAME} lib/Debug/${SDL2_LIB_NAME}
+        COMMAND ${CMAKE_COMMAND} -E copy lib/Debug/${SDL2_LIB_NAME} lib/Release/${SDL2_LIB_NAME}
+        LOG 1
+      )
+  endif()
 endif ()
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)

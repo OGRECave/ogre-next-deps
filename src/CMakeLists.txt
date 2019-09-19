@@ -208,20 +208,6 @@ if (OGREDEPS_BUILD_SDL2)
     COMMAND ${CMAKE_COMMAND} -E copy bin/Debug/${SDL2_BIN_NAME} bin/Release/${SDL2_BIN_NAME}
     LOG 1
   )
-  if (NOT MINGW)
-      ExternalProject_Add_Step(
-        SDL2
-        MoveInstallFiles2
-        COMMENT "Move SDL2 install lib files into the Release and Debug folders."
-        DEPENDEES install
-        WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-        COMMAND ${CMAKE_COMMAND} -E make_directory lib/Release
-        COMMAND ${CMAKE_COMMAND} -E make_directory lib/Debug
-        COMMAND ${CMAKE_COMMAND} -E rename lib/${SDL2_LIB_NAME} lib/Debug/${SDL2_LIB_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy lib/Debug/${SDL2_LIB_NAME} lib/Release/${SDL2_LIB_NAME}
-        LOG 1
-      )
-  endif()
 endif ()
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)

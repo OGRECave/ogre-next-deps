@@ -197,7 +197,7 @@ if (OGREDEPS_BUILD_SDL2)
     COMMAND ${CMAKE_COMMAND} -E make_directory bin/Release
     COMMAND ${CMAKE_COMMAND} -E make_directory bin/Debug
     # COMMAND ${CMAKE_COMMAND} -E make_directory lib/Release
-    COMMAND ${CMAKE_COMMAND} -E copy bin/${SDL2_BIN_NAME} bin/Debug/SDL2.dll
+    COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Debug/SDL2.dll
     COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Release/SDL2.dll
     # COMMAND ${CMAKE_COMMAND} -E rename lib/${SDL2_LIB_NAME} lib/Release/${SDL2_LIB_NAME}
     LOG 1

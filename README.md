@@ -10,12 +10,15 @@ COMPILATION
 =============
 
 You need CMake (http://www.cmake.org). In a console, type:
-> cd /path/to/ogredeps
-> mkdir build
-> cd build
-> cmake ..
-> make
-> make install
+
+```
+cd /path/to/ogredeps
+mkdir build
+cd build
+cmake ..
+make
+make install
+```
 
 If you are on a Windows system or prefer graphical interfaces,
 launch cmake-gui instead. Enter as the source code path the

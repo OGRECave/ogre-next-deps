@@ -1,8 +1,8 @@
-OGRE DEPENDENCIES SOURCE PACKAGE
+OGRE-next DEPENDENCIES SOURCE PACKAGE
 ==================================
 
 This package is provided as a quick route to compile the core
-dependencies of OGRE (http://www.ogre3d.org) on most supported
+dependencies of [OGRE-next](https://github.com/OGRECave/ogre-next) on most supported
 platforms. For a list of the included libraries and their 
 versions, see versions.txt
 

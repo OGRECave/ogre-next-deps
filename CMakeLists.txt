@@ -4,8 +4,6 @@ project(OGREDEPS)
 set(CMAKE_MODULE_PATH "${OGREDEPS_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 
 if (WIN32)
-  # Look for DirectX which is needed by OIS.
-  find_package(DirectX)
   add_definitions(-DWINVER=0x0500)
 endif ()
 

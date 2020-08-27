@@ -1,3 +1,18 @@
 [submodule "src/SDL2"]
 	path = src/SDL2
 	url = https://github.com/spurious/SDL-mirror.git
+[submodule "src/vulkan/shaderc/src/third_party/effcee"]
+	path = src/vulkan/shaderc/src/third_party/effcee
+	url = https://github.com/google/effcee
+[submodule "src/vulkan/shaderc/src/third_party/glslang"]
+	path = src/vulkan/shaderc/src/third_party/glslang
+	url = https://github.com/KhronosGroup/glslang
+[submodule "src/vulkan/shaderc/src/third_party/googletest"]
+	path = src/vulkan/shaderc/src/third_party/googletest
+	url = https://github.com/google/googletest
+[submodule "src/vulkan/shaderc/src/third_party/re2"]
+	path = src/vulkan/shaderc/src/third_party/re2
+	url = https://github.com/google/re2
+[submodule "src/vulkan/shaderc/src/third_party/spirv-tools/external/spirv-headers"]
+	path = src/vulkan/shaderc/src/third_party/spirv-tools/external/spirv-headers
+	url = https://github.com/KhronosGroup/SPIRV-Headers

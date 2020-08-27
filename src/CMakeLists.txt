@@ -16,6 +16,7 @@ option(OGREDEPS_BUILD_RAPIDJSON "Build rapidjson dependency" TRUE)
 if( NOT ANDROID )
 	option(OGREDEPS_BUILD_REMOTERY "Build Remotery dependency" TRUE)
 endif()
+option(OGREDEPS_BUILD_SHADERC "Build Vulkan's shaderc dependency" TRUE)
 option(OGREDEPS_INSTALL_DEV "Install development headers and libraries" TRUE)
 set(OGREDEPS_LIB_DIRECTORY "lib${LIB_SUFFIX}" CACHE STRING
   "Install path for libraries, e.g. 'lib64' on some 64-bit Linux distros.")
@@ -196,6 +197,30 @@ if (OGREDEPS_BUILD_SDL2)
     COMMAND ${CMAKE_COMMAND} -E copy bin/Debug/${SDL2_BIN_NAME} bin/Release/${SDL2_BIN_NAME}
     LOG 1
   )
+endif ()
+if (OGREDEPS_BUILD_SHADERC)
+	if( WIN32 )
+		set( WIN32_CONFIGURATIONSTR "$(CONFIGURATION)" )
+	else()
+		set( CONFIGURATIONSTR "" )
+	endif()
+
+	set( SHADERC_CMAKE_ARGS
+			"-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}"
+			"-DCMAKE_INSTALL_LIBDIR:PATH=${CMAKE_INSTALL_PREFIX}/lib/${WIN32_CONFIGURATIONSTR}"
+			"-DCMAKE_INSTALL_BINDIR:PATH=${CMAKE_INSTALL_PREFIX}/bin/${WIN32_CONFIGURATIONSTR}"
+			"-DSHADERC_ENABLE_SHARED_CRT=ON"
+			"-DSHADERC_SKIP_INSTALL=OFF"
+			"-DSHADERC_SKIP_TESTS=ON"
+			"-DSKIP_SPIRV_TOOLS_INSTALL=ON"
+			"-DSKIP_GLSLANG_INSTALL=ON" )
+  ExternalProject_Add(
+	shaderc
+	# Configure step.
+	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/shaderc/src
+	CMAKE_ARGS ${SHADERC_CMAKE_ARGS}
+	BUILD_ALWAYS 1
+	)
 endif ()
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)

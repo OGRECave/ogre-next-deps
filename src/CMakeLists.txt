@@ -226,6 +226,8 @@ if (OGREDEPS_BUILD_SHADERC)
 		CMAKE_ARGS ${SHADERC_CMAKE_ARGS}
 		BUILD_ALWAYS 1
 	)
+
+	add_subdirectory(vulkan/basic-sdk)
 endif ()
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)

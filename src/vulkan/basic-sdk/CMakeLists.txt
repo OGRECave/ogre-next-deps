@@ -1,0 +1,31 @@
+project( VulkanBasicSdk )
+
+if(OGREDEPS_PLATFORM_X64)
+	set(PROCESSOR_ARCH "64")
+else()
+	set(PROCESSOR_ARCH "32")
+endif()
+
+# Get platform.
+if(WIN32)
+	set(PLATFORM_NAME "win")
+elseif(UNIX AND NOT APPLE)
+	if(CMAKE_SYSTEM_NAME MATCHES ".*Linux")
+		set(PLATFORM_NAME "linux")
+	endif()
+elseif(APPLE)
+	if(CMAKE_SYSTEM_NAME MATCHES ".*Darwin.*" OR CMAKE_SYSTEM_NAME MATCHES ".*MacOS.*")
+		set(PLATFORM_NAME "osx")
+	endif()
+endif()
+
+set(VulkanBasicSdk_INCLUDE_DIR "${VulkanBasicSdk_SOURCE_DIR}/include" CACHE PATH "")
+set(VulkanBasicSdk_LIB_DIR "${VulkanBasicSdk_SOURCE_DIR}/lib/${PLATFORM_NAME}${PROCESSOR_ARCH}" CACHE PATH "")
+mark_as_advanced(VulkanBasicSdk_INCLUDE_DIR)
+mark_as_advanced(VulkanBasicSdk_LIB_DIR)
+
+if (OGREDEPS_INSTALL_DEV)
+	install(DIRECTORY ${VulkanBasicSdk_INCLUDE_DIR}/ DESTINATION include)
+	install(DIRECTORY ${VulkanBasicSdk_LIB_DIR}/ DESTINATION ${OGREDEPS_LIB_DIRECTORY}/${OGREDEPS_DEBUG_PATH})
+	install(DIRECTORY ${VulkanBasicSdk_LIB_DIR}/ DESTINATION ${OGREDEPS_LIB_DIRECTORY}/${OGREDEPS_RELEASE_PATH})
+endif()

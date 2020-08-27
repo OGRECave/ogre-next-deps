@@ -214,12 +214,17 @@ if (OGREDEPS_BUILD_SHADERC)
 			"-DSHADERC_SKIP_TESTS=ON"
 			"-DSKIP_SPIRV_TOOLS_INSTALL=ON"
 			"-DSKIP_GLSLANG_INSTALL=ON" )
-  ExternalProject_Add(
-	shaderc
-	# Configure step.
-	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/shaderc/src
-	CMAKE_ARGS ${SHADERC_CMAKE_ARGS}
-	BUILD_ALWAYS 1
+	if( UNIX )
+		set( SHADERC_CMAKE_ARGS ${SHADERC_CMAKE_ARGS}
+				"-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" )
+	endif()
+
+	ExternalProject_Add(
+		shaderc
+		# Configure step.
+		SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/shaderc/src
+		CMAKE_ARGS ${SHADERC_CMAKE_ARGS}
+		BUILD_ALWAYS 1
 	)
 endif ()
 if (OGREDEPS_BUILD_ZLIB)

@@ -233,9 +233,7 @@ if (OGREDEPS_BUILD_SHADERC)
 		BUILD_ALWAYS 1
 	)
 
-	if( NOT ANDROID )
-		add_subdirectory(vulkan/basic-sdk)
-	endif()
+	add_subdirectory(vulkan/basic-sdk)
 endif ()
 if (OGREDEPS_BUILD_ZLIB)
   add_subdirectory(zlib)

@@ -6,6 +6,17 @@ dependencies of [OGRE-next](https://github.com/OGRECave/ogre-next) on most suppo
 platforms. For a list of the included libraries and their 
 versions, see versions.txt
 
+CHECKOUT
+========
+
+This repo contains submodules. Therefore it needs to be cloned using the following command:
+
+`git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps`
+
+Checkout the [Quick Start Scripts](https://www.ogre3d.org/download/sdk/sdk-ogre-next) to see scripts
+that automatically clone this repo and build it (and also clone the main OGRE-next repo and build it).
+
+
 COMPILATION
 =============
 

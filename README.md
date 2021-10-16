@@ -41,6 +41,8 @@ for your IDE (e.g. Visual Studio or XCode) in the chosen build
 directory. Open them, compile the target 'BUILD_ALL'. Also build
 the target 'install'.
 
+**Note: Python 3.X is required to build the "shaderc" project.** Download link: [Python 3.X](https://www.python.org/downloads/)
+
 USAGE
 =======
 

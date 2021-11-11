@@ -49,5 +49,9 @@ USAGE
 When compilation was successful and the install target was built,
 you should find a new directory 'ogredeps' in your build path.
 This contains the final include and lib files needed. Copy it
-to your Ogre source or build directory, then rerun CMake for your
-Ogre build. It should pick up the dependencies automatically.
+to your Ogre source directory, rename it to Dependencies (or
+iOSDependencies or AndroidDependencies for those platforms)
+then rerun CMake for your Ogre build.
+It should pick up the dependencies automatically.
+
+Check the [manual](https://ogrecave.github.io/ogre-next/api/2.3/_setting_up_ogre.html) for more information.

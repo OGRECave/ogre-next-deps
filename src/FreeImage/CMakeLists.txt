@@ -805,8 +805,7 @@ include_directories(Source/ZLib)
 
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DPNG_INTEL_SSE_OPT=1)
 
-# add_library(FreeImage STATIC ${FreeImage_SOURCES})
-add_library(FreeImage SHARED ${FreeImage_SOURCES})
+add_library(FreeImage STATIC ${FreeImage_SOURCES})
 if (OGRE_PROJECT_FOLDERS)
 	set_property(TARGET FreeImage PROPERTY FOLDER Dependencies)
 endif ()
@@ -825,5 +824,3 @@ set(FreeImage_INCLUDE_DIR "${FreeImage_SOURCE_DIR}/Source" CACHE PATH "" FORCE)
 set(FreeImage_LIBRARY_DBG FreeImage CACHE STRING "" FORCE)
 set(FreeImage_LIBRARY_REL FreeImage CACHE STRING "" FORCE)
 mark_as_advanced(FreeImage_INCLUDE_DIR FreeImage_LIBRARY_DBG FreeImage_LIBRARY_REL)
-
-# set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --no-undefined --unresolved-symbols=report-all --error-unresolved-symbols --no-allow-shlib-undefined" )

@@ -5,6 +5,9 @@ set(CMAKE_MODULE_PATH "${OGREDEPS_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 
 if (WIN32)
   add_definitions(-DWINVER=0x0500)
+  if(MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+  endif()
 endif ()
 
 if (APPLE AND NOT ANDROID)

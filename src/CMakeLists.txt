@@ -177,7 +177,7 @@ endif ()
 if (OGREDEPS_BUILD_RENDERDOC)
   add_subdirectory(RenderDoc)
 endif ()
-if (OGREDEPS_BUILD_SDL2 AND NOT APPLE)
+if (OGREDEPS_BUILD_SDL2)
   set(SDL2_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}" "-DSDL_CMAKE_DEBUG_POSTFIX:STRING=_d")
   if( MSVC )
 	  # Enable multi-process compilation
@@ -187,6 +187,8 @@ if (OGREDEPS_BUILD_SDL2 AND NOT APPLE)
     list(APPEND SDL2_CMAKE_ARGS "-DDIRECTX=0")
     set(SDL2_BIN_NAME "libSDL2.dll")
     # set(SDL2_LIB_NAME "libSDL2.a")
+  elseif (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
+    set(SDL2_BIN_NAME "SDL2.dylib")
   else ()
     set(SDL2_BIN_NAME "SDL2.dll")
     set(SDL2_LIB_NAME "SDL2.lib")
@@ -205,21 +207,23 @@ if (OGREDEPS_BUILD_SDL2 AND NOT APPLE)
         --config Release
     BUILD_ALWAYS 1
   )
-  ExternalProject_Add_Step(
-    SDL2
-    MoveInstallFiles
-    COMMENT "Move SDL2 install files into the Release and Debug folders."
-    DEPENDEES install
-    WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-    # For MinGW, the Release & Debug directories may not yet exist.
-    COMMAND ${CMAKE_COMMAND} -E make_directory bin/Release
-    COMMAND ${CMAKE_COMMAND} -E make_directory bin/RelWithDebInfo
-    COMMAND ${CMAKE_COMMAND} -E make_directory bin/Debug
-    COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Debug/${SDL2_BIN_NAME}
-    COMMAND ${CMAKE_COMMAND} -E copy bin/Debug/${SDL2_BIN_NAME} bin/Release/${SDL2_BIN_NAME}
-    COMMAND ${CMAKE_COMMAND} -E copy bin/Debug/${SDL2_BIN_NAME} bin/RelWithDebInfo/${SDL2_BIN_NAME}
-    LOG 1
+  if (NOT APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
+    ExternalProject_Add_Step(
+      SDL2
+      MoveInstallFiles
+      COMMENT "Move SDL2 install files into the Release and Debug folders."
+      DEPENDEES install
+      WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+      # For MinGW, the Release & Debug directories may not yet exist.
+      COMMAND ${CMAKE_COMMAND} -E make_directory bin/Release
+      COMMAND ${CMAKE_COMMAND} -E make_directory bin/RelWithDebInfo
+      COMMAND ${CMAKE_COMMAND} -E make_directory bin/Debug
+      COMMAND ${CMAKE_COMMAND} -E rename bin/${SDL2_BIN_NAME} bin/Debug/${SDL2_BIN_NAME}
+      COMMAND ${CMAKE_COMMAND} -E copy bin/Debug/${SDL2_BIN_NAME} bin/Release/${SDL2_BIN_NAME}
+      COMMAND ${CMAKE_COMMAND} -E copy bin/Debug/${SDL2_BIN_NAME} bin/RelWithDebInfo/${SDL2_BIN_NAME}
+      LOG 1
   )
+  endif ()
 endif ()
 if (OGREDEPS_BUILD_SHADERC)
 	if( WIN32 )

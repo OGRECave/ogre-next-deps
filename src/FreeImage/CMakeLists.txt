@@ -769,7 +769,7 @@ else()
 	)
 endif()
 
-if( CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR OGRE_BUILD_PLATFORM_APPLE_IOS )
+if( CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" OR OGRE_BUILD_PLATFORM_APPLE_IOS )
 	set( FreeImage_SOURCES ${FreeImage_SOURCES}
 		Source/LibPNG/arm/arm_init.c
 		Source/LibPNG/arm/filter_neon_intrinsics.c

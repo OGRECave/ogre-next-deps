@@ -8,7 +8,11 @@ if (WIN32)
   option(OGREDEPS_BUILD_SDL2 "Build SDL2 dependency" TRUE)
 endif ()
 if (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
-  option(OGREDEPS_BUILD_SDL2 "Build SDL2 dependency" TRUE)
+  # Disabled by default because it causes problems with XCode 13.4.1:
+  #
+  # clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]
+  # ld: library not found for -lstdc++
+  option(OGREDEPS_BUILD_SDL2 "Build SDL2 dependency" FALSE)
 endif ()
 option(OGREDEPS_BUILD_FREEIMAGE "Build FreeImage dependency" TRUE)
 option(OGREDEPS_BUILD_FREETYPE "Build FreeType dependency" TRUE)

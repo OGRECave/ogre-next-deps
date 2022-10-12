@@ -85,6 +85,7 @@ set(DFA_XTRA "" CACHE FILEPATH "File containing extra configuration settings")
 if(PNG_HARDWARE_OPTIMIZATIONS)
 # set definitions and sources for arm
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm" OR
+  CMAKE_SYSTEM_PROCESSOR MATCHES "^arm64" OR
   CMAKE_SYSTEM_PROCESSOR MATCHES "^aarch64")
   set(PNG_ARM_NEON_POSSIBLE_VALUES check on off)
   set(PNG_ARM_NEON "check" CACHE STRING "Enable ARM NEON optimizations:

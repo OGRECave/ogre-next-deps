@@ -26,8 +26,10 @@ if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
   endif()
   add_definitions(-DHAVE_UNISTD_H=1)
 elseif (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
-  # 10.7 is the minimum for libc++ support
-  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+  # OgreNext no longer targets OpenGL on Apple and the first
+  # macOS with Metal support was El Capitan
+  # Also see https://github.com/OGRECave/ogre-next-deps/issues/11
+  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11)
 
   if (NOT CMAKE_OSX_ARCHITECTURES)
 	if(XCODE_VERSION VERSION_LESS 11.0)

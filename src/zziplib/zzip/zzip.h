@@ -3,12 +3,7 @@
  *	Guido Draheim <guidod@gmx.de>
  *	Tomi Ollila <Tomi.Ollila@iki.fi>
  *
- *	Copyright (c) 1999,2000,2001,2002,2003,2004 Guido Draheim
- * 	    All rights reserved, 
- *          usage allowed under the restrictions of the
- *	    Lesser GNU General Public License 
- *          or alternatively the restrictions 
- *          of the Mozilla Public License 1.1
+ * Copyright (c) Guido Draheim, use under copyleft (LPGL,MPL)
  *
  * if you see "unknown symbol" errors, check first that `-I ..` is part of
  * your compiler options - a special hint to VC/IDE users who tend to make up
@@ -168,7 +163,7 @@ _zzip_export
 void	 	zzip_seekdir(ZZIP_DIR * dir, zzip_off_t offset);
 
 /*
- * 'opening', 'closing' and reading invidual files in zip archive.
+ * 'opening', 'closing' and reading individual files in zip archive.
  * zzip/file.c
  */
 _zzip_export
@@ -184,6 +179,14 @@ _zzip_export
 int	 	zzip_close(ZZIP_FILE * fp);
 _zzip_export
 zzip_ssize_t	zzip_read(ZZIP_FILE * fp, void * buf, zzip_size_t len);
+
+/*
+ * Read data from the specified offset.  Depending on the
+ * implementation, this may or may not move the file pointer.
+ */
+_zzip_export
+zzip_size_t
+zzip_pread(ZZIP_FILE *file, void *ptr, zzip_size_t size, zzip_off_t offset);
 
 /*
  * the stdc variant to open/read/close files. - Take note of the freopen()
@@ -256,7 +259,7 @@ ZZIP_DIR *  zzip_dir_open_ext_io(zzip_char_t* filename,
 /* zzip_file_open_ext_io => zzip_dir_open_ext_io + zzip_file_open */
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /* _ZZIPLIB_H */

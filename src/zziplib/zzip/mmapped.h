@@ -8,12 +8,7 @@
  * Author:
  *      Guido Draheim <guidod@gmx.de>
  *
- * Copyright (c) 2003,2004 Guido Draheim
- *          All rights reserved,
- *          use under the restrictions of the
- *          Lesser GNU General Public License
- *          or alternatively the restrictions
- *          of the Mozilla Public License 1.1
+ * Copyright (c) Guido Draheim, use under copyleft (LGPL,MPL)
  */
 
 
@@ -33,7 +28,7 @@ typedef struct zzip_disk       ZZIP_DISK;
 
 /* we expose this structure so third party applications can augment
  * on them. The mmapped zip access usually just needs the two pointers
- * specifying the mmapped area, whereever you have that from.
+ * specifying the mmapped area, wherever you have that from.
  */
 struct zzip_disk
 {

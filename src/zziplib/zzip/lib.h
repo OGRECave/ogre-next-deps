@@ -3,12 +3,7 @@
  *      Guido Draheim <guidod@gmx.de>
  *      Tomi Ollila <Tomi.Ollila@iki.fi>
  *
- * Copyright (c) 1999,2000,2001,2002,2003 Guido Draheim
- *          All rights reserved
- *          use under the restrictions of the
- *          Lesser GNU General Public License
- *          or alternatively the restrictions 
- *          of the Mozilla Public License 1.1
+ * Copyright (c) Guido Draheim, use under copyleft (LGPL,MPL)
  *
  * This is the private header containing definitions that are not
  * use by a libzzip user application. Writing an extension lib that
@@ -21,7 +16,6 @@
 #include <zzip/zzip.h>
 #include <zzip/plugin.h>
 #include <zzip/stdint.h>
-#include <zzip/zzip32.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,7 +75,7 @@ ZZIP_DIR*
 zzip_dir_fdopen_ext_io(int fd, zzip_error_t * errorcode_p,
                        zzip_strings_t* ext, const zzip_plugin_io_t io);
 
-ZZIP_DIR* /*depracated*/
+ZZIP_DIR* /*deprecated*/
 zzip_dir_alloc_ext_io (zzip_strings_t* ext, const zzip_plugin_io_t io);
 
 #ifdef __cplusplus

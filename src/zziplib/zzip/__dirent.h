@@ -9,12 +9,7 @@
  * functions (or just static members) and a few defines, simply to be
  * able to reuse these across - and have everything in a specific place.
  *
- * Copyright (c) 2002,2003 Guido Draheim
- *          All rights reserved,
- *          use under the restrictions of the 
- *          Lesser GNU General Public License
- *          or alternatively the restrictions 
- *          of the Mozilla Public License 1.1
+ * Copyright (c) Guido Draheim, use under copyleft (LGPL,MPL)
  */
 
 #ifdef ZZIP_HAVE_DIRENT_H
@@ -125,7 +120,7 @@ typedef struct
 
 #ifndef S_ISDIR
 #define S_ISDIR(m)	((m & S_IFMT) == S_IFDIR)	/* is a directory */
-#endif  /* S_ISDIR */
+#endif  S_ISDIR
 
 
 /*

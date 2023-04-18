@@ -10,19 +10,14 @@
  * Author:
  *      Guido Draheim <guidod@gmx.de>
  *
- *      Copyright (c) 2001,2002,2003,2004 Guido Draheim
- *          All rights reserved,
- *          use under the restrictions of the
- *          Lesser GNU General Public License
- *          or alternatively the restrictions
- *          of the Mozilla Public License 1.1
+ * Copyright: (c) Guido Draheim, use under copyleft (LGPL,MPL)
  */
 
 #ifndef _ZZIP_CONF_H
 #define _ZZIP_CONF_H 1
 
 #if !defined ZZIP_OMIT_CONFIG_H
-# if defined _MSC_VER || defined __BORLANDC__ || defined __WATCOMC__ || defined _WIN32
+# if defined _MSC_VER || defined __BORLANDC__ || defined __WATCOMC__
 # include <zzip/_msvc.h>
 # elif defined ZZIP_1_H
 # include "zzip-1.h"
@@ -80,7 +75,7 @@
 #endif
 #if defined __linux__ && __GNUC__+0 >= 4
 #define zzip__new__ __attribute__((malloc))
-#elif defined __linux__ && __GNUC__+0 >= 3 && __GNUC_MINOR_+0 >= 3
+#elif defined __linux__ && __GNUC__+0 >= 3 && __GNUC_MINOR__+0 >= 3
 #define zzip__new__  __attribute__((malloc))
 #else
 #define zzip__new__
@@ -159,11 +154,11 @@
 #define _zzip_inline static
 #endif
 
-#if defined _MSC_VER || defined __WATCOMC__ || defined _WIN32
+#if defined _MSC_VER || defined __WATCOMC__
 #include <io.h>
 #endif
 
-#if defined _MSC_VER || defined _WIN32
+#ifdef _MSC_VER
 # if !__STDC__
 #  ifndef _zzip_lseek
 #  define _zzip_lseek _lseek
@@ -183,7 +178,7 @@
 #endif
   /*MSVC*/
 
-#if defined _MSC_VER || defined __WATCOMC__ || defined _WIN32
+#if defined _MSC_VER || defined __WATCOMC__
 #  ifndef strcasecmp
 #  define strcasecmp _stricmp
 #  endif
@@ -208,7 +203,7 @@
 #     endif
 
 
-#if defined ZZIP_EXPORTS || defined ZZIPLIB_EXPORTS
+#if defined ZZIP_EXPORTS || defined ZZIPLIB_EXPORTS || defined libzzip_EXPORTS // CMake export defines
 # undef ZZIP_DLL
 #define ZZIP_DLL 1
 #endif

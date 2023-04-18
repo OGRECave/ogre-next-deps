@@ -1,3 +1,85 @@
+2021-01-04  gdraheim@github
+    * The testbuilds were fixed to make cmake install and automake install the same
+    * The cmake install did need patches for man3 installation on Unix
+    * The cmake install did need patches for dll installation on Windows
+    * The cmake install did need patches for dylib installation on MacOS
+    * The cmake install did need patches for pkgconfig generation
+    * Bump testbuilds to modern distro versions (ubuntu 20.04 centos 7.9 / 8.3)
+    * Takeover docker_mirror.py for air-gap testings (for testbuilds.py)
+    * handle UNZZIP-NOTFOUND in cmake and mark Ubuntu 'unzip' to be broken
+    * merge patches for zzip_pread feature from Max Kellermann
+    * merge patches for some bugs being found and reported via GitHub issues
+    * run azure-pipelines with -DZZIP_TESTCVE=OFF to skip CVE *.zip downloads
+    * use zziptests.py --downloadonly to get the CVE zip files for local storage
+    * The ninja builds for cmake were run regularly as it seems to be widely used.
+    * AND ... rename configure.ac to old.configure.ac to break outdated packaging scripts
+    * ....... see testbuilds/*-am-*.dockerfile that it still works to rename them back
+    * release 0.13.72
+
+2020-04-14  gdraheim@github
+    * The testbuilds allow to compile and test for different os via docker
+    * The testbuilds allow to compare new cmake to automake install results
+    * Found fixes to bring base, sdl, manpages and site docs to same level
+    * release 0.13.71
+
+2020-04-14  gdraheim@github
+    * there have been tons of bugfixes over the last two years ...
+    * Thanks go to Patrick Steinhardt (then at Aservo) for python3 updates
+    * Thanks go to Josef Moellers (working at SUSE Labs) for many CVE fixes
+    * and of course all the other patches that came in via github issues.
+    * I have cleaned up sources to only uses Python3 (as needed by 2020).
+    * !!! The old automake/autconf/libtool system will be dumped soon!!!
+    * The build system was ported to 'cmake' .. (last tested cmake 3.10.2)
+    * release 0.13.70
+
+2018-03-15  guidod  <guidod@gmx.de>
+    * fix a number of CVEs reported with special *.zip PoC files
+    * man-pages are generated with new dbk2man.py - docbook xmlto is optional now
+    * completing some doc strings while checking the new man-pages to look good
+    * allow the zziptests.py testsuite to run with an installed /bin path
+    * try to fix some issues on testing with non-installed binaries on non-linux platfors
+    * update autotools to allow compiling on some newer Mac / Win machines
+    * a zip-program is still required for testing, but some errors are gone when not there
+    * complete the approximation of fnmatch for the test binaries (on platforms without)
+    * allow windows __mmap.h to be simpler, helping with some problems on MingW
+    * integrate 'fopen("wb")' from TexLive to be more portable across
+    * more portability as well for helpers like strnlen being used in the sources
+    * update doc refs to point to github instead of sf.net
+    * update the sf.net pages to have a prominent hint on newer github.com location
+    * release v0.13.69
+
+2018-02-02  guidod  <guidod@gmx.de>
+    * fix a number of CVEs reported with special *.zip files
+    * the testsuite has been expanded to cover all the CVEs
+    * some minor doc updates referencing GitHub instead of sf.net
+    * release v0.13.68
+
+2017-06-11  guidod  <guidod@gmx.de>
+    * fix portability issues by introducing <zzip/__errno.h>
+    * fix portability issues by introducing <zzip/__mkdir.h>
+    * fix portability issues by introducing <zzip/__string.h> for strndup
+    * reuse portability header <zzip/__fnmatch.h> in bins/*.c
+    * release v0.13.67
+
+2017-04-24  guidod  <guidod@gmx.de>
+    * common frontend 'unzzip.c' for example code in unzzip*-xx.c
+    * expand testcases to cover all of big/mem/mix/zap variants
+    * release v0.13.66
+
+2017-04-23  guidod  <guidod@gmx.de>
+    * turn the testsuite from makefile into python unittest format
+    * extend 'make check' testsuite to cover non-libzzip extensions
+    * fix unzzipcat-seeko and unzzipcat-mem to match the testsuite
+    * release v0.13.65
+
+2017-04-20  guidod  <guidod@gmx.de>
+    * check patches in opensuse builds, mostly for some CVE reports
+
+2012-09-15  guidod  <guidod@gmx.de>
+    * zzip.h, plugin.h: "};" at end of extern-C produces build errors with
+       the default --pedantic-errors on newer CMake. Thanks to Keith Thompson
+       recognizing it - see http://stackoverflow.com/questions/12384280/ 
+
 2012-03-11  guidod  <guidod@gmx.de>
 
 	* configure.ac: fallback to libtool -export-dynamic unless being sure to
@@ -208,7 +290,7 @@
 	* zzip/file.c: errornous usage of currentfp before setting it to
 	   the new fp value in zzip_seek(). In the good case it would seek
 	   on the wrong file and in the bad case it goes off on sigbus/NPE.
-	   The problem occurs only if two+ zips are accessed simultanously.
+	   The problem occurs only if two+ zips are accessed simultaneously.
 	   (problem reported and patch kindly provided by Evgeniy Muhin)
 	* docs/Makefile.am: fixup for newer xmlto may be to generate
 	   a subdirectory "man3" inside of our output directory "man3"
@@ -415,7 +497,7 @@
  * fixing some compilation problems related to zip64 support in win32
 
 2005-12-08
- * cut acinclude.m4 into seperated aclocal macros in m4/ subdirectory
+ * cut acinclude.m4 into separated aclocal macros in m4/ subdirectory
 
 2005-10-14
  * testing on sourceforge compilefarm, cleaning away any compiler warnings
@@ -763,7 +845,7 @@
 	within plugin.h for io->read() calls. That makes for a little
 	bit of portability - it seems some platforms (dot-net f.e.)
 	do not `typedef unsigned int size_t;`, perhaps because int is 16bit
-	and a 32bit or even 64bit entitity is needed.
+	and a 32bit or even 64bit entity is needed.
  * now we do not need to AC_COMPILE_CHECK_SIZEOF(size_t) anymore, perhaps
 	even stand io-wrap is not needed anymore. Let's see.
  * both changes need update of zzip/conf.h for _zzip_size_t plus
@@ -834,7 +916,7 @@
 	a backslash as well. That should be handled better, we add some
 	alternative implementations for dirsep_strrchr and dirsep_casecmp
 	but the default is OFF!! even on WINDOWS !!
- * thereby seen another problem: we did deliberatly use strcasecmp but
+ * thereby seen another problem: we did deliberately use strcasecmp but
 	this symbol is not available on all unix systems - the manual
 	says its a BSD4.3 addition. Some other systems call it strcmpi
 	or stricmp instead, or they do not have it at all. Here we add
@@ -922,7 +1004,7 @@
  * fix some problems of make-doc.pl with the current project
  * make a standard inlude info referring to zziplib.h as well
  * unpack htmpages.ar on SFNET and register it on the frontpage
- * dont forget to modify includes of internal headers
+ * don't forget to modify includes of internal headers
  * ...
  * fixed an annoying bug in make-doc.pl
  * include htmpages.ar into the tarball
@@ -931,7 +1013,7 @@
  * completed new directory structure - the library is called 0.12.22 as
 	to match 0.10.72, it's the same C source in its content
  * install-headers modified - the new structure is now compatible both
-	as a shared libary (binary compatible) and for the include headers
+	as a shared library (binary compatible) and for the include headers
 	too - source compatible not only for function names but also for
 	the #include lines
  * 0.12.23 fixes a bug in make doc: the xmlto html was never done.
@@ -1076,7 +1158,7 @@
  * Michael-dot-Fink-at-asamnet-dot-de did some code review while
 	going after a specialty he wanted to do with the libs, and therefore..
  * PREFERZIP did never test real file - stupid bug, inverted logic....
- * add ZIPONLY zzipmode - we have plenty of options availabe... on 32bit
+ * add ZIPONLY zzipmode - we have plenty of options available... on 32bit
 	platforms however, since I want to keep with the access-bits in
 	the lower parts.
 
@@ -1135,7 +1217,7 @@
 	and two fixes
  * put the updated MSVC6 files into the project, again Mike Nordell
  * me, add new zzwrap.dsp to DIST in Makefile.am, following Mike's addition
- * me, modify some typecasts to use off_t/size_t where apropriate
+ * me, modify some typecasts to use off_t/size_t where appropriate
  * modified COPYING.ZZIP to be a bit more general than just for ZZIPLIB
 	as noted by Tomi Olilla
  * zzipwrap demo_callback, how can we do void* and char* at the same time...
@@ -1153,7 +1235,7 @@
  * add a new file COPYING for new less-strictly license
 	after Tomi Ollila has transferred full copyright to me
  * remove Tomi Ollila from all copyright entries in the sources
-	but honour his name where apropriate
+	but honour his name where appropriate
  * modify LGPL hints in sources and point to COPYING.ZZIP as well
         and change copyright year info
  * create COPYING.ZZIP with some general LGPL exceptions.
@@ -1375,7 +1457,7 @@
  * two new functions, zzip_dir_real and zzip_file_real
    to check if the ZZIP_XX structures are wrapping a
    real file or directory. Otherwise it is a zip-archive
-   or a zip-contained file respectivly.
+   or a zip-contained file respectively.
  * zzip_compr_str does now know about stat-types and
    will return names for S_ISTYPE bits.
  * remove zzip_fd. It was identical to zzip_dirfd
@@ -1483,7 +1565,7 @@
    Tomi did.
  * bugfixes for zzip_open, it did not always
    set errno(2) to the value of zzip_errno.
- * The zzip_read is now seperate from
+ * The zzip_read is now separate from
    zzip_fp_read, so that setting errno(2) is
    only done in zzip_read, not in the zzip-touching
    function.

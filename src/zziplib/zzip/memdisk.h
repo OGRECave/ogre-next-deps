@@ -1,10 +1,15 @@
 #ifndef __ZZIP_MEMDISK_H
 #define __ZZIP_MEMDISK_H
 
-/* NOTE: this is part of libzzipmmapped (i.e. it is not libzzip). */
+/*
+ * NOTE: this is part of libzzipmmapped (i.e. it is not libzzip).
+ *
+ * Copyright (c) Guido Draheim, use under copyleft (LGPL,MPL)
+ */
 
 #include <zzip/types.h>
 #include <zzip/mmapped.h>
+#include <zzip/__hints.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +44,9 @@ zzip_mem_disk_load (ZZIP_MEM_DISK* dir, ZZIP_DISK* disk);
 zzip_mem_disk_extern void
 zzip_mem_disk_unload (ZZIP_MEM_DISK* dir);
 ZZIP_EXTRA_BLOCK*
-zzip_mem_entry_extra_block (ZZIP_MEM_ENTRY* entry, short datatype);
+zzip_mem_entry_extra_block (ZZIP_MEM_ENTRY* entry, short datatype) ZZIP_GNUC_DEPRECATED;
+ZZIP_EXTRA_BLOCK*
+zzip_mem_entry_find_extra_block (ZZIP_MEM_ENTRY* entry, short datatype, zzip_size_t blocksize);
 
 #ifdef USE_INLINE
 _zzip_inline ZZIP_DISK* zzip_disk (ZZIP_MEM_DISK* dir) { return dir->disk; }
@@ -65,12 +72,13 @@ struct _zzip_mem_entry {
     int              zz_diskstart; /* (from "z_diskstart") rridden by zip64 */
     int              zz_filetype;  /* (from "z_filetype") */
     char*            zz_comment;   /* zero-terminated (from "comment") */
-    ZZIP_EXTRA_BLOCK* zz_ext[3];   /* terminated by null in z_datatype */
-};                                 /* the extra blocks are NOT converted */
+    ZZIP_EXTRA_BLOCK* zz_ext[3];    /* terminated by null in z_datatype */
+    zzip_size_t       zz_extlen[3]; /* the extra blocks are NOT converted */
+};                                
 
-#define _zzip_mem_disk_findfirst(_d_) ((_d_)->list)
-#define _zzip_mem_disk_findnext(_d_,_e_) (!(_e_)?(_d_)->list:(_e_)->zz_next)
-#define _zzip_mem_entry_findnext(_e_) ((_e_)->zz_next)
+#define _zzip_mem_disk_findfirst(_d_)   (!(_d_) ? 0 : ((_d_)->list))
+#define _zzip_mem_disk_findnext(_d_,_e_) (!(_e_) ? (!(_d_) ? 0 : ((_d_)->list)) : ((_e_)->zz_next))
+#define _zzip_mem_entry_findnext(_e_) (!(_e_) ? 0 : ((_e_)->zz_next))
 
 #ifndef USE_INLINE
 #define zzip_mem_disk_findfirst _zzip_mem_disk_findfirst
@@ -92,10 +100,10 @@ zzip_mem_entry_findnext(ZZIP_MEM_ENTRY* entry) {
     return _zzip_mem_entry_findnext(entry); }
 #endif
 
-#define _zzip_mem_entry_to_name(_e_) ((_e_)->zz_name)
-#define _zzip_mem_entry_to_comment(_e_) ((_e_)->zz_comment)
-#define _zzip_mem_entry_strdup_name(_e_) (strdup((_e_)->zz_name))
-#define _zzip_mem_entry_to_data(_e_) ((_e_)->zz_data)
+#define _zzip_mem_entry_to_name(_e_) (!(_e_) ? 0 : ((_e_)->zz_name))
+#define _zzip_mem_entry_to_comment(_e_) (!(_e_) ? 0 : ((_e_)->zz_comment))
+#define _zzip_mem_entry_strdup_name(_e_) (!(_e_) ? 0 : (strdup((_e_)->zz_name)))
+#define _zzip_mem_entry_to_data(_e_) (!(_e_) ? 0 : ((_e_)->zz_data))
 
 #ifndef USE_INLINE
 #define zzip_mem_entry_to_name _zzip_mem_entry_to_name

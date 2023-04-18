@@ -3,7 +3,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 
 project(zlib)
 
-set(VERSION "1.2.8")
+set(VERSION "1.2.13")
 
 set(zlib_SOURCES
   adler32.c

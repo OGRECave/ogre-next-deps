@@ -313,7 +313,7 @@ size_t FreeImage_GetTagMemorySize(FITAG *tag);
 	Structure to hold a tag information
 */
 typedef struct tagTagInfo {
-	WORD tag;			// Tag ID (required)
+	uint16_t tag;			// Tag ID (required)
 	char *fieldname;	// Field name (required)
 	char *description;	// Field description (may be NULL)
 } TagInfo;
@@ -375,7 +375,7 @@ public:
 
 private:
 
-	typedef std::map<WORD, TagInfo*> TAGINFO;
+	typedef std::map<uint16_t, TagInfo*> TAGINFO;
 	typedef std::map<int, TAGINFO*>  TABLEMAP;
 
 	/// store hash tables for all known tag info tables
@@ -401,7 +401,7 @@ private:
 	@param tag_table Tag info table
 	@return Returns TRUE if successful, returns FALSE otherwise
 	*/
-	BOOL addMetadataModel(MDMODEL md_model, TagInfo *tag_table);
+	FIBOOL addMetadataModel(MDMODEL md_model, TagInfo *tag_table);
 
 public:
 	/// Destructor
@@ -418,7 +418,7 @@ public:
 	@param tagID tag ID
 	@return Returns the TagInfo descriptor if successful, returns NULL otherwise
 	*/
-	const TagInfo* getTagInfo(MDMODEL md_model, WORD tagID);
+	const TagInfo* getTagInfo(MDMODEL md_model, uint16_t tagID);
 
 	/**
 	Given a tag ID, returns its tag field name. 
@@ -429,7 +429,7 @@ public:
 	@param defaultKey Assumed to be an array of 16 chars. If not NULL, build a key for unknown tags
 	@return Returns the tag field name if successful, returns an 'unknown tag' string contained in defaultKey otherwise
 	*/
-	const char* getTagFieldName(MDMODEL md_model, WORD tagID, char *defaultKey);
+	const char* getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey);
 
 	/**
 	Given a tag ID, returns its description. 
@@ -438,7 +438,7 @@ public:
 	@param tagID tag ID
 	@return Returns the tag description if successful, returns NULL otherwise
 	*/
-	const char* getTagDescription(MDMODEL md_model, WORD tagID);
+	const char* getTagDescription(MDMODEL md_model, uint16_t tagID);
 
 	/**
 	Given a tag field name, returns its tag ID. 
@@ -477,24 +477,24 @@ extern "C" {
 
 // JPEG / JPEG-XR Exif profile (see Exif.cpp)
 // --------------------------------------------------------------------------
-BOOL jpeg_read_exif_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned datalen);
-BOOL jpeg_read_exif_profile_raw(FIBITMAP *dib, const BYTE *profile, unsigned length);
-BOOL jpegxr_read_exif_profile(FIBITMAP *dib, const BYTE *profile, unsigned length, unsigned file_offset);
-BOOL jpegxr_read_exif_gps_profile(FIBITMAP *dib, const BYTE *profile, unsigned length, unsigned file_offset);
+FIBOOL jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned datalen);
+FIBOOL jpeg_read_exif_profile_raw(FIBITMAP *dib, const uint8_t *profile, unsigned length);
+FIBOOL jpegxr_read_exif_profile(FIBITMAP *dib, const uint8_t *profile, unsigned length, unsigned file_offset);
+FIBOOL jpegxr_read_exif_gps_profile(FIBITMAP *dib, const uint8_t *profile, unsigned length, unsigned file_offset);
 
-BOOL tiff_get_ifd_profile(FIBITMAP *dib, FREE_IMAGE_MDMODEL md_model, BYTE **ppbProfile, unsigned *uProfileLength);
+FIBOOL tiff_get_ifd_profile(FIBITMAP *dib, FREE_IMAGE_MDMODEL md_model, uint8_t **ppbProfile, unsigned *uProfileLength);
 
 
 // PSD Exif profile (see Exif.cpp)
 // --------------------------------------------------------------------------
-BOOL psd_read_exif_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned datalen);
-BOOL psd_read_exif_profile_raw(FIBITMAP *dib, const BYTE *dataptr, unsigned datalen);
+FIBOOL psd_read_exif_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned datalen);
+FIBOOL psd_read_exif_profile_raw(FIBITMAP *dib, const uint8_t *dataptr, unsigned datalen);
 
 
 // JPEG / PSD / TIFF IPTC profile (see IPTC.cpp)
 // --------------------------------------------------------------------------
-BOOL read_iptc_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen);
-BOOL write_iptc_profile(FIBITMAP *dib, BYTE **profile, unsigned *profile_size);
+FIBOOL read_iptc_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen);
+FIBOOL write_iptc_profile(FIBITMAP *dib, uint8_t **profile, unsigned *profile_size);
 
 #if defined(__cplusplus)
 }

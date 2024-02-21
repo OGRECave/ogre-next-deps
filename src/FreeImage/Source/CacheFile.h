@@ -43,7 +43,7 @@ static const int BLOCK_SIZE = (64 * 1024) - 8;
 struct Block {
      unsigned nr;
      unsigned next;
-     BYTE *data;
+     uint8_t *data;
 };
 
 #ifdef _WIN32
@@ -64,19 +64,19 @@ public :
 	CacheFile();
 	~CacheFile();
 	
-	BOOL open(const std::string& filename = "", BOOL keep_in_memory = TRUE);
+	FIBOOL open(const std::string& filename = "", FIBOOL keep_in_memory = TRUE);
 	void close();
 
-	BOOL readFile(BYTE *data, int nr, int size);
-	int writeFile(BYTE *data, int size);
+	FIBOOL readFile(uint8_t *data, int nr, int size);
+	int writeFile(uint8_t *data, int size);
 	void deleteFile(int nr);
 
 private :
 	void cleanupMemCache();
 	int allocateBlock();
 	Block *lockBlock(int nr);
-	BOOL unlockBlock(int nr);
-	BOOL deleteBlock(int nr);
+	FIBOOL unlockBlock(int nr);
+	FIBOOL deleteBlock(int nr);
 
 private :
 	FILE *m_file;
@@ -87,7 +87,7 @@ private :
 	PageMap m_page_map;
 	int m_page_count;
 	Block *m_current_block;
-	BOOL m_keep_in_memory;
+	FIBOOL m_keep_in_memory;
 };
 
 #endif // FREEIMAGE_CACHEFILE_H

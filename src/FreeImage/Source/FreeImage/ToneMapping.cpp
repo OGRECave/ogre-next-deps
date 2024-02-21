@@ -66,6 +66,22 @@ FreeImage_ToneMapping(FIBITMAP *dib, FREE_IMAGE_TMO tmo, double first_param, dou
 					return FreeImage_TmoFattal02(dib, first_param, second_param);
 				}
 				break;
+
+			case FITMO_CLAMP:
+				if ((first_param == 0) && (second_param == 0)) {
+					return FreeImage_TmoClamp(dib);
+				}
+				else {
+					return FreeImage_TmoClamp(dib, first_param);
+				}
+				
+			case FITMO_LINEAR:
+				if ((first_param == 0) && (second_param == 0)) {
+					return FreeImage_TmoLinear(dib);
+				}
+				else {
+					return FreeImage_TmoLinear(dib, first_param, static_cast<FREE_IMAGE_CVT_COLOR_PARAM>(second_param));
+				}
 		}
 	}
 

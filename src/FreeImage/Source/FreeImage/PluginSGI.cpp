@@ -43,33 +43,33 @@
 
 typedef struct tagSGIHeader {
 	/** IRIS image file magic number. This should be decimal 474. */
-	WORD magic;
+	uint16_t magic;
 	/** Storage format: 0 for uncompressed, 1 for RLE compression. */
-	BYTE storage;
+	uint8_t storage;
 	/** Number of bytes per pixel channel. Legally 1 or 2. */
-	BYTE bpc;
+	uint8_t bpc;
 	/**
 	Number of dimensions. Legally 1, 2, or 3. 
 	1 means a single row, XSIZE long
 	2 means a single 2D image
 	3 means multiple 2D images
 	*/
-	WORD dimension;	
+	uint16_t dimension;	
 	/** X size in pixels */
-	WORD xsize;
+	uint16_t xsize;
 	/** Y size in pixels */
-	WORD ysize;
+	uint16_t ysize;
 	/**
 	Number of channels. 
 	1 indicates greyscale
 	3 indicates RGB
 	4 indicates RGB and Alpha
 	*/
-	WORD zsize;
+	uint16_t zsize;
 	/** Minimum pixel value. This is the lowest pixel value in the image.*/
-	LONG pixmin;
+	int32_t pixmin;
 	/** Maximum pixel value. This is the highest pixel value in the image.*/
-	LONG pixmax;
+	int32_t pixmax;
 	/** Ignored. Normally set to 0. */
 	char dummy[4];
 	/** Image name. Must be null terminated, therefore at most 79 bytes. */
@@ -81,7 +81,7 @@ typedef struct tagSGIHeader {
 	2 - index colour, obsolete
 	3 - not an image but a colourmap
 	*/
-	LONG colormap;
+	int32_t colormap;
 	/** Ignored. Should be set to 0, makes the header 512 bytes. */
 	char reserved[404];
 } SGIHeader;
@@ -122,9 +122,9 @@ SwapHeader(SGIHeader *header) {
 	SwapShort(&header->xsize);
 	SwapShort(&header->ysize);
 	SwapShort(&header->zsize);
-	SwapLong((DWORD*)&header->pixmin);
-	SwapLong((DWORD*)&header->pixmax);
-	SwapLong((DWORD*)&header->colormap);
+	SwapLong((uint32_t*)&header->pixmin);
+	SwapLong((uint32_t*)&header->pixmax);
+	SwapLong((uint32_t*)&header->colormap);
 }
 #endif
 
@@ -133,8 +133,8 @@ get_rlechar(FreeImageIO *io, fi_handle handle, RLEStatus *pstatus) {
 	if (!pstatus->cnt) {
 		int cnt = 0;
 		while (0 == cnt) {
-			BYTE packed = 0;
-			if(io->read_proc(&packed, sizeof(BYTE), 1, handle) < 1) {
+			uint8_t packed = 0;
+			if(io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
 				return EOF;
 			}
 			cnt = packed;
@@ -146,8 +146,8 @@ get_rlechar(FreeImageIO *io, fi_handle handle, RLEStatus *pstatus) {
 		if (cnt & 0x80) {
 			pstatus->val = -1;
 		} else {
-			BYTE packed = 0;
-			if(io->read_proc(&packed, sizeof(BYTE), 1, handle) < 1) {
+			uint8_t packed = 0;
+			if(io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
 				return EOF;
 			}
 			pstatus->val = packed;
@@ -155,8 +155,8 @@ get_rlechar(FreeImageIO *io, fi_handle handle, RLEStatus *pstatus) {
 	}
 	pstatus->cnt--;
 	if (pstatus->val == -1) {
-		BYTE packed = 0;
-		if(io->read_proc(&packed, sizeof(BYTE), 1, handle) < 1) {
+		uint8_t packed = 0;
+		if(io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
 			return EOF;
 		}
 		return packed;
@@ -191,22 +191,22 @@ MimeType() {
   return "image/x-sgi";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	BYTE sgi_signature[2] = { 0x01, 0xDA };
-	BYTE signature[2] = { 0, 0 };
+	uint8_t sgi_signature[2] = { 0x01, 0xDA };
+	uint8_t signature[2] = { 0, 0 };
 
 	io->read_proc(signature, 1, sizeof(sgi_signature), handle);
 
 	return (memcmp(sgi_signature, signature, sizeof(sgi_signature)) == 0);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
   return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
   return FALSE;
 }
@@ -219,7 +219,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	SGIHeader sgiHeader;
 	RLEStatus my_rle_status;
 	FIBITMAP *dib = NULL;
-	LONG *pRowIndex = NULL;
+	int32_t *pRowIndex = NULL;
 
 	try {
 		// read the header
@@ -234,7 +234,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			throw FI_MSG_ERROR_MAGIC_NUMBER;
 		}
 		
-		BOOL bIsRLE = (sgiHeader.storage == 1) ? TRUE : FALSE;
+		FIBOOL bIsRLE = (sgiHeader.storage == 1) ? TRUE : FALSE;
 	
 		// check for unsupported image types
 		if (sgiHeader.bpc != 1) {
@@ -264,25 +264,25 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if(bIsRLE) {
 			// read the Offset Tables 
 			int index_len = height * zsize;
-			pRowIndex = (LONG*)malloc(index_len * sizeof(LONG));
+			pRowIndex = (int32_t*)malloc(index_len * sizeof(int32_t));
 			if(!pRowIndex) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
 			
-			if ((unsigned)index_len != io->read_proc(pRowIndex, sizeof(LONG), index_len, handle)) {
+			if ((unsigned)index_len != io->read_proc(pRowIndex, sizeof(int32_t), index_len, handle)) {
 				throw SGI_EOF_IN_RLE_INDEX;
 			}
 			
 #ifndef FREEIMAGE_BIGENDIAN		
 			// Fix byte order in index
 			for (i = 0; i < index_len; i++) {
-				SwapLong((DWORD*)&pRowIndex[i]);
+				SwapLong((uint32_t*)&pRowIndex[i]);
 			}
 #endif
 			// Discard row size index
-			for (i = 0; i < (int)(index_len * sizeof(LONG)); i++) {
-				BYTE packed = 0;
-				if( io->read_proc(&packed, sizeof(BYTE), 1, handle) < 1 ) {
+			for (i = 0; i < (int)(index_len * sizeof(int32_t)); i++) {
+				uint8_t packed = 0;
+				if( io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1 ) {
 					throw SGI_EOF_IN_RLE_INDEX;
 				}
 			}
@@ -314,12 +314,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (bitcount == 8) {
 			// 8-bit SGI files are grayscale images, so we'll generate
 			// a grayscale palette.
-			RGBQUAD *pclrs = FreeImage_GetPalette(dib);
+			FIRGBA8 *pclrs = FreeImage_GetPalette(dib);
 			for (i = 0; i < 256; i++) {
-				pclrs[i].rgbRed = (BYTE)i;
-				pclrs[i].rgbGreen = (BYTE)i;
-				pclrs[i].rgbBlue = (BYTE)i;
-				pclrs[i].rgbReserved = 0;
+				pclrs[i].red = (uint8_t)i;
+				pclrs[i].green = (uint8_t)i;
+				pclrs[i].blue = (uint8_t)i;
+				pclrs[i].alpha = 0;
 			}
 		}
 
@@ -328,7 +328,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		memset(&my_rle_status, 0, sizeof(RLEStatus));
 		
 		int ns = FreeImage_GetPitch(dib);                                                    
-		BYTE *pStartRow = FreeImage_GetScanLine(dib, 0);
+		uint8_t *pStartRow = FreeImage_GetScanLine(dib, 0);
 		int offset_table[] = { 2, 1, 0, 3 };
 		int numChannels = zsize;
 		if (zsize < 3) {
@@ -344,24 +344,24 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			numChannels = 4;
 		}
 		
-		LONG *pri = pRowIndex;
+		int32_t *pri = pRowIndex;
 		for (i = 0; i < zsize; i++) {
-			BYTE *pRow = pStartRow + offset_table[i];
+			uint8_t *pRow = pStartRow + offset_table[i];
 			for (int j = 0; j < height; j++, pRow += ns, pri++) {
-				BYTE *p = pRow;
+				uint8_t *p = pRow;
 				if (bIsRLE) {
 					my_rle_status.cnt = 0;
 					io->seek_proc(handle, *pri, SEEK_SET);
 				}
 				for (int k = 0; k < width; k++, p += numChannels) {
 					int ch;
-					BYTE packed = 0;
+					uint8_t packed = 0;
 					if (bIsRLE) {
 						ch = get_rlechar(io, handle, &my_rle_status);
-						packed = (BYTE)ch;
+						packed = (uint8_t)ch;
 					}
 					else {
-						ch = io->read_proc(&packed, sizeof(BYTE), 1, handle);
+						ch = io->read_proc(&packed, sizeof(uint8_t), 1, handle);
 					}
 					if (ch == EOF) {
 						throw SGI_EOF_IN_IMAGE_DATA;
@@ -373,11 +373,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		
 		if (zsize == 2)
 		{
-			BYTE *pRow = pStartRow;
+			uint8_t *pRow = pStartRow;
 			//If faking RGBA from grayscale + alpha, copy first channel to second and third
 			for (int i=0; i<height; i++, pRow += ns)
 			{
-				BYTE *pPixel = pRow;
+				uint8_t *pPixel = pRow;
 				for (int j=0; j<width; j++)
 				{
 					pPixel[2] = pPixel[1] = pPixel[0];

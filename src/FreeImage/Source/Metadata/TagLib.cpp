@@ -1477,7 +1477,7 @@ TagLib::TagLib() {
 	addMetadataModel(TagLib::ANIMATION, animation_tag_table);
 }
 
-BOOL TagLib::addMetadataModel(MDMODEL md_model, TagInfo *tag_table) {
+FIBOOL TagLib::addMetadataModel(MDMODEL md_model, TagInfo *tag_table) {
 	// check that the model doesn't already exist
 	if((_table_map.find(md_model) == _table_map.end()) && (tag_table != NULL)) {
 
@@ -1516,7 +1516,7 @@ TagLib::instance() {
 }
 
 const TagInfo* 
-TagLib::getTagInfo(MDMODEL md_model, WORD tagID) {
+TagLib::getTagInfo(MDMODEL md_model, uint16_t tagID) {
 
 	if(_table_map.find(md_model) != _table_map.end()) {
 
@@ -1529,7 +1529,7 @@ TagLib::getTagInfo(MDMODEL md_model, WORD tagID) {
 }
 
 const char* 
-TagLib::getTagFieldName(MDMODEL md_model, WORD tagID, char *defaultKey) {
+TagLib::getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey) {
 
 	const TagInfo *info = getTagInfo(md_model, tagID);
 	if(NULL == info) {
@@ -1545,7 +1545,7 @@ TagLib::getTagFieldName(MDMODEL md_model, WORD tagID, char *defaultKey) {
 }
 
 const char* 
-TagLib::getTagDescription(MDMODEL md_model, WORD tagID) {
+TagLib::getTagDescription(MDMODEL md_model, uint16_t tagID) {
 
 	const TagInfo *info = getTagInfo(md_model, tagID);
 	if(info) {

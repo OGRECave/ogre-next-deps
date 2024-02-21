@@ -23,6 +23,9 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include <complex>
+#include <cstring>
+#include "../FreeImage/SimpleTools.h"
 
 // ----------------------------------------------------------
 //   Macros + structures
@@ -43,7 +46,7 @@
 @param src Input image to be processed.
 @return Returns TRUE if successful, FALSE otherwise.
 */
-BOOL DLL_CALLCONV 
+FIBOOL DLL_CALLCONV 
 FreeImage_Invert(FIBITMAP *src) {
 
 	if (!FreeImage_HasPixels(src)) return FALSE;
@@ -66,16 +69,16 @@ FreeImage_Invert(FIBITMAP *src) {
 				// else, keep the linear grayscale
 
 				if (FreeImage_GetColorType(src) == FIC_PALETTE) {
-					RGBQUAD *pal = FreeImage_GetPalette(src);
+					FIRGBA8 *pal = FreeImage_GetPalette(src);
 
 					for(i = 0; i < FreeImage_GetColorsUsed(src); i++) {
-						pal[i].rgbRed	= 255 - pal[i].rgbRed;
-						pal[i].rgbGreen = 255 - pal[i].rgbGreen;
-						pal[i].rgbBlue	= 255 - pal[i].rgbBlue;
+						pal[i].red	= 255 - pal[i].red;
+						pal[i].green = 255 - pal[i].green;
+						pal[i].blue	= 255 - pal[i].blue;
 					}
 				} else {
 					for(y = 0; y < height; y++) {
-						BYTE *bits = FreeImage_GetScanLine(src, y);
+						uint8_t *bits = FreeImage_GetScanLine(src, y);
 
 						for (x = 0; x < FreeImage_GetLine(src); x++) {
 							bits[x] = ~bits[x];
@@ -93,7 +96,7 @@ FreeImage_Invert(FIBITMAP *src) {
 				const unsigned bytespp = FreeImage_GetLine(src) / width;
 
 				for(y = 0; y < height; y++) {
-					BYTE *bits = FreeImage_GetScanLine(src, y);
+					uint8_t *bits = FreeImage_GetScanLine(src, y);
 					for(x = 0; x < width; x++) {
 						for(k = 0; k < bytespp; k++) {
 							bits[k] = ~bits[k];
@@ -110,10 +113,10 @@ FreeImage_Invert(FIBITMAP *src) {
 	}
 	else if((image_type == FIT_UINT16) || (image_type == FIT_RGB16) || (image_type == FIT_RGBA16)) {
 		// Calculate the number of words per pixel (1 for 16-bit, 3 for 48-bit or 4 for 64-bit)
-		const unsigned wordspp = (FreeImage_GetLine(src) / width) / sizeof(WORD);
+		const unsigned wordspp = (FreeImage_GetLine(src) / width) / sizeof(uint16_t);
 
 		for(y = 0; y < height; y++) {
-			WORD *bits = (WORD*)FreeImage_GetScanLine(src, y);
+			uint16_t *bits = (uint16_t*)FreeImage_GetScanLine(src, y);
 			for(x = 0; x < width; x++) {
 				for(k = 0; k < wordspp; k++) {
 					bits[k] = ~bits[k];
@@ -144,10 +147,10 @@ plane (R,G, and B). Otherwise, the LUT is applied to the specified channel only.
 @return Returns TRUE if successful, FALSE otherwise.
 @see FREE_IMAGE_COLOR_CHANNEL
 */
-BOOL DLL_CALLCONV 
-FreeImage_AdjustCurve(FIBITMAP *src, BYTE *LUT, FREE_IMAGE_COLOR_CHANNEL channel) {
+FIBOOL DLL_CALLCONV 
+FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL channel) {
 	unsigned x, y;
-	BYTE *bits = NULL;
+	uint8_t *bits = NULL;
 
 	if(!FreeImage_HasPixels(src) || !LUT || (FreeImage_GetImageType(src) != FIT_BITMAP))
 		return FALSE;
@@ -165,11 +168,11 @@ FreeImage_AdjustCurve(FIBITMAP *src, BYTE *LUT, FREE_IMAGE_COLOR_CHANNEL channel
 			// else, apply the LUT to pixel values
 
 			if(FreeImage_GetColorType(src) == FIC_PALETTE) {
-				RGBQUAD *rgb = FreeImage_GetPalette(src);
+				FIRGBA8 *rgb = FreeImage_GetPalette(src);
 				for (unsigned pal = 0; pal < FreeImage_GetColorsUsed(src); pal++) {
-					rgb->rgbRed   = LUT[rgb->rgbRed];
-					rgb->rgbGreen = LUT[rgb->rgbGreen];
-					rgb->rgbBlue  = LUT[rgb->rgbBlue];
+					rgb->red   = LUT[rgb->red];
+					rgb->green = LUT[rgb->green];
+					rgb->blue  = LUT[rgb->blue];
 					rgb++;
 				}
 			}
@@ -267,9 +270,9 @@ FreeImage_AdjustCurve(FIBITMAP *src, BYTE *LUT, FREE_IMAGE_COLOR_CHANNEL channel
 less than one darkens it, and greater than one lightens it.
 @return Returns TRUE if successful, FALSE otherwise.
 */
-BOOL DLL_CALLCONV 
+FIBOOL DLL_CALLCONV 
 FreeImage_AdjustGamma(FIBITMAP *src, double gamma) {
-	BYTE LUT[256];		// Lookup table
+	uint8_t LUT[256];		// Lookup table
 
 	if(!FreeImage_HasPixels(src) || (gamma <= 0))
 		return FALSE;
@@ -282,7 +285,7 @@ FreeImage_AdjustGamma(FIBITMAP *src, double gamma) {
 		double color = (double)pow((double)i, exponent) * v;
 		if(color > 255)
 			color = 255;
-		LUT[i] = (BYTE)floor(color + 0.5);
+		LUT[i] = (uint8_t)floor(color + 0.5);
 	}
 
 	// Apply the gamma correction
@@ -297,9 +300,9 @@ A value 0 means no change, less than 0 will make the image darker
 and greater than 0 will make the image brighter.
 @return Returns TRUE if successful, FALSE otherwise.
 */
-BOOL DLL_CALLCONV 
+FIBOOL DLL_CALLCONV 
 FreeImage_AdjustBrightness(FIBITMAP *src, double percentage) {
-	BYTE LUT[256];		// Lookup table
+	uint8_t LUT[256];		// Lookup table
 	double value;
 
 	if(!FreeImage_HasPixels(src))
@@ -310,7 +313,7 @@ FreeImage_AdjustBrightness(FIBITMAP *src, double percentage) {
 	for(int i = 0; i < 256; i++) {
 		value = i * scale;
 		value = MAX(0.0, MIN(value, 255.0));
-		LUT[i] = (BYTE)floor(value + 0.5);
+		LUT[i] = (uint8_t)floor(value + 0.5);
 	}
 	return FreeImage_AdjustCurve(src, LUT, FICC_RGB);
 }
@@ -323,9 +326,9 @@ A value 0 means no change, less than 0 will decrease the contrast
 and greater than 0 will increase the contrast of the image.
 @return Returns TRUE if successful, FALSE otherwise.
 */
-BOOL DLL_CALLCONV 
+FIBOOL DLL_CALLCONV 
 FreeImage_AdjustContrast(FIBITMAP *src, double percentage) {
-	BYTE LUT[256];		// Lookup table
+	uint8_t LUT[256];		// Lookup table
 	double value;
 
 	if(!FreeImage_HasPixels(src))
@@ -336,7 +339,7 @@ FreeImage_AdjustContrast(FIBITMAP *src, double percentage) {
 	for(int i = 0; i < 256; i++) {
 		value = 128 + (i - 128) * scale;
 		value = MAX(0.0, MIN(value, 255.0));
-		LUT[i] = (BYTE)floor(value + 0.5);
+		LUT[i] = (uint8_t)floor(value + 0.5);
 	}
 	return FreeImage_AdjustCurve(src, LUT, FICC_RGB);
 }
@@ -351,10 +354,10 @@ bit depth is not supported (nothing is done).
 @param channel Color channel to use
 @return Returns TRUE if succesful, returns FALSE if the image bit depth isn't supported.
 */
-BOOL DLL_CALLCONV 
-FreeImage_GetHistogram(FIBITMAP *src, DWORD *histo, FREE_IMAGE_COLOR_CHANNEL channel) {
-	BYTE pixel;
-	BYTE *bits = NULL;
+FIBOOL DLL_CALLCONV 
+FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL channel) {
+	uint8_t pixel;
+	uint8_t *bits = NULL;
 	unsigned x, y;
 
 	if(!FreeImage_HasPixels(src) || !histo) return FALSE;
@@ -365,7 +368,7 @@ FreeImage_GetHistogram(FIBITMAP *src, DWORD *histo, FREE_IMAGE_COLOR_CHANNEL cha
 
 	if(bpp == 8) {
 		// clear histogram array
-		memset(histo, 0, 256 * sizeof(DWORD));
+		memset(histo, 0, 256 * sizeof(uint32_t));
 		// compute histogram for black channel
 		for(y = 0; y < height; y++) {
 			bits = FreeImage_GetScanLine(src, y);
@@ -381,7 +384,7 @@ FreeImage_GetHistogram(FIBITMAP *src, DWORD *histo, FREE_IMAGE_COLOR_CHANNEL cha
 		int bytespp = bpp / 8;	// bytes / pixel
 
 		// clear histogram array
-		memset(histo, 0, 256 * sizeof(DWORD));
+		memset(histo, 0, 256 * sizeof(uint32_t));
 
 		switch(channel) {
 			case FICC_RED:
@@ -442,6 +445,503 @@ FreeImage_GetHistogram(FIBITMAP *src, DWORD *histo, FREE_IMAGE_COLOR_CHANNEL cha
 	return FALSE;
 }
 
+#if __cplusplus >= 201703L
+namespace
+{
+
+	template <typename PixelSelector_>
+	class HistogramBuilder
+		: private PixelSelector_
+	{
+	public:
+		HistogramBuilder(uint32_t* hist, uint32_t stride)
+			: mHist(hist)
+			, mStride(stride)
+		{ }
+
+		bool Discardable() const {
+			return mHist == nullptr;
+		}
+
+		void SetZero(uint32_t v) const {
+			mHist[0] = v;
+		}
+
+		template <typename PixelType_, typename IndexFunction_>
+		void Add(const PixelType_& pixel, IndexFunction_&& indexFunction) const
+		{
+			const auto i = std::forward<IndexFunction_>(indexFunction)(PixelSelector_::operator()(pixel));
+			++mHist[i * mStride];
+		}
+
+	private:
+		uint32_t* mHist;
+		uint32_t mStride;
+	};
+
+	template <typename PixelType_>
+	class HistogramFloat
+	{
+	public:
+		using ValueType = ToValueType<PixelType_>;
+		static_assert(std::is_floating_point<ValueType>::value, "wrong pixel type");
+
+		HistogramFloat(FIBITMAP* dib, uint32_t binsNumber, const ValueType& minVal, const ValueType& maxVal)
+			: mBitmap(dib)
+			, mBinsNumber(binsNumber)
+			, mMinVal(minVal)
+			, mMaxVal(maxVal)
+		{ }
+
+		HistogramFloat(const HistogramFloat&) = delete;
+		HistogramFloat(HistogramFloat&&) noexcept = default;
+
+		~HistogramFloat() = default;
+
+		HistogramFloat& operator=(const HistogramFloat&) = delete;
+		HistogramFloat& operator=(HistogramFloat&&) noexcept = default;
+
+		template <typename... Builders_>
+		bool operator()(const Builders_&... builders) const
+		{
+			if (mMinVal > mMaxVal || mBinsNumber < 1) {
+				return false;
+			}
+			if (mMinVal == mMaxVal) {
+				const uint32_t pixelsNumber = FreeImage_GetWidth(mBitmap) * FreeImage_GetHeight(mBitmap);
+				(..., builders.SetZero(pixelsNumber));
+				return true;
+			}
+			const ValueType div = static_cast<ValueType>(mBinsNumber) / (mMaxVal - mMinVal);
+
+			const auto CalculateBinIndex = [&, this](const ValueType& value) {
+				const uint32_t i = static_cast<uint32_t>(std::max(static_cast<ValueType>(0), (value - mMinVal) * div));
+				return std::min(i, mBinsNumber - 1);
+			};
+
+			BitmapForEach<PixelType_>(mBitmap, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+				(..., builders.Add(p, CalculateBinIndex));
+			});
+			return true;
+		}
+
+	private:
+		FIBITMAP* mBitmap;
+		uint32_t mBinsNumber;
+		ValueType mMinVal;
+		ValueType mMaxVal;
+	};
+
+	template <typename PixelType_>
+	class HistogramSInt
+	{
+		using ValueType = ToValueType<PixelType_>;
+		static_assert(!std::is_floating_point<ValueType>::value, "wrong pixel type");
+		static_assert(std::is_signed<ValueType>::value, "wrong pixel type");
+	public:
+		HistogramSInt(FIBITMAP* dib, uint32_t binsNumber)
+			: mBitmap(dib)
+			, mBinsNumber(binsNumber)
+		{ }
+
+		HistogramSInt(const HistogramSInt&) = delete;
+		HistogramSInt(HistogramSInt&&) noexcept = default;
+
+		~HistogramSInt() = default;
+
+		HistogramSInt& operator=(const HistogramSInt&) = delete;
+		HistogramSInt& operator=(HistogramSInt&&) noexcept = default;
+
+		template <typename... Builders_>
+		bool operator()(const Builders_&... builders) const
+		{
+			if (mBinsNumber < 1) {
+				return false;
+			}
+
+			constexpr uint32_t bits = 8 * sizeof(ValueType);
+			const auto CalculateBinIndexSigned = [&](const ValueType& value) {
+				using WideValueType = ToWiderType<ValueType>;
+				const auto uvalue = static_cast<ToUnsignedType<WideValueType>>(static_cast<WideValueType>(value) - std::numeric_limits<ValueType>::min());
+				const uint32_t i = static_cast<uint32_t>((uvalue * mBinsNumber) >> bits);
+				return std::min(i, mBinsNumber - 1);
+			};
+
+			BitmapForEach<PixelType_>(mBitmap, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+				(..., builders.Add(p, CalculateBinIndexSigned));
+			});
+			return true;
+		}
+
+	private:
+		FIBITMAP* mBitmap;
+		uint32_t mBinsNumber;
+	};
+
+	template <typename PixelType_>
+	class HistogramUInt
+	{
+	public:
+		using ValueType = ToValueType<PixelType_>;
+		static_assert(!std::is_floating_point<ValueType>::value, "wrong pixel type");
+		static_assert(std::is_unsigned<ValueType>::value, "wrong pixel type");
+
+		HistogramUInt(FIBITMAP* dib, uint32_t binsNumber)
+			: mBitmap(dib)
+			, mBinsNumber(binsNumber)
+		{ }
+
+		HistogramUInt(const HistogramUInt&) = delete;
+		HistogramUInt(HistogramUInt&&) noexcept = default;
+
+		~HistogramUInt() = default;
+
+		HistogramUInt& operator=(const HistogramUInt&) = delete;
+		HistogramUInt& operator=(HistogramUInt&&) noexcept = default;
+
+		template <typename... Builders_>
+		bool operator()(const Builders_&... builders) const
+		{
+			if (mBinsNumber < 1) {
+				return false;
+			}
+			constexpr uint32_t bits = 8 * sizeof(ValueType);
+			if (mBinsNumber == (1ULL << bits)) {
+				const auto CalculateBinIndexWithoutScale = [&](const ValueType& value) {
+					const uint32_t i = static_cast<uint32_t>(value);
+					return std::min(i, mBinsNumber - 1);
+				};
+
+				BitmapForEach<PixelType_>(mBitmap, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+					(..., builders.Add(p, CalculateBinIndexWithoutScale));
+				});
+			}
+			else {
+				const auto CalculateBinIndexWithScale = [&](const ValueType& value) {
+					using WideValueType = ToWiderType<ValueType>;
+					const uint32_t i = static_cast<uint32_t>((static_cast<WideValueType>(value) * mBinsNumber) >> bits);
+					return std::min(i, mBinsNumber - 1);
+				};
+
+				BitmapForEach<PixelType_>(mBitmap, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+					(..., builders.Add(p, CalculateBinIndexWithScale));
+				});
+			}
+			return true;
+		}
+
+	private:
+		FIBITMAP* mBitmap;
+		uint32_t mBinsNumber;
+	};
+
+	template <uint32_t BuildersNum_>
+	struct InvokeWithBuildersImpl
+	{
+		template <typename Function_, typename Builder0_, typename... Args_>
+		static
+		bool Apply(Function_&& f, const Builder0_& b0, Args_&&... args)
+		{
+			if (!b0.Discardable()) {
+				return InvokeWithBuildersImpl<BuildersNum_ - 1>::Apply(std::forward<Function_>(f), std::forward<Args_>(args)..., b0);
+			}
+			else {
+				return InvokeWithBuildersImpl<BuildersNum_ - 1>::Apply(std::forward<Function_>(f), std::forward<Args_>(args)...);
+			}
+		}
+	};
+
+	template <>
+	struct InvokeWithBuildersImpl<0>
+	{
+		template <typename Function_, typename... Args_>
+		static
+		bool Apply(Function_&& f, Args_&&... args)
+		{
+			return std::forward<Function_>(f)(std::forward<Args_>(args)...);
+		}
+	};
+
+	template <typename Function_, typename... Builders_>
+	bool InvokeWithBuilders(Function_&& f, Builders_&&... builders)
+	{
+		return InvokeWithBuildersImpl<sizeof...(Builders_)>::Apply(std::forward<Function_>(f), std::forward<Builders_>(builders)...);
+	}
+
+	struct SelectRed
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.red;
+		}
+	};
+
+	struct SelectGreen
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.green;
+		}
+	};
+
+	struct SelectBlue
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.blue;
+		}
+	};
+
+	struct SelectRgbBrightness
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return Brightness{}(p);
+		}
+	};
+
+	struct SelectReal
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.r;
+		}
+	};
+
+	struct SelectImag
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.i;
+		}
+	};
+
+	struct SelectAbs
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return std::abs(std::complex<ToValueType<Py_>>(p.r, p.i));
+		}
+	};
+
+	struct SelectIdentity
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p;
+		}
+	};
+
+	template <typename Ty_>
+	void SetIntMinMax(void* outMinVal, void* outMaxVal)
+	{
+		if (outMinVal) {
+			*static_cast<Ty_*>(outMinVal) = std::numeric_limits<Ty_>::lowest();
+		}
+		if (outMaxVal) {
+			*static_cast<Ty_*>(outMaxVal) = std::numeric_limits<Ty_>::max();
+		}
+	}
+
+	void ClearHistogram(uint32_t* hist, uint32_t stride, uint32_t binsNumber) {
+		if (hist) {
+			if (stride == 1) {
+				std::memset(hist, 0, binsNumber * sizeof(uint32_t));
+			}
+			else {
+				for (uint32_t i = 0; i < binsNumber; ++i, hist += stride) {
+					*hist = 0u;
+				}
+			}
+		}
+	}
+
+	template <typename PixelType_>
+	bool FindHistogramBounds(FIBITMAP* dib, ToValueType<PixelType_>& minVal, ToValueType<PixelType_>& maxVal, void* outMinVal, void* outMaxVal)
+	{
+		PixelType_ minChannelValues, maxChannelValues;
+		if (!FreeImage_FindMinMaxValue(dib, &minChannelValues, &maxChannelValues)) {
+			return false;
+		}
+		minVal = PixelMin(StripAlpha(minChannelValues));
+		maxVal = PixelMax(StripAlpha(maxChannelValues));
+		if (outMinVal) {
+			*static_cast<ToValueType<PixelType_>*>(outMinVal) = minVal;
+		}
+		if (outMaxVal) {
+			*static_cast<ToValueType<PixelType_>*>(outMaxVal) = maxVal;
+		}
+		return true;
+	}
+
+} // namespace
+
+
+FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinVal, void* outMaxVal, uint32_t* histR, uint32_t strideR, uint32_t* histG, uint32_t strideG, uint32_t* histB, uint32_t strideB, uint32_t* histL, uint32_t strideL)
+{
+	if (!FreeImage_HasPixels(dib) || binsNumber < 1) {
+		return FALSE;
+	}
+	if ((histR && strideR <= 0) || (histG && strideG <= 0) || (histB && strideB <= 0) || (histL && strideL <= 0)) {
+		return FALSE;
+	}
+
+	if (!histR && !histG && !histB && !histL) {
+		return TRUE;
+	}
+
+	ClearHistogram(histR, strideR, binsNumber);
+	ClearHistogram(histG, strideG, binsNumber);
+	ClearHistogram(histB, strideB, binsNumber);
+	ClearHistogram(histL, strideL, binsNumber);
+
+	bool success = FALSE;
+	switch (FreeImage_GetImageType(dib)) {
+	case FIT_BITMAP: {
+			const auto bpp = FreeImage_GetBPP(dib);
+			const auto colorType = FreeImage_GetColorType2(dib);
+			if ((colorType == FIC_RGBALPHA || colorType == FIC_YUV) && (bpp == 32)) {
+				success = InvokeWithBuilders(HistogramUInt<FIRGBA8>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+					HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+			}
+			else if ((colorType == FIC_RGB || colorType == FIC_YUV) && (bpp == 24)) {
+				success = InvokeWithBuilders(HistogramUInt<FIRGB8>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+					HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+			}
+			else if (colorType == FIC_MINISBLACK && bpp == 8) {
+				success = InvokeWithBuilders(HistogramUInt<uint8_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+			}
+			if (success) {
+				SetIntMinMax<uint8_t>(outMinVal, outMaxVal);
+			}
+		}
+		break;
+	case FIT_RGBF: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<FIRGBF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders(HistogramFloat<FIRGBF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectRed>(histR, strideR),
+				HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+		}
+		break;
+	case FIT_RGBAF: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<FIRGBAF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders(HistogramFloat<FIRGBAF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectRed>(histR, strideR),
+				HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+		}
+		break;
+	case FIT_COMPLEX: {
+			double minVal{}, maxVal{};
+			if (!FindHistogramBounds<FICOMPLEX>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders(HistogramFloat<FICOMPLEX>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectReal>(histR, strideR),
+				HistogramBuilder<SelectImag>(histG, strideG), HistogramBuilder<SelectAbs>(histB, strideB));
+		}
+		break;
+	case FIT_COMPLEXF: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<FICOMPLEXF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders(HistogramFloat<FICOMPLEXF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectReal>(histR, strideR),
+				HistogramBuilder<SelectImag>(histG, strideG), HistogramBuilder<SelectAbs>(histB, strideB));
+		}
+		break;
+	case FIT_DOUBLE: {
+			double minVal{}, maxVal{};
+			if (!FindHistogramBounds<double>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders(HistogramFloat<double>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectIdentity>(histR, strideR));
+		}
+		break;
+	case FIT_FLOAT: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<float>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders(HistogramFloat<float>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectIdentity>(histR, strideR));
+		}
+		break;
+	case FIT_RGBA32:
+		success = InvokeWithBuilders(HistogramUInt<FIRGBA32>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+		if (success) {
+			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_RGB32:
+		success = InvokeWithBuilders(HistogramUInt<FIRGB32>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+		if (success) {
+			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_RGBA16:
+		success = InvokeWithBuilders(HistogramUInt<FIRGBA16>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+		if (success) {
+			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_RGB16:
+		success = InvokeWithBuilders(HistogramUInt<FIRGB16>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
+		if (success) {
+			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_UINT32:
+		success = InvokeWithBuilders(HistogramUInt<uint32_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		if (success) {
+			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_INT32:
+		success = InvokeWithBuilders(HistogramSInt<int32_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		if (success) {
+			SetIntMinMax<int32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_UINT16:
+		success = InvokeWithBuilders(HistogramUInt<uint16_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		if (success) {
+			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_INT16:
+		success = InvokeWithBuilders(HistogramSInt<int16_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		if (success) {
+			SetIntMinMax<int16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	default:
+		return FALSE;
+	}
+
+	return success ? TRUE : FALSE;
+}
+#else
+FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinVal, void* outMaxVal, uint32_t* histR, uint32_t strideR, uint32_t* histG, uint32_t strideG, uint32_t* histB, uint32_t strideB, uint32_t* histL, uint32_t strideL)
+{
+	return FALSE;
+}
+#endif
+
+
 // ----------------------------------------------------------
 
 
@@ -475,7 +975,7 @@ FreeImage_GetHistogram(FIBITMAP *src, DWORD *histo, FREE_IMAGE_COLOR_CHANNEL cha
  Better and even faster would be snippet 3:
  
  // snippet 3:
- BYTE LUT[256];
+ uint8_t LUT[256];
  FreeImage_GetAdjustColorsLookupTable(LUT, 50.0, 15.0, 1.0, FALSE); 
  FreeImage_AdjustCurve(dib, LUT, FICC_RGB);
  
@@ -500,7 +1000,7 @@ FreeImage_GetHistogram(FIBITMAP *src, DWORD *histo, FREE_IMAGE_COLOR_CHANNEL cha
  compared to a blind lookup table.
  */
 int DLL_CALLCONV
-FreeImage_GetAdjustColorsLookupTable(BYTE *LUT, double brightness, double contrast, double gamma, BOOL invert) {
+FreeImage_GetAdjustColorsLookupTable(uint8_t *LUT, double brightness, double contrast, double gamma, FIBOOL invert) {
 	double dblLUT[256];
 	double value;
 	int result = 0;
@@ -509,7 +1009,7 @@ FreeImage_GetAdjustColorsLookupTable(BYTE *LUT, double brightness, double contra
 		// nothing to do, if all arguments have their default values
 		// return a blind LUT
 		for (int i = 0; i < 256; i++) {
-			LUT[i] = (BYTE)i;
+			LUT[i] = (uint8_t)i;
 		}
 		return 0;
 	}
@@ -552,11 +1052,11 @@ FreeImage_GetAdjustColorsLookupTable(BYTE *LUT, double brightness, double contra
 
 	if (!invert) {
 		for (int i = 0; i < 256; i++) {
-			LUT[i] = (BYTE)floor(dblLUT[i] + 0.5);
+			LUT[i] = (uint8_t)floor(dblLUT[i] + 0.5);
 		}
 	} else {
 		for (int i = 0; i < 256; i++) {
-			LUT[i] = 255 - (BYTE)floor(dblLUT[i] + 0.5);
+			LUT[i] = 255 - (uint8_t)floor(dblLUT[i] + 0.5);
 		}
 		result++;
 	}
@@ -610,9 +1110,9 @@ FreeImage_GetAdjustColorsLookupTable(BYTE *LUT, double brightness, double contra
  @return Returns TRUE on success, FALSE otherwise (e.g. when the bitdeph of the
  source dib cannot be handled).
  */
-BOOL DLL_CALLCONV
-FreeImage_AdjustColors(FIBITMAP *dib, double brightness, double contrast, double gamma, BOOL invert) {
-	BYTE LUT[256];
+FIBOOL DLL_CALLCONV
+FreeImage_AdjustColors(FIBITMAP *dib, double brightness, double contrast, double gamma, FIBOOL invert) {
+	uint8_t LUT[256];
 
 	if (!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP)) {
 		return FALSE;
@@ -664,7 +1164,7 @@ FreeImage_AdjustColors(FIBITMAP *dib, double brightness, double contrast, double
  @return Returns the total number of pixels changed. 
  */
 unsigned DLL_CALLCONV
-FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolors, unsigned count, BOOL ignore_alpha, BOOL swap) {
+FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolors, unsigned count, FIBOOL ignore_alpha, FIBOOL swap) {
 	unsigned result = 0;
 
 	if (!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP)) {
@@ -682,17 +1182,17 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 		case 4:
 		case 8: {
 			unsigned size = FreeImage_GetColorsUsed(dib);
-			RGBQUAD *pal = FreeImage_GetPalette(dib);
-			RGBQUAD *a, *b;
+			FIRGBA8 *pal = FreeImage_GetPalette(dib);
+			FIRGBA8 *a, *b;
 			for (unsigned x = 0; x < size; x++) {
 				for (unsigned j = 0; j < count; j++) {
 					a = srccolors;
 					b = dstcolors;
 					for (int i = (swap ? 0 : 1); i < 2; i++) {
-						if ((pal[x].rgbBlue == a[j].rgbBlue)&&(pal[x].rgbGreen == a[j].rgbGreen) &&(pal[x].rgbRed== a[j].rgbRed)) {
-							pal[x].rgbBlue = b[j].rgbBlue;
-							pal[x].rgbGreen = b[j].rgbGreen;
-							pal[x].rgbRed = b[j].rgbRed;
+						if ((pal[x].blue == a[j].blue)&&(pal[x].green == a[j].green) &&(pal[x].red== a[j].red)) {
+							pal[x].blue = b[j].blue;
+							pal[x].green = b[j].green;
+							pal[x].red = b[j].red;
 							result++;
 							j = count;
 							break;
@@ -705,12 +1205,12 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 			return result;
 		}
 		case 16: {
-			WORD *src16 = (WORD *)malloc(sizeof(WORD) * count);
+			uint16_t *src16 = (uint16_t *)malloc(sizeof(uint16_t) * count);
 			if (NULL == src16) {
 				return 0;
 			}
 
-			WORD *dst16 = (WORD *)malloc(sizeof(WORD) * count);
+			uint16_t *dst16 = (uint16_t *)malloc(sizeof(uint16_t) * count);
 			if (NULL == dst16) {
 				free(src16);
 				return 0;
@@ -723,9 +1223,9 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 
 			unsigned height = FreeImage_GetHeight(dib);
 			unsigned width = FreeImage_GetWidth(dib);
-			WORD *a, *b;
+			uint16_t *a, *b;
 			for (unsigned y = 0; y < height; y++) {
-				WORD *bits = (WORD *)FreeImage_GetScanLine(dib, y);
+				uint16_t *bits = (uint16_t *)FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits++) {
 					for (unsigned j = 0; j < count; j++) {
 						a = src16;
@@ -750,18 +1250,18 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 		case 24: {
 			unsigned height = FreeImage_GetHeight(dib);
 			unsigned width = FreeImage_GetWidth(dib);
-			RGBQUAD *a, *b;
+			FIRGBA8 *a, *b;
 			for (unsigned y = 0; y < height; y++) {
-				BYTE *bits = FreeImage_GetScanLine(dib, y);
+				uint8_t *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits += 3) {
 					for (unsigned j = 0; j < count; j++) {
 						a = srccolors;
 						b = dstcolors;
 						for (int i = (swap ? 0 : 1); i < 2; i++) {
-							if ((bits[FI_RGBA_BLUE] == a[j].rgbBlue) && (bits[FI_RGBA_GREEN] == a[j].rgbGreen) &&(bits[FI_RGBA_RED] == a[j].rgbRed)) {
-								bits[FI_RGBA_BLUE] = b[j].rgbBlue;
-								bits[FI_RGBA_GREEN] = b[j].rgbGreen;
-								bits[FI_RGBA_RED] = b[j].rgbRed;
+							if ((bits[FI_RGBA_BLUE] == a[j].blue) && (bits[FI_RGBA_GREEN] == a[j].green) &&(bits[FI_RGBA_RED] == a[j].red)) {
+								bits[FI_RGBA_BLUE] = b[j].blue;
+								bits[FI_RGBA_GREEN] = b[j].green;
+								bits[FI_RGBA_RED] = b[j].red;
 								result++;
 								j = count;
 								break;
@@ -777,21 +1277,21 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 		case 32: {
 			unsigned height = FreeImage_GetHeight(dib);
 			unsigned width = FreeImage_GetWidth(dib);
-			RGBQUAD *a, *b;
+			FIRGBA8 *a, *b;
 			for (unsigned y = 0; y < height; y++) {
-				BYTE *bits = FreeImage_GetScanLine(dib, y);
+				uint8_t *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits += 4) {
 					for (unsigned j = 0; j < count; j++) {
 						a = srccolors;
 						b = dstcolors;
 						for (int i = (swap ? 0 : 1); i < 2; i++) {
-							if ((bits[FI_RGBA_BLUE] == a[j].rgbBlue) &&(bits[FI_RGBA_GREEN] == a[j].rgbGreen) &&(bits[FI_RGBA_RED] == a[j].rgbRed)
-								&&((ignore_alpha) || (bits[FI_RGBA_ALPHA] == a[j].rgbReserved))) {
-								bits[FI_RGBA_BLUE] = b[j].rgbBlue;
-								bits[FI_RGBA_GREEN] = b[j].rgbGreen;
-								bits[FI_RGBA_RED] = b[j].rgbRed;
+							if ((bits[FI_RGBA_BLUE] == a[j].blue) &&(bits[FI_RGBA_GREEN] == a[j].green) &&(bits[FI_RGBA_RED] == a[j].red)
+								&&((ignore_alpha) || (bits[FI_RGBA_ALPHA] == a[j].alpha))) {
+								bits[FI_RGBA_BLUE] = b[j].blue;
+								bits[FI_RGBA_GREEN] = b[j].green;
+								bits[FI_RGBA_RED] = b[j].red;
 								if (!ignore_alpha) {
-									bits[FI_RGBA_ALPHA] = b[j].rgbReserved;
+									bits[FI_RGBA_ALPHA] = b[j].alpha;
 								}
 								result++;
 								j = count;
@@ -832,7 +1332,7 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
  @return Returns the total number of pixels changed. 
  */
 unsigned DLL_CALLCONV
-FreeImage_SwapColors(FIBITMAP *dib, RGBQUAD *color_a, RGBQUAD *color_b, BOOL ignore_alpha) {
+FreeImage_SwapColors(FIBITMAP *dib, FIRGBA8 *color_a, FIRGBA8 *color_b, FIBOOL ignore_alpha) {
 	return FreeImage_ApplyColorMapping(dib, color_a, color_b, 1, ignore_alpha, TRUE);
 }
 
@@ -865,7 +1365,7 @@ FreeImage_SwapColors(FIBITMAP *dib, RGBQUAD *color_a, RGBQUAD *color_b, BOOL ign
  @return Returns the total number of pixels changed. 
  */
 unsigned DLL_CALLCONV
-FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, BYTE *srcindices,	BYTE *dstindices, unsigned count, BOOL swap) {
+FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, uint8_t *srcindices,	uint8_t *dstindices, unsigned count, FIBOOL swap) {
 	unsigned result = 0;
 
 	if (!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP)) {
@@ -879,7 +1379,7 @@ FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, BYTE *srcindices,	BYTE *dstind
 
 	unsigned height = FreeImage_GetHeight(dib);
 	unsigned width = FreeImage_GetLine(dib);
-	BYTE *a, *b;
+	uint8_t *a, *b;
 
 	int bpp = FreeImage_GetBPP(dib);
 	switch (bpp) {
@@ -891,7 +1391,7 @@ FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, BYTE *srcindices,	BYTE *dstind
 			int skip_last = (FreeImage_GetWidth(dib) & 0x01);
 			unsigned max_x = width - 1;
 			for (unsigned y = 0; y < height; y++) {
-				BYTE *bits = FreeImage_GetScanLine(dib, y);
+				uint8_t *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++) {
 					int start = ((skip_last) && (x == max_x)) ? 1 : 0;
 					for (int cn = start; cn < 2; cn++) {
@@ -916,7 +1416,7 @@ FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, BYTE *srcindices,	BYTE *dstind
 		}
 		case 8: {
 			for (unsigned y = 0; y < height; y++) {
-				BYTE *bits = FreeImage_GetScanLine(dib, y);
+				uint8_t *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++) {
 					for (unsigned j = 0; j < count; j++) {
 						a = srcindices;
@@ -961,7 +1461,88 @@ FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, BYTE *srcindices,	BYTE *dstind
  @return Returns the total number of pixels changed. 
  */
 unsigned DLL_CALLCONV 
-FreeImage_SwapPaletteIndices(FIBITMAP *dib, BYTE *index_a, BYTE *index_b) {
+FreeImage_SwapPaletteIndices(FIBITMAP *dib, uint8_t *index_a, uint8_t *index_b) {
 	return FreeImage_ApplyPaletteIndexMapping(dib, index_a, index_b, 1, TRUE);
 }
 
+
+
+namespace
+{
+	template <typename DstTy_, typename SrcTy_>
+	FIBOOL StaticCastPixelValue(void* dst_pixel, const SrcTy_* src_pixel)
+	{
+		*static_cast<DstTy_*>(dst_pixel) = static_cast<DstTy_>(*src_pixel);
+		return TRUE;
+	}
+
+	template <typename SrcTy_>
+	FIBOOL CastPixelValueImpl(const void* src_pixel, FREE_IMAGE_TYPE dst_type, void* dst_pixel)
+	{
+		const SrcTy_* src = static_cast<const SrcTy_*>(src_pixel);
+		switch (dst_type) {
+		case FIT_COMPLEX:
+		case FIT_DOUBLE:
+			return StaticCastPixelValue<double>(dst_pixel, src);
+		case FIT_FLOAT:
+		case FIT_COMPLEXF:
+		case FIT_RGBAF:
+		case FIT_RGBF:
+			return StaticCastPixelValue<float>(dst_pixel, src);
+		case FIT_UINT32:
+		case FIT_RGBA32:
+		case FIT_RGB32:
+			return StaticCastPixelValue<uint32_t>(dst_pixel, src);
+		case FIT_INT32:
+			return StaticCastPixelValue<int32_t>(dst_pixel, src);
+		case FIT_UINT16:
+		case FIT_RGBA16:
+		case FIT_RGB16:
+			return StaticCastPixelValue<uint16_t>(dst_pixel, src);
+		case FIT_INT16:
+			return StaticCastPixelValue<int16_t>(dst_pixel, src);
+			break;
+		case FIT_BITMAP:
+			return StaticCastPixelValue<uint8_t>(dst_pixel, src);
+			break;
+		default:
+			return FALSE;
+		}
+	}
+
+} // namespace
+
+FIBOOL CastPixelValue(FREE_IMAGE_TYPE src_type, const void* src_pixel, FREE_IMAGE_TYPE dst_type, void* dst_pixel)
+{
+	if (!src_pixel || !dst_pixel) {
+		return FALSE;
+	}
+	switch (src_type) {
+	case FIT_COMPLEX:
+	case FIT_DOUBLE:
+		return CastPixelValueImpl<double>(src_pixel, dst_type, dst_pixel);
+	case FIT_FLOAT:
+	case FIT_COMPLEXF:
+	case FIT_RGBAF:
+	case FIT_RGBF:
+		return CastPixelValueImpl<float>(src_pixel, dst_type, dst_pixel);
+	case FIT_UINT32:
+	case FIT_RGBA32:
+	case FIT_RGB32:
+		return CastPixelValueImpl<uint32_t>(src_pixel, dst_type, dst_pixel);
+	case FIT_INT32:
+		return CastPixelValueImpl<int32_t>(src_pixel, dst_type, dst_pixel);
+	case FIT_UINT16:
+	case FIT_RGBA16:
+	case FIT_RGB16:
+		return CastPixelValueImpl<uint16_t>(src_pixel, dst_type, dst_pixel);
+	case FIT_INT16:
+		return CastPixelValueImpl<int16_t>(src_pixel, dst_type, dst_pixel);
+		break;
+	case FIT_BITMAP:
+		return CastPixelValueImpl<uint8_t>(src_pixel, dst_type, dst_pixel);
+		break;
+	default:
+		return FALSE;
+	}
+}

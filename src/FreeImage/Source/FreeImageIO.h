@@ -34,7 +34,7 @@ FI_STRUCT (FIMEMORYHEADER) {
 	When the buffer is a wrapped buffer, it is read-only, no need to delete it. 
 	When the buffer is a read/write buffer, it is allocated dynamically and must be deleted when no longer needed.
 	*/
-	BOOL delete_me;
+	FIBOOL delete_me;
 	/**
 	file_length is equal to the input buffer size when the buffer is a wrapped buffer, i.e. file_length == data_length. 
 	file_length is the amount of the written bytes when the buffer is a read/write buffer.

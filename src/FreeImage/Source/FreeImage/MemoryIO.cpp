@@ -32,11 +32,11 @@
 // =====================================================================
 
 FIMEMORY * DLL_CALLCONV 
-FreeImage_OpenMemory(BYTE *data, DWORD size_in_bytes) {
+FreeImage_OpenMemory(uint8_t *data, uint32_t size_in_bytes) {
 	// allocate a memory handle
 	FIMEMORY *stream = (FIMEMORY*)malloc(sizeof(FIMEMORY));
 	if(stream) {
-		stream->data = (BYTE*)malloc(sizeof(FIMEMORYHEADER));
+		stream->data = (uint8_t*)malloc(sizeof(FIMEMORYHEADER));
 
 		if(stream->data) {
 			FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(stream->data);
@@ -47,7 +47,7 @@ FreeImage_OpenMemory(BYTE *data, DWORD size_in_bytes) {
 			if(data && size_in_bytes) {
 				// wrap a user buffer
 				mem_header->delete_me = FALSE;
-				mem_header->data = (BYTE*)data;
+				mem_header->data = (uint8_t*)data;
 				mem_header->data_length = mem_header->file_length = size_in_bytes;
 			} else {
 				mem_header->delete_me = TRUE;
@@ -91,7 +91,7 @@ FreeImage_LoadFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int flags) {
 }
 
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_SaveToMemory(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FIMEMORY *stream, int flags) {
 	if (stream) {
 		FreeImageIO io;
@@ -114,12 +114,12 @@ FreeImage_SaveToMemory(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FIMEMORY *stream, i
 // Memory stream buffer access
 // =====================================================================
 
-BOOL DLL_CALLCONV
-FreeImage_AcquireMemory(FIMEMORY *stream, BYTE **data, DWORD *size_in_bytes) {
+FIBOOL DLL_CALLCONV
+FreeImage_AcquireMemory(FIMEMORY *stream, uint8_t **data, uint32_t *size_in_bytes) {
 	if (stream) {
 		FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(stream->data);
 
-		*data = (BYTE*)mem_header->data;
+		*data = (uint8_t*)mem_header->data;
 		*size_in_bytes = mem_header->file_length;
 		return TRUE;
 	}
@@ -138,7 +138,7 @@ Moves the memory pointer to a specified location
 @param origin Initial position
 @return Returns TRUE if successful, returns FALSE otherwise
 */
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_SeekMemory(FIMEMORY *stream, long offset, int origin) {
 	FreeImageIO io;
 	SetMemoryIO(&io);

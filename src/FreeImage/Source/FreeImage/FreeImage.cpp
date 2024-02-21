@@ -38,8 +38,8 @@ static const char *s_copyright = "This program uses FreeImage, a free, open sour
 #if defined(_WIN32) && !defined(__MINGW32__)
 #ifndef FREEIMAGE_LIB
 
-BOOL APIENTRY
-DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
+FIBOOL APIENTRY
+DllMain(HANDLE hModule, uint32_t ul_reason_for_call, LPVOID lpReserved) {
 	switch (ul_reason_for_call) {
 		case DLL_PROCESS_ATTACH :
 			FreeImage_Initialise(FALSE);
@@ -78,6 +78,9 @@ void FreeImage_SO_DeInitialise() {
 
 //----------------------------------------------------------------------
 
+#define QUOTE_MACRO_(T) #T
+#define QUOTE_MACRO(T) QUOTE_MACRO_(T)
+
 const char * DLL_CALLCONV
 FreeImage_GetVersion() {
 	static char s_version[16];
@@ -90,13 +93,30 @@ FreeImage_GetCopyrightMessage() {
 	return s_copyright;
 }
 
+const char* DLL_CALLCONV
+FreeImageRe_GetVersion() {
+	static const char* version = QUOTE_MACRO(FREEIMAGERE_MAJOR_VERSION) "." QUOTE_MACRO(FREEIMAGERE_MINOR_VERSION);
+	return version;
+}
+
+void DLL_CALLCONV
+FreeImageRe_GetVersionNumbers(int* major, int* minor)
+{
+	if (major) {
+		*major = FREEIMAGERE_MAJOR_VERSION;
+	}
+	if (minor) {
+		*minor = FREEIMAGERE_MINOR_VERSION;
+	}
+}
+
 //----------------------------------------------------------------------
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_IsLittleEndian() {
 	union {
-		DWORD i;
-		BYTE c[4];
+		uint32_t i;
+		uint8_t c[4];
 	} u;
 	u.i = 1;
 	return (u.c[0] != 0);

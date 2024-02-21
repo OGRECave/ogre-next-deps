@@ -114,12 +114,12 @@ FreeImage_GetFileTypeFromMemory(FIMEMORY *stream, int size) {
 
 // --------------------------------------------------------------------------
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_ValidateFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle) {
 	return FreeImage_ValidateFIF(fif, io, handle);
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_Validate(FREE_IMAGE_FORMAT fif, const char *filename) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
@@ -127,7 +127,7 @@ FreeImage_Validate(FREE_IMAGE_FORMAT fif, const char *filename) {
 	FILE *handle = fopen(filename, "rb");
 
 	if (handle != NULL) {
-		BOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)handle);
+		FIBOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)handle);
 		fclose(handle);
 		return bIsValidFIF;
 	}
@@ -135,7 +135,7 @@ FreeImage_Validate(FREE_IMAGE_FORMAT fif, const char *filename) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_ValidateU(FREE_IMAGE_FORMAT fif, const wchar_t *filename) {
 #ifdef _WIN32	
 	FreeImageIO io;
@@ -143,7 +143,7 @@ FreeImage_ValidateU(FREE_IMAGE_FORMAT fif, const wchar_t *filename) {
 	FILE *handle = _wfopen(filename, L"rb");
 
 	if (handle != NULL) {
-		BOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)handle);
+		FIBOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)handle);
 		fclose(handle);
 		return bIsValidFIF;
 	}
@@ -151,13 +151,13 @@ FreeImage_ValidateU(FREE_IMAGE_FORMAT fif, const wchar_t *filename) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_ValidateFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream) {
 	FreeImageIO io;
 	SetMemoryIO(&io);
 
 	if (stream != NULL) {
-		BOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)stream);
+		FIBOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)stream);
 		return bIsValidFIF;
 	}
 

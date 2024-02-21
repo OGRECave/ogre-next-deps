@@ -33,9 +33,9 @@
 #endif
 
 typedef struct tagCUTHEADER {
-	WORD width;
-	WORD height;
-	LONG dummy;
+	uint16_t width;
+	uint16_t height;
+	int32_t dummy;
 } CUTHEADER;
 
 #ifdef _WIN32
@@ -79,22 +79,22 @@ MimeType() {
 	return "image/x-cut";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -112,7 +112,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	try {
 		CUTHEADER header;		
 
-		BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 		// read the cut header
 
@@ -121,8 +121,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 #ifdef FREEIMAGE_BIGENDIAN
-		SwapShort((WORD *)&header.width);
-		SwapShort((WORD *)&header.height);
+		SwapShort((uint16_t *)&header.width);
+		SwapShort((uint16_t *)&header.height);
 #endif
 
 		if ((header.width == 0) || (header.height == 0)) {
@@ -139,10 +139,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// stuff it with a palette
 
-		RGBQUAD *palette = FreeImage_GetPalette(dib);
+		FIRGBA8 *palette = FreeImage_GetPalette(dib);
 
 		for (int j = 0; j < 256; ++j) {
-			palette[j].rgbBlue = palette[j].rgbGreen = palette[j].rgbRed = (BYTE)j;
+			palette[j].blue = palette[j].green = palette[j].red = (uint8_t)j;
 		}
 		
 		if(header_only) {
@@ -152,15 +152,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// unpack the RLE bitmap bits
 
-		BYTE *bits = FreeImage_GetScanLine(dib, header.height - 1);
+		uint8_t *bits = FreeImage_GetScanLine(dib, header.height - 1);
 
 		unsigned i = 0, k = 0;
 		unsigned pitch = FreeImage_GetPitch(dib);
 		unsigned size = header.width * header.height;
-		BYTE count = 0, run = 0;
+		uint8_t count = 0, run = 0;
 
 		while (i < size) {
-			if(io->read_proc(&count, 1, sizeof(BYTE), handle) != 1) {
+			if(io->read_proc(&count, 1, sizeof(uint8_t), handle) != 1) {
 				throw FI_MSG_ERROR_PARSING;
 			}
 
@@ -170,8 +170,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// paint shop pro adds two useless bytes here...
 
-				io->read_proc(&count, 1, sizeof(BYTE), handle);
-				io->read_proc(&count, 1, sizeof(BYTE), handle);
+				io->read_proc(&count, 1, sizeof(uint8_t), handle);
+				io->read_proc(&count, 1, sizeof(uint8_t), handle);
 
 				continue;
 			}
@@ -179,7 +179,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (count & 0x80) {
 				count &= ~(0x80);
 
-				if(io->read_proc(&run, 1, sizeof(BYTE), handle) != 1) {
+				if(io->read_proc(&run, 1, sizeof(uint8_t), handle) != 1) {
 					throw FI_MSG_ERROR_PARSING;
 				}
 
@@ -190,7 +190,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 			} else {
 				if(k + count <= header.width) {
-					if(io->read_proc(&bits[k], count, sizeof(BYTE), handle) != 1) {
+					if(io->read_proc(&bits[k], count, sizeof(uint8_t), handle) != 1) {
 						throw FI_MSG_ERROR_PARSING;
 					}
 				} else {

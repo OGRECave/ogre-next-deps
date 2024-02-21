@@ -340,7 +340,7 @@ void NNQuantizer::getSample(long pos, int *b, int *g, int *r) {
 	int x = pos % img_line;
 	int y = pos / img_line;
 
-	BYTE *bits = FreeImage_GetScanLine(dib_ptr, y) + x;
+	uint8_t *bits = FreeImage_GetScanLine(dib_ptr, y) + x;
 
 	*b = bits[FI_RGBA_BLUE] << netbiasshift;
 	*g = bits[FI_RGBA_GREEN] << netbiasshift;
@@ -428,7 +428,7 @@ void NNQuantizer::learn(int sampling_factor) {
 // Quantizer
 // -----------
 
-FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *ReservePalette, int sampling) {
+FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *ReservePalette, int sampling) {
 
 	if ((!dib) || (FreeImage_GetBPP(dib) != 24)) {
 		return NULL;
@@ -465,9 +465,9 @@ FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *Reserve
 
 	// 3.5) Overwrite the last few palette entries with the reserved ones
     for (int i = 0; i < ReserveSize; i++) {
-		network[netsize - ReserveSize + i][FI_RGBA_BLUE] = ReservePalette[i].rgbBlue;
-		network[netsize - ReserveSize + i][FI_RGBA_GREEN] = ReservePalette[i].rgbGreen;
-		network[netsize - ReserveSize + i][FI_RGBA_RED] = ReservePalette[i].rgbRed;
+		network[netsize - ReserveSize + i][FI_RGBA_BLUE] = ReservePalette[i].blue;
+		network[netsize - ReserveSize + i][FI_RGBA_GREEN] = ReservePalette[i].green;
+		network[netsize - ReserveSize + i][FI_RGBA_RED] = ReservePalette[i].red;
 		network[netsize - ReserveSize + i][3] = netsize - ReserveSize + i;
 	}
 
@@ -480,24 +480,24 @@ FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *Reserve
 
 	// 5) Write the quantized palette
 
-	RGBQUAD *new_pal = FreeImage_GetPalette(new_dib);
+	FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
     for (int j = 0; j < netsize; j++) {
-		new_pal[j].rgbBlue  = (BYTE)network[j][FI_RGBA_BLUE];
-		new_pal[j].rgbGreen = (BYTE)network[j][FI_RGBA_GREEN];
-		new_pal[j].rgbRed	= (BYTE)network[j][FI_RGBA_RED];
+		new_pal[j].blue  = (uint8_t)network[j][FI_RGBA_BLUE];
+		new_pal[j].green = (uint8_t)network[j][FI_RGBA_GREEN];
+		new_pal[j].red	= (uint8_t)network[j][FI_RGBA_RED];
 	}
 
 	inxbuild();
 
 	// 6) Write output image using inxsearch(b,g,r)
 
-	for (WORD rows = 0; rows < img_height; rows++) {
-		BYTE *new_bits = FreeImage_GetScanLine(new_dib, rows);			
-		BYTE *bits = FreeImage_GetScanLine(dib_ptr, rows);
+	for (uint16_t rows = 0; rows < img_height; rows++) {
+		uint8_t *new_bits = FreeImage_GetScanLine(new_dib, rows);			
+		uint8_t *bits = FreeImage_GetScanLine(dib_ptr, rows);
 
-		for (WORD cols = 0; cols < img_width; cols++) {
-			new_bits[cols] = (BYTE)inxsearch(bits[FI_RGBA_BLUE], bits[FI_RGBA_GREEN], bits[FI_RGBA_RED]);
+		for (uint16_t cols = 0; cols < img_width; cols++) {
+			new_bits[cols] = (uint8_t)inxsearch(bits[FI_RGBA_BLUE], bits[FI_RGBA_GREEN], bits[FI_RGBA_RED]);
 
 			bits += 3;
 		}

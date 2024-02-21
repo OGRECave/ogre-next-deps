@@ -97,20 +97,20 @@ enum {
 template <int N>
 class PSDGetValue {
 public:
-	static inline int get(const BYTE * iprBuffer) {} // error
+	static inline int get(const uint8_t * iprBuffer) {} // error
 };
 
 template <>
 class PSDGetValue<1> {
 public:
-	static inline BYTE get(const BYTE * iprBuffer) { return iprBuffer[0]; }
+	static inline uint8_t get(const uint8_t * iprBuffer) { return iprBuffer[0]; }
 };
 
 template <>
 class PSDGetValue<2> {
 public:
-	static inline WORD get(const BYTE * iprBuffer) {
-		WORD v = ((const WORD*)iprBuffer)[0];
+	static inline uint16_t get(const uint8_t * iprBuffer) {
+		uint16_t v = ((const uint16_t*)iprBuffer)[0];
 #ifndef FREEIMAGE_BIGENDIAN
 		SwapShort(&v);
 #endif
@@ -121,8 +121,8 @@ public:
 template <>
 class PSDGetValue<4> {
 public:
-	static inline DWORD get(const BYTE * iprBuffer) {
-		DWORD v = ((const DWORD*)iprBuffer)[0];
+	static inline uint32_t get(const uint8_t * iprBuffer) {
+		uint32_t v = ((const uint32_t*)iprBuffer)[0];
 #ifndef FREEIMAGE_BIGENDIAN
 		SwapLong(&v);
 #endif
@@ -133,8 +133,8 @@ public:
 template <>
 class PSDGetValue<8> {
 public:
-	static inline UINT64 get(const BYTE * iprBuffer) {
-		UINT64 v = ((const UINT64*)iprBuffer)[0];
+	static inline uint64_t get(const uint8_t * iprBuffer) {
+		uint64_t v = ((const uint64_t*)iprBuffer)[0];
 #ifndef FREEIMAGE_BIGENDIAN
 		SwapInt64(&v);
 #endif
@@ -147,14 +147,14 @@ public:
 
 // --------------------------------------------------------------------------
 
-static UINT64
+static uint64_t
 psdReadSize(FreeImageIO *io, fi_handle handle, const psdHeaderInfo& header) {
 	if(header._Version == 1) {
-		BYTE Length[4];
+		uint8_t Length[4];
 		io->read_proc(Length, sizeof(Length), 1, handle);
 		return psdGetLongValue(Length, sizeof(Length));
 	} else {
-		BYTE Length[8];
+		uint8_t Length[8];
 		io->read_proc(Length, sizeof(Length), 1, handle);
 		return psdGetLongValue(Length, sizeof(Length));
 	}
@@ -165,45 +165,45 @@ psdReadSize(FreeImageIO *io, fi_handle handle, const psdHeaderInfo& header) {
 template <int N>
 class PSDSetValue {
 public:
-	static inline void set(BYTE * iprBuffer, int v) {} // error
+	static inline void set(uint8_t * iprBuffer, int v) {} // error
 };
 
 template <>
 class PSDSetValue<1> {
 public:
-	static inline void set(BYTE * iprBuffer, BYTE v) { iprBuffer[0] = v; }
+	static inline void set(uint8_t * iprBuffer, uint8_t v) { iprBuffer[0] = v; }
 };
 
 template <>
 class PSDSetValue<2> {
 public:
-	static inline void set(BYTE * iprBuffer, WORD v) {
+	static inline void set(uint8_t * iprBuffer, uint16_t v) {
 #ifndef FREEIMAGE_BIGENDIAN
 		SwapShort(&v);
 #endif
-		((WORD*)iprBuffer)[0] = v;
+		((uint16_t*)iprBuffer)[0] = v;
 	}
 };
 
 template <>
 class PSDSetValue<4> {
 public:
-	static inline void set(const BYTE * iprBuffer, DWORD v) {
+	static inline void set(const uint8_t * iprBuffer, uint32_t v) {
 #ifndef FREEIMAGE_BIGENDIAN
 		SwapLong(&v);
 #endif
-		((DWORD*)iprBuffer)[0] = v;
+		((uint32_t*)iprBuffer)[0] = v;
 	}
 };
 
 template <>
 class PSDSetValue<8> {
 public:
-	static inline void set(const BYTE * iprBuffer, UINT64 v) {
+	static inline void set(const uint8_t * iprBuffer, uint64_t v) {
 #ifndef FREEIMAGE_BIGENDIAN
 		SwapInt64(&v);
 #endif
-		((UINT64*)iprBuffer)[0] = v;
+		((uint64_t*)iprBuffer)[0] = v;
 	}
 };
 
@@ -213,13 +213,13 @@ public:
 // --------------------------------------------------------------------------
 
 static inline bool
-psdWriteSize(FreeImageIO *io, fi_handle handle, const psdHeaderInfo& header, UINT64 v) {
+psdWriteSize(FreeImageIO *io, fi_handle handle, const psdHeaderInfo& header, uint64_t v) {
 	if(header._Version == 1) {
-		BYTE Length[4];
-		psdSetLongValue(Length, sizeof(Length), (DWORD)v);
+		uint8_t Length[4];
+		psdSetLongValue(Length, sizeof(Length), (uint32_t)v);
 		return (io->write_proc(Length, sizeof(Length), 1, handle) == 1);
 	} else {
-		BYTE Length[8];
+		uint8_t Length[8];
 		psdSetLongValue(Length, sizeof(Length), v);
 		return (io->write_proc(Length, sizeof(Length), 1, handle) == 1);
 	}
@@ -229,17 +229,17 @@ psdWriteSize(FreeImageIO *io, fi_handle handle, const psdHeaderInfo& header, UIN
 Return Exif metadata as a binary read-only buffer.
 The buffer is owned by the function and MUST NOT be freed by the caller.
 */
-static BOOL
-psd_write_exif_profile_raw(FIBITMAP *dib, BYTE **profile, unsigned *profile_size) {
+static FIBOOL
+psd_write_exif_profile_raw(FIBITMAP *dib, uint8_t **profile, unsigned *profile_size) {
     // marker identifying string for Exif = "Exif\0\0"
 	// used by JPEG not PSD
-    BYTE exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
+    uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 
 	FITAG *tag_exif = NULL;
 	FreeImage_GetMetadata(FIMD_EXIF_RAW, dib, g_TagLib_ExifRawFieldName, &tag_exif);
 
 	if(tag_exif) {
-		const BYTE *tag_value = (BYTE*)FreeImage_GetTagValue(tag_exif);
+		const uint8_t *tag_value = (uint8_t*)FreeImage_GetTagValue(tag_exif);
 
 		// verify the identifying string
 		if(memcmp(exif_signature, tag_value, sizeof(exif_signature)) != 0) {
@@ -247,7 +247,7 @@ psd_write_exif_profile_raw(FIBITMAP *dib, BYTE **profile, unsigned *profile_size
 			return FALSE;
 		}
 
-		*profile = (BYTE*)tag_value + sizeof(exif_signature);
+		*profile = (uint8_t*)tag_value + sizeof(exif_signature);
 		*profile_size = (unsigned)FreeImage_GetTagLength(tag_exif) - sizeof(exif_signature);
 
 		return TRUE;
@@ -256,15 +256,15 @@ psd_write_exif_profile_raw(FIBITMAP *dib, BYTE **profile, unsigned *profile_size
 	return FALSE;
 }
 
-static BOOL
-psd_set_xmp_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
+static FIBOOL
+psd_set_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	// create a tag
 	FITAG *tag = FreeImage_CreateTag();
 	if (tag) {
 		FreeImage_SetTagID(tag, PSDP_RES_XMP);
 		FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-		FreeImage_SetTagLength(tag, (DWORD)datalen);
-		FreeImage_SetTagCount(tag, (DWORD)datalen);
+		FreeImage_SetTagLength(tag, (uint32_t)datalen);
+		FreeImage_SetTagCount(tag, (uint32_t)datalen);
 		FreeImage_SetTagType(tag, FIDT_ASCII);
 		FreeImage_SetTagValue(tag, dataptr);
 
@@ -282,14 +282,14 @@ psd_set_xmp_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
 Return XMP metadata as a binary read-only buffer.
 The buffer is owned by the function and MUST NOT be freed by the caller.
 */
-static BOOL
-psd_get_xmp_profile(FIBITMAP *dib, BYTE **profile, unsigned *profile_size) {
+static FIBOOL
+psd_get_xmp_profile(FIBITMAP *dib, uint8_t **profile, unsigned *profile_size) {
 	FITAG *tag_xmp = NULL;
 	FreeImage_GetMetadata(FIMD_XMP, dib, g_TagLib_XMPFieldName, &tag_xmp);
 
 	if(tag_xmp && (NULL != FreeImage_GetTagValue(tag_xmp))) {
 
-		*profile = (BYTE*)FreeImage_GetTagValue(tag_xmp);
+		*profile = (uint8_t*)FreeImage_GetTagValue(tag_xmp);
 		*profile_size = (unsigned)FreeImage_GetTagLength(tag_xmp);
 
 		return TRUE;
@@ -322,7 +322,7 @@ bool psdHeaderInfo::Read(FreeImageIO *io, fi_handle handle) {
 		if (1 == nVersion || 2 == nVersion) {
 			_Version = nVersion;
 			// header.Reserved must be zero
-			BYTE psd_reserved[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+			uint8_t psd_reserved[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 			if(memcmp(header.Reserved, psd_reserved, 6) != 0) {
 				FreeImage_OutputMessageProc(FIF_PSD, "Warning: file header reserved member is not equal to zero");
 			}
@@ -371,12 +371,12 @@ bool psdColourModeData::Read(FreeImageIO *io, fi_handle handle) {
 		SAFE_DELETE_ARRAY(_plColourData);
 	}
 
-	BYTE Length[4];
+	uint8_t Length[4];
 	io->read_proc(Length, sizeof(Length), 1, handle);
 
 	_Length = psdGetValue( Length, sizeof(_Length) );
 	if (0 < _Length) {
-		_plColourData = new BYTE[_Length];
+		_plColourData = new uint8_t[_Length];
 		io->read_proc(_plColourData, _Length, 1, handle);
 	}
 
@@ -396,12 +396,12 @@ bool psdColourModeData::Write(FreeImageIO *io, fi_handle handle) {
 }
 
 bool psdColourModeData::FillPalette(FIBITMAP *dib) {
-	RGBQUAD *pal = FreeImage_GetPalette(dib);
+	FIRGBA8 *pal = FreeImage_GetPalette(dib);
 	if(pal) {
 		for (int i = 0; i < 256; i++) {
-			pal[i].rgbRed	= _plColourData[i + 0*256];
-			pal[i].rgbGreen = _plColourData[i + 1*256];
-			pal[i].rgbBlue	= _plColourData[i + 2*256];
+			pal[i].red	= _plColourData[i + 0*256];
+			pal[i].green = _plColourData[i + 1*256];
+			pal[i].blue	= _plColourData[i + 2*256];
 		}
 		return true;
 	}
@@ -427,11 +427,11 @@ void psdImageResource::Reset() {
 }
 
 bool psdImageResource::Write(FreeImageIO *io, fi_handle handle, int ID, int Size) {
-	BYTE ShortValue[2], IntValue[4];
+	uint8_t ShortValue[2], IntValue[4];
 
 	_ID = ID;
 	_Size = Size;
-	psdSetValue((BYTE*)_OSType, sizeof(_OSType), PSD_RESOURCE);
+	psdSetValue((uint8_t*)_OSType, sizeof(_OSType), PSD_RESOURCE);
 	if(io->write_proc(_OSType, sizeof(_OSType), 1, handle) != 1) {
 		return false;
 	}
@@ -459,7 +459,7 @@ psdResolutionInfo::~psdResolutionInfo() {
 }
 
 int psdResolutionInfo::Read(FreeImageIO *io, fi_handle handle) {
-	BYTE IntValue[4], ShortValue[2];
+	uint8_t IntValue[4], ShortValue[2];
 	int nBytes=0, n;
 
 	// Horizontal resolution in pixels per inch.
@@ -496,7 +496,7 @@ int psdResolutionInfo::Read(FreeImageIO *io, fi_handle handle) {
 }
 
 bool psdResolutionInfo::Write(FreeImageIO *io, fi_handle handle) {
-	BYTE IntValue[4], ShortValue[2];
+	uint8_t IntValue[4], ShortValue[2];
 
 	if (!psdImageResource().Write(io, handle, PSDP_RES_RESOLUTION_INFO, 16)) {
 		return false;
@@ -569,7 +569,7 @@ psdResolutionInfo_v2::~psdResolutionInfo_v2() {
 }
 
 int psdResolutionInfo_v2::Read(FreeImageIO *io, fi_handle handle) {
-	BYTE ShortValue[2];
+	uint8_t ShortValue[2];
 	int nBytes=0, n;
 
 	n = (int)io->read_proc(ShortValue, sizeof(ShortValue), 1, handle);
@@ -596,7 +596,7 @@ int psdResolutionInfo_v2::Read(FreeImageIO *io, fi_handle handle) {
 }
 
 bool psdResolutionInfo_v2::Write(FreeImageIO *io, fi_handle handle) {
-	BYTE ShortValue[2];
+	uint8_t ShortValue[2];
 
 	if(!psdImageResource().Write(io, handle, PSDP_RES_RESOLUTION_INFO_V2, 10))
 		return false;
@@ -640,7 +640,7 @@ psdDisplayInfo::~psdDisplayInfo() {
 }
 
 int psdDisplayInfo::Read(FreeImageIO *io, fi_handle handle) {
-	BYTE ShortValue[2];
+	uint8_t ShortValue[2];
 	int nBytes=0, n;
 
 	n = (int)io->read_proc(ShortValue, sizeof(ShortValue), 1, handle);
@@ -660,15 +660,15 @@ int psdDisplayInfo::Read(FreeImageIO *io, fi_handle handle) {
 		throw "Invalid DisplayInfo::Opacity value";
 	}
 
-	BYTE c[1];
+	uint8_t c[1];
 	n = (int)io->read_proc(c, sizeof(c), 1, handle);
 	nBytes += n * sizeof(c);
-	_Kind = (BYTE)psdGetValue(c, sizeof(c));
+	_Kind = (uint8_t)psdGetValue(c, sizeof(c));
 
 	n = (int)io->read_proc(c, sizeof(c), 1, handle);
 	nBytes += n * sizeof(c);
 
-	_padding = (BYTE)psdGetValue(c, sizeof(c));
+	_padding = (uint8_t)psdGetValue(c, sizeof(c));
 	if(_padding != 0) {
 		throw "Invalid DisplayInfo::Padding value";
 	}
@@ -677,7 +677,7 @@ int psdDisplayInfo::Read(FreeImageIO *io, fi_handle handle) {
 }
 
 bool psdDisplayInfo::Write(FreeImageIO *io, fi_handle handle) {
-	BYTE ShortValue[2];
+	uint8_t ShortValue[2];
 
 	if(!psdImageResource().Write(io, handle, PSDP_RES_DISPLAY_INFO, 14))
 		return false;
@@ -696,7 +696,7 @@ bool psdDisplayInfo::Write(FreeImageIO *io, fi_handle handle) {
 	if(io->write_proc(ShortValue, sizeof(ShortValue), 1, handle) != 1) {
 		return false;
 	}
-	BYTE c[1];
+	uint8_t c[1];
 	psdSetValue(c, sizeof(c), _Kind);
 	if(io->write_proc(c, sizeof(c), 1, handle) != 1) {
 		return false;
@@ -734,7 +734,7 @@ psdThumbnail::Init() {
 }
 
 int psdThumbnail::Read(FreeImageIO *io, fi_handle handle, int iResourceSize, bool isBGR) {
-	BYTE ShortValue[2], IntValue[4];
+	uint8_t ShortValue[2], IntValue[4];
 	int nBytes=0, n;
 
 	// remove the header size (28 bytes) from the total data size
@@ -792,8 +792,8 @@ int psdThumbnail::Read(FreeImageIO *io, fi_handle handle, int iResourceSize, boo
 	else {
 		// kRawRGB thumbnail image
 		_dib = FreeImage_Allocate(_Width, _Height, _BitPerPixel);
-		BYTE* dst_line_start = FreeImage_GetScanLine(_dib, _Height - 1);//<*** flipped
-		BYTE* line_start = new BYTE[_WidthBytes];
+		uint8_t* dst_line_start = FreeImage_GetScanLine(_dib, _Height - 1);//<*** flipped
+		uint8_t* line_start = new uint8_t[_WidthBytes];
 		const unsigned dstLineSize = FreeImage_GetPitch(_dib);
 		for(unsigned h = 0; h < (unsigned)_Height; ++h, dst_line_start -= dstLineSize) {//<*** flipped
 			io->read_proc(line_start, _WidthBytes, 1, handle);
@@ -816,7 +816,7 @@ int psdThumbnail::Read(FreeImageIO *io, fi_handle handle, int iResourceSize, boo
 }
 
 bool psdThumbnail::Write(FreeImageIO *io, fi_handle handle, bool isBGR) {
-	BYTE ShortValue[2], IntValue[4];
+	uint8_t ShortValue[2], IntValue[4];
 
 	const long res_start_pos = io->tell_proc(handle);
 	const int ID = isBGR ? PSDP_RES_THUMBNAIL_PS4 : PSDP_RES_THUMBNAIL;
@@ -889,7 +889,7 @@ bool psdThumbnail::Write(FreeImageIO *io, fi_handle handle, bool isBGR) {
 	io->seek_proc(handle, 0, SEEK_END);
 
 	if((len % 2) != 0) {
-		BYTE data[1];
+		uint8_t data[1];
 		data[0] = 0;
 		if(io->write_proc(data, sizeof(data), 1, handle) != 1) {
 			return false;
@@ -915,11 +915,11 @@ int psdICCProfile::Read(FreeImageIO *io, fi_handle handle, int size) {
 
 	clear();
 
-	_ProfileData = new (std::nothrow) BYTE[size];
+	_ProfileData = new (std::nothrow) uint8_t[size];
 	if(NULL != _ProfileData) {
 		n = (int)io->read_proc(_ProfileData, 1, size, handle);
 		_ProfileSize = size;
-		nBytes += n * sizeof(BYTE);
+		nBytes += n * sizeof(uint8_t);
 	}
 
 	return nBytes;
@@ -934,7 +934,7 @@ bool psdICCProfile::Write(FreeImageIO *io, fi_handle handle) {
 			return false;
 		}
 		if((_ProfileSize % 2) != 0) {
-			BYTE data[1];
+			uint8_t data[1];
 			data[0] = 0;
 			if(io->write_proc(data, sizeof(data), 1, handle) != 1) {
 				return false;
@@ -961,11 +961,11 @@ int psdData::Read(FreeImageIO *io, fi_handle handle, int size) {
 
 	clear();
 
-	_Data = new (std::nothrow) BYTE[size];
+	_Data = new (std::nothrow) uint8_t[size];
 	if(NULL != _Data) {
 		n = (int)io->read_proc(_Data, 1, size, handle);
 		_Size = (unsigned)size;
-		nBytes += n * sizeof(BYTE);
+		nBytes += n * sizeof(uint8_t);
 	}
 
 	return nBytes;
@@ -980,7 +980,7 @@ bool psdData::Write(FreeImageIO *io, fi_handle handle, int ID) {
 			return false;
 		}
 		if((_Size % 2) != 0) {
-			BYTE data[1];
+			uint8_t data[1];
 			data[0] = 0;
 			if(io->write_proc(data, sizeof(data), 1, handle) != 1) {
 				return false;
@@ -998,19 +998,19 @@ Invert only color components, skipping Alpha/Black
 (Can be useful as public/utility function)
 */
 static
-BOOL invertColor(FIBITMAP* dib) {
+FIBOOL invertColor(FIBITMAP* dib) {
 	FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
 	const unsigned Bpp = FreeImage_GetBPP(dib)/8;
 
 	if((type == FIT_BITMAP && Bpp == 4) || type == FIT_RGBA16) {
 		const unsigned width = FreeImage_GetWidth(dib);
 		const unsigned height = FreeImage_GetHeight(dib);
-		BYTE *line_start = FreeImage_GetScanLine(dib, 0);
+		uint8_t *line_start = FreeImage_GetScanLine(dib, 0);
 		const unsigned pitch = FreeImage_GetPitch(dib);
 		const unsigned triBpp = Bpp - (Bpp == 4 ? 1 : 2);
 
 		for(unsigned y = 0; y < height; y++) {
-			BYTE *line = line_start;
+			uint8_t *line = line_start;
 
 			for(unsigned x = 0; x < width; x++) {
 				for(unsigned b=0; b < triBpp; ++b) {
@@ -1063,10 +1063,10 @@ unsigned psdParser::GetChannelOffset(FIBITMAP* bitmap, unsigned c) const {
 bool psdParser::ReadLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle)	{
 	bool bSuccess = true;
 
-	UINT64 nTotalBytes = psdReadSize(io, handle, _headerInfo);
+	uint64_t nTotalBytes = psdReadSize(io, handle, _headerInfo);
 
 	// Hack to handle large PSB files without using fseeko().
-	if (sizeof(long) < sizeof(UINT64)) {
+	if (sizeof(long) < sizeof(uint64_t)) {
 		const long offset = 0x10000000;
 		while (nTotalBytes > offset) {
 			if (io->seek_proc(handle, offset, SEEK_CUR) != 0) {
@@ -1084,14 +1084,14 @@ bool psdParser::ReadLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle)	{
 	return bSuccess;
 }
 
-bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, LONG length) {
+bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, int32_t length) {
 	psdImageResource oResource;
 	bool bSuccess = false;
 
 	if(length > 0) {
 		oResource._Length = length;
 	} else {
-		BYTE Length[4];
+		uint8_t Length[4];
 		int n = (int)io->read_proc(Length, sizeof(Length), 1, handle);
 
 		oResource._Length = psdGetValue( Length, sizeof(oResource._Length) );
@@ -1115,22 +1115,22 @@ bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, LONG lengt
 			return false;
 		}
 
-		int nOSType = psdGetValue((BYTE*)&oResource._OSType, sizeof(oResource._OSType));
+		int nOSType = psdGetValue((uint8_t*)&oResource._OSType, sizeof(oResource._OSType));
 
 		if ( PSD_RESOURCE == nOSType ) {
-			BYTE ID[2];
+			uint8_t ID[2];
 			n = (int)io->read_proc(ID, sizeof(ID), 1, handle);
 			nBytes += n * sizeof(ID);
 
 			oResource._ID = (short)psdGetValue( ID, sizeof(ID) );
 
-			BYTE SizeOfName;
+			uint8_t SizeOfName;
 			n = (int)io->read_proc(&SizeOfName, sizeof(SizeOfName), 1, handle);
 			nBytes += n * sizeof(SizeOfName);
 
 			int nSizeOfName = psdGetValue( &SizeOfName, sizeof(SizeOfName) );
 			if ( 0 < nSizeOfName ) {
-				oResource._plName = new BYTE[nSizeOfName];
+				oResource._plName = new uint8_t[nSizeOfName];
 				n = (int)io->read_proc(oResource._plName, nSizeOfName, 1, handle);
 				nBytes += n * nSizeOfName;
 			}
@@ -1140,7 +1140,7 @@ bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, LONG lengt
 				nBytes += n * sizeof(SizeOfName);
 			}
 
-			BYTE Size[4];
+			uint8_t Size[4];
 			n = (int)io->read_proc(Size, sizeof(Size), 1, handle);
 			nBytes += n * sizeof(Size);
 
@@ -1151,8 +1151,8 @@ bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, LONG lengt
 				oResource._Size++;
 			}
 			if ( 0 < oResource._Size ) {
-				BYTE IntValue[4];
-				BYTE ShortValue[2];
+				uint8_t IntValue[4];
+				uint8_t ShortValue[2];
 
 				switch( oResource._ID ) {
 					case PSDP_RES_RESOLUTION_INFO_V2:
@@ -1259,15 +1259,15 @@ bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, LONG lengt
 
 }
 
-void psdParser::ReadImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, unsigned dstBpp, unsigned bytes) {
+void psdParser::ReadImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSize, unsigned dstBpp, unsigned bytes) {
 	switch (bytes) {
 		case 4:
 		{
-			DWORD* d = (DWORD*)dst;
-			const DWORD* s = (const DWORD*)src;
+			uint32_t* d = (uint32_t*)dst;
+			const uint32_t* s = (const uint32_t*)src;
 			dstBpp /= 4;
 			while (lineSize > 0) {
-				DWORD v = *s++;
+				uint32_t v = *s++;
 #ifndef FREEIMAGE_BIGENDIAN
 				SwapLong(&v);
 #endif
@@ -1279,11 +1279,11 @@ void psdParser::ReadImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, uns
 		}
 		case 2:
 		{
-			WORD* d = (WORD*)dst;
-			const WORD* s = (const WORD*)src;
+			uint16_t* d = (uint16_t*)dst;
+			const uint16_t* s = (const uint16_t*)src;
 			dstBpp /= 2;
 			while (lineSize > 0) {
-				WORD v = *s++;
+				uint16_t v = *s++;
 #ifndef FREEIMAGE_BIGENDIAN
 				SwapShort(&v);
 #endif
@@ -1307,7 +1307,7 @@ void psdParser::ReadImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, uns
 	}
 }
 
-void psdParser::UnpackRLE(BYTE* line, const BYTE* rle_line, BYTE* line_end, unsigned srcSize) {
+void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, uint8_t* line_end, unsigned srcSize) {
 	while (srcSize > 0) {
 
 		int len = *rle_line++;
@@ -1353,7 +1353,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 	bool header_only = (_fi_flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
-	WORD nCompression = 0;
+	uint16_t nCompression = 0;
 	if (io->read_proc(&nCompression, sizeof(nCompression), 1, handle) != 1) {
 		return NULL;
 	}
@@ -1376,7 +1376,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 	const unsigned depth = _headerInfo._BitsPerChannel;
 	const unsigned bytes = (depth == 1) ? 1 : depth / 8;
 
-	// channel(plane) line (BYTE aligned)
+	// channel(plane) line (uint8_t aligned)
 	const unsigned lineSize = (_headerInfo._BitsPerChannel == 1) ? (nWidth + 7) / 8 : nWidth * bytes;
 
 	if(nCompression == PSDP_COMPRESSION_RLE && depth > 16) {
@@ -1461,9 +1461,9 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 	const unsigned dstBpp =  (depth == 1) ? 1 : FreeImage_GetBPP(bitmap)/8;
 	const unsigned dstLineSize = FreeImage_GetPitch(bitmap);
-	BYTE* const dst_first_line = FreeImage_GetScanLine(bitmap, nHeight - 1);//<*** flipped
+	uint8_t* const dst_first_line = FreeImage_GetScanLine(bitmap, nHeight - 1);//<*** flipped
 
-	BYTE* line_start = new BYTE[lineSize]; //< fileline cache
+	uint8_t* line_start = new uint8_t[lineSize]; //< fileline cache
 
 	switch ( nCompression ) {
 		case PSDP_COMPRESSION_NONE: // raw data
@@ -1476,7 +1476,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 				const unsigned channelOffset = GetChannelOffset(bitmap, c) * bytes;
 
-				BYTE* dst_line_start = dst_first_line + channelOffset;
+				uint8_t* dst_line_start = dst_first_line + channelOffset;
 				for(unsigned h = 0; h < nHeight; ++h, dst_line_start -= dstLineSize) {//<*** flipped
 					io->read_proc(line_start, lineSize, 1, handle);
 					ReadImageLine(dst_line_start, line_start, lineSize, dstBpp, bytes);
@@ -1495,8 +1495,8 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 			// store an array of these
 			// Version 2 has 4-byte line sizes.
 
-			// later use this array as DWORD rleLineSizeList[nChannels][nHeight];
-			DWORD *rleLineSizeList = new (std::nothrow) DWORD[nChannels*nHeight];
+			// later use this array as uint32_t rleLineSizeList[nChannels][nHeight];
+			uint32_t *rleLineSizeList = new (std::nothrow) uint32_t[nChannels*nHeight];
 
 			if(!rleLineSizeList) {
 				FreeImage_Unload(bitmap);
@@ -1504,7 +1504,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 				throw std::bad_alloc();
 			}
 			if(_headerInfo._Version == 1) {
-				WORD *rleLineSizeList2 = new (std::nothrow) WORD[nChannels*nHeight];
+				uint16_t *rleLineSizeList2 = new (std::nothrow) uint16_t[nChannels*nHeight];
 				if(!rleLineSizeList2) {
 					FreeImage_Unload(bitmap);
 					SAFE_DELETE_ARRAY(line_start);
@@ -1527,7 +1527,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 #endif
 			}
 
-			DWORD largestRLELine = 0;
+			uint32_t largestRLELine = 0;
 			for(unsigned ch = 0; ch < nChannels; ++ch) {
 				for(unsigned h = 0; h < nHeight; ++h) {
 					const unsigned index = ch * nHeight + h;
@@ -1538,7 +1538,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 				}
 			}
 
-			BYTE* rle_line_start = new (std::nothrow) BYTE[largestRLELine];
+			uint8_t* rle_line_start = new (std::nothrow) uint8_t[largestRLELine];
 			if(!rle_line_start) {
 				FreeImage_Unload(bitmap);
 				SAFE_DELETE_ARRAY(line_start);
@@ -1552,17 +1552,17 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 					// @todo write to extra channels
 					break;
 				}
-				const BYTE* const line_end = line_start + lineSize;
+				const uint8_t* const line_end = line_start + lineSize;
 
 				const unsigned channelOffset = GetChannelOffset(bitmap, ch) * bytes;
 
-				BYTE* dst_line_start = dst_first_line + channelOffset;
+				uint8_t* dst_line_start = dst_first_line + channelOffset;
 				for(unsigned h = 0; h < nHeight; ++h, dst_line_start -= dstLineSize) {//<*** flipped
 					const unsigned index = ch * nHeight + h;
 
 					// - read and uncompress line -
 
-					const DWORD rleLineSize = rleLineSizeList[index];
+					const uint32_t rleLineSize = rleLineSizeList[index];
 
 					io->read_proc(rle_line_start, rleLineSize, 1, handle);
 
@@ -1589,15 +1589,15 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 		case PSDP_COMPRESSION_ZIP: // ZIP without prediction
 		case PSDP_COMPRESSION_ZIP_PREDICTION: // ZIP with prediction
 			{
-				BYTE *compressed = NULL;
+				uint8_t *compressed = NULL;
 				size_t compressedSize = 0;
-				BYTE *uncompressed = new (std::nothrow) BYTE[nHeight * lineSize];
+				uint8_t *uncompressed = new (std::nothrow) uint8_t[nHeight * lineSize];
 				if(!uncompressed) {
 					FreeImage_Unload(bitmap);
 					SAFE_DELETE_ARRAY(line_start);
 					throw std::bad_alloc();
 				}
-				DWORD size = FreeImage_ZLibGUnzip(uncompressed, nHeight * lineSize, compressed, compressedSize);
+				uint32_t size = FreeImage_ZLibGUnzip(uncompressed, nHeight * lineSize, compressed, compressedSize);
 			}
 			break;
 		*/
@@ -1670,9 +1670,9 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 bool psdParser::WriteLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle)	{
 	// Short section with no layers.
-	BYTE IntValue[4];
+	uint8_t IntValue[4];
 
-	UINT64 size;
+	uint64_t size;
 	if(_headerInfo._Version == 1) {
 		size = 8;
 	} else {
@@ -1695,15 +1695,15 @@ bool psdParser::WriteLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle)	
 	return true;
 }
 
-void psdParser::WriteImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, unsigned srcBpp, unsigned bytes) {
+void psdParser::WriteImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSize, unsigned srcBpp, unsigned bytes) {
 	switch (bytes) {
 	case 4:
 		{
-			DWORD* d = (DWORD*)dst;
-			const DWORD* s = (const DWORD*)src;
+			uint32_t* d = (uint32_t*)dst;
+			const uint32_t* s = (const uint32_t*)src;
 			srcBpp /= 4;
 			while (lineSize > 0) {
-				DWORD v = *s;
+				uint32_t v = *s;
 #ifndef FREEIMAGE_BIGENDIAN
 				SwapLong(&v);
 #endif
@@ -1715,11 +1715,11 @@ void psdParser::WriteImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, un
 		}
 	case 2:
 		{
-			WORD* d = (WORD*)dst;
-			const WORD* s = (const WORD*)src;
+			uint16_t* d = (uint16_t*)dst;
+			const uint16_t* s = (const uint16_t*)src;
 			srcBpp /= 2;
 			while (lineSize > 0) {
-				WORD v = *s;
+				uint16_t v = *s;
 #ifndef FREEIMAGE_BIGENDIAN
 				SwapShort(&v);
 #endif
@@ -1743,14 +1743,14 @@ void psdParser::WriteImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, un
 	}
 }
 
-unsigned psdParser::PackRLE(BYTE* line_start, const BYTE* src_line, unsigned srcSize) {
-	BYTE* line = line_start;
+unsigned psdParser::PackRLE(uint8_t* line_start, const uint8_t* src_line, unsigned srcSize) {
+	uint8_t* line = line_start;
 	while (srcSize > 0) {
 		if(srcSize >= 2 && src_line[0] == src_line[1]) {
 			int len = 2;
 			while(len < 127 && len < (int)srcSize && src_line[0] == src_line[len])
 				len++;
-			*line++ = (BYTE)((-len + 1) & 0xFF);
+			*line++ = (uint8_t)((-len + 1) & 0xFF);
 			*line++ = src_line[0];
 			src_line += len;
 			srcSize -= len;
@@ -1763,7 +1763,7 @@ unsigned psdParser::PackRLE(BYTE* line_start, const BYTE* src_line, unsigned src
 				   src_line[len] != src_line[len+1] ||
 				   src_line[len] != src_line[len+2]))
 				len++;
-			*line++ = (BYTE)(len - 1);
+			*line++ = (uint8_t)(len - 1);
 			for(int i=0; i < len; i++) {
 				*line++ = *src_line;
 				src_line++;
@@ -1805,7 +1805,7 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 		}
 	}
 
-	WORD CompressionValue = nCompression;
+	uint16_t CompressionValue = nCompression;
 #ifndef FREEIMAGE_BIGENDIAN
 	SwapShort(&CompressionValue);
 #endif
@@ -1820,13 +1820,13 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 	const unsigned depth = _headerInfo._BitsPerChannel;
 	const unsigned bytes = (depth == 1) ? 1 : depth / 8;
 
-	// channel(plane) line (BYTE aligned)
+	// channel(plane) line (uint8_t aligned)
 	const unsigned lineSize = (_headerInfo._BitsPerChannel == 1) ? (nWidth + 7) / 8 : nWidth * bytes;
 
 	const unsigned srcBpp =  (depth == 1) ? 1 : FreeImage_GetBPP(dib)/8;
 	const unsigned srcLineSize = FreeImage_GetPitch(dib);
-	BYTE* const src_first_line = FreeImage_GetScanLine(dib, nHeight - 1);//<*** flipped
-	BYTE* line_start = new BYTE[lineSize]; //< fileline cache
+	uint8_t* const src_first_line = FreeImage_GetScanLine(dib, nHeight - 1);//<*** flipped
+	uint8_t* line_start = new uint8_t[lineSize]; //< fileline cache
 
 	switch ( nCompression ) {
 		case PSDP_COMPRESSION_NONE: // raw data
@@ -1834,7 +1834,7 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 			for(unsigned c = 0; c < nChannels; c++) {
 				const unsigned channelOffset = GetChannelOffset(dib, c) * bytes;
 
-				BYTE* src_line_start = src_first_line + channelOffset;
+				uint8_t* src_line_start = src_first_line + channelOffset;
 				for(unsigned h = 0; h < nHeight; ++h, src_line_start -= srcLineSize) {//<*** flipped
 					WriteImageLine(line_start, src_line_start, lineSize, srcBpp, bytes);
 					if(io->write_proc(line_start, lineSize, 1, handle) != 1) {
@@ -1851,16 +1851,16 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 			// store an array of these
 			// Version 2 has 4-byte line sizes.
 
-			// later use this array as WORD rleLineSizeList[nChannels][nHeight];
+			// later use this array as uint16_t rleLineSizeList[nChannels][nHeight];
 			// Every 127 bytes needs a length byte.
-			BYTE* rle_line_start = new BYTE[lineSize + ((nWidth + 126) / 127)]; //< RLE buffer
-			DWORD *rleLineSizeList = new (std::nothrow) DWORD[nChannels*nHeight];
+			uint8_t* rle_line_start = new uint8_t[lineSize + ((nWidth + 126) / 127)]; //< RLE buffer
+			uint32_t *rleLineSizeList = new (std::nothrow) uint32_t[nChannels*nHeight];
 
 			if(!rleLineSizeList) {
 				SAFE_DELETE_ARRAY(line_start);
 				throw std::bad_alloc();
 			}
-			memset(rleLineSizeList, 0, sizeof(DWORD)*nChannels*nHeight);
+			memset(rleLineSizeList, 0, sizeof(uint32_t)*nChannels*nHeight);
 			const long offsets_pos = io->tell_proc(handle);
 			if(_headerInfo._Version == 1) {
 				if(io->write_proc(rleLineSizeList, nChannels*nHeight*2, 1, handle) != 1) {
@@ -1874,7 +1874,7 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 			for(unsigned c = 0; c < nChannels; c++) {
 				const unsigned channelOffset = GetChannelOffset(dib, c) * bytes;
 
-				BYTE* src_line_start = src_first_line + channelOffset;
+				uint8_t* src_line_start = src_first_line + channelOffset;
 				for(unsigned h = 0; h < nHeight; ++h, src_line_start -= srcLineSize) {//<*** flipped
 					WriteImageLine(line_start, src_line_start, lineSize, srcBpp, bytes);
 					unsigned len = PackRLE(rle_line_start, line_start, lineSize);
@@ -1888,13 +1888,13 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 			// Fix length of resource
 			io->seek_proc(handle, offsets_pos, SEEK_SET);
 			if(_headerInfo._Version == 1) {
-				WORD *rleLineSizeList2 = new (std::nothrow) WORD[nChannels*nHeight];
+				uint16_t *rleLineSizeList2 = new (std::nothrow) uint16_t[nChannels*nHeight];
 				if(!rleLineSizeList2) {
 					SAFE_DELETE_ARRAY(line_start);
 					throw std::bad_alloc();
 				}
 				for(unsigned index = 0; index < nChannels * nHeight; ++index) {
-					rleLineSizeList2[index] = (WORD)rleLineSizeList[index];
+					rleLineSizeList2[index] = (uint16_t)rleLineSizeList[index];
 #ifndef FREEIMAGE_BIGENDIAN
 					SwapShort(&rleLineSizeList2[index]);
 #endif
@@ -2103,13 +2103,13 @@ bool psdParser::Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page,
 	_colourModeData._Length = 0;
 	_colourModeData._plColourData = NULL;
 	if (FreeImage_GetPalette(dib) != NULL) {
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		_colourModeData._Length = FreeImage_GetColorsUsed(dib) * 3;
-		_colourModeData._plColourData = new BYTE[_colourModeData._Length];
+		_colourModeData._plColourData = new uint8_t[_colourModeData._Length];
 		for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++ ) {
-			_colourModeData._plColourData[i + 0*256] = pal[i].rgbRed;
-			_colourModeData._plColourData[i + 1*256] = pal[i].rgbGreen;
-			_colourModeData._plColourData[i + 2*256] = pal[i].rgbBlue;
+			_colourModeData._plColourData[i + 0*256] = pal[i].red;
+			_colourModeData._plColourData[i + 1*256] = pal[i].green;
+			_colourModeData._plColourData[i + 2*256] = pal[i].blue;
 		}
 	}
 
@@ -2117,7 +2117,7 @@ bool psdParser::Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page,
 		return false;
 	}
 
-	BYTE IntValue[4];
+	uint8_t IntValue[4];
 	const long res_start_pos = io->tell_proc(handle);
 	psdSetValue(IntValue, sizeof(IntValue), 0);
 	if(io->write_proc(IntValue, sizeof(IntValue), 1, handle) != 1) {
@@ -2160,7 +2160,7 @@ bool psdParser::Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page,
 		_iccProfile.clear();
 		_iccProfile._owned = false;
 		_iccProfile._ProfileSize = iccProfile->size;
-		_iccProfile._ProfileData = (BYTE*)iccProfile->data;
+		_iccProfile._ProfileData = (uint8_t*)iccProfile->data;
 		if (!_iccProfile.Write(io, handle)) {
 			return false;
 		}

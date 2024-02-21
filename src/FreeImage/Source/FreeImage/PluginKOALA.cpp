@@ -33,10 +33,10 @@
 #endif
 
 typedef struct tagKOALA {
-	BYTE image[8000];		// pixmap image
-	BYTE colour1[1000];		// first colourmap (colour 1 and 2)
-	BYTE colour2[1000];		// second colourmap (colour 3)
-	BYTE background;		// background colour
+	uint8_t image[8000];		// pixmap image
+	uint8_t colour1[1000];		// first colourmap (colour 1 and 2)
+	uint8_t colour2[1000];		// second colourmap (colour 3)
+	uint8_t background;		// background colour
 } koala_t;
 
 struct colour_t {
@@ -112,22 +112,22 @@ MimeType() {
 	return "image/x-koala";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	BYTE koala_signature[] = { 0x00, 0x60 };
-	BYTE signature[2] = { 0, 0 };
+	uint8_t koala_signature[] = { 0x00, 0x60 };
+	uint8_t signature[2] = { 0, 0 };
 
 	io->read_proc(signature, 1, sizeof(koala_signature), handle);
 
 	return (memcmp(koala_signature, signature, sizeof(koala_signature)) == 0);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
@@ -148,10 +148,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// if the load address is correct, skip it. otherwise ignore the load address
 
 		if ((load_address[0] != 0x00) || (load_address[1] != 0x60)) {
-			((BYTE *)&image)[0] = load_address[0];
-			((BYTE *)&image)[1] = load_address[1];
+			((uint8_t *)&image)[0] = load_address[0];
+			((uint8_t *)&image)[1] = load_address[1];
 
-			io->read_proc((BYTE *)&image + 2, 1, 10001 - 2, handle);
+			io->read_proc((uint8_t *)&image + 2, 1, 10001 - 2, handle);
 		} else {
 			io->read_proc(&image, 1, 10001, handle);
 		}		
@@ -163,18 +163,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (dib) {
 			// write out the commodore 64 color palette
 
-			RGBQUAD *palette = FreeImage_GetPalette(dib);
+			FIRGBA8 *palette = FreeImage_GetPalette(dib);
 
 			for (int i = 0; i < 16; i++) {
-				palette[i].rgbBlue  = (BYTE)c64colours[i].b;
-				palette[i].rgbGreen = (BYTE)c64colours[i].g;
-				palette[i].rgbRed   = (BYTE)c64colours[i].r;
+				palette[i].blue  = (uint8_t)c64colours[i].b;
+				palette[i].green = (uint8_t)c64colours[i].g;
+				palette[i].red   = (uint8_t)c64colours[i].r;
 			}
 
 			// write out bitmap data
 
-			BYTE pixel_mask[4]         = { 0xc0, 0x30, 0x0c, 0x03 };
-			BYTE pixel_displacement[4] = { 6, 4, 2, 0 };
+			uint8_t pixel_mask[4]         = { 0xc0, 0x30, 0x0c, 0x03 };
+			uint8_t pixel_displacement[4] = { 6, 4, 2, 0 };
 			int	pixel, index, colourindex;
 			unsigned char found_color = 0;
 

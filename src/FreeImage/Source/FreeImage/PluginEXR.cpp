@@ -28,16 +28,16 @@
 #pragma warning (disable : 4800) // ImfVersion.h - 'const int' : forcing value to bool 'true' or 'false' (performance warning)
 #endif 
 
-#include "../OpenEXR/IlmImf/ImfIO.h"
-#include "../OpenEXR/Iex/Iex.h"
-#include "../OpenEXR/IlmImf/ImfOutputFile.h"
-#include "../OpenEXR/IlmImf/ImfInputFile.h"
-#include "../OpenEXR/IlmImf/ImfRgbaFile.h"
-#include "../OpenEXR/IlmImf/ImfChannelList.h"
-#include "../OpenEXR/IlmImf/ImfRgba.h"
-#include "../OpenEXR/IlmImf/ImfArray.h"
-#include "../OpenEXR/IlmImf/ImfPreviewImage.h"
-#include "../OpenEXR/Half/half.h"
+#include "OpenEXR/IlmImf/ImfIO.h"
+#include "Iex/Iex.h"
+#include "OpenEXR/IlmImf/ImfOutputFile.h"
+#include "OpenEXR/IlmImf/ImfInputFile.h"
+#include "OpenEXR/IlmImf/ImfRgbaFile.h"
+#include "OpenEXR/IlmImf/ImfChannelList.h"
+#include "OpenEXR/IlmImf/ImfRgba.h"
+#include "OpenEXR/IlmImf/ImfArray.h"
+#include "OpenEXR/IlmImf/ImfPreviewImage.h"
+//#include "OpenEXR/Half/half.h"
 
 
 // ==========================================================
@@ -66,11 +66,11 @@ public:
 		return ((unsigned)n != _io->read_proc(c, 1, n, _handle));
 	}
 
-	virtual Imath::Int64 tellg() {
+	virtual uint64_t tellg() {
 		return _io->tell_proc(_handle);
 	}
 
-	virtual void seekg(Imath::Int64 pos) {
+	virtual void seekg(uint64_t pos) {
 		_io->seek_proc(_handle, (unsigned)pos, SEEK_SET);
 	}
 
@@ -100,11 +100,11 @@ public:
 		}
 	}
 
-	virtual Imath::Int64 tellp() {
+	virtual uint64_t tellp() {
 		return _io->tell_proc(_handle);
 	}
 
-	virtual void seekp(Imath::Int64 pos) {
+	virtual void seekp(uint64_t pos) {
 		_io->seek_proc(_handle, (unsigned)pos, SEEK_SET);
 	}
 };
@@ -141,21 +141,21 @@ MimeType() {
 	return "image/x-exr";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	BYTE exr_signature[] = { 0x76, 0x2F, 0x31, 0x01 };
-	BYTE signature[] = { 0, 0, 0, 0 };
+	uint8_t exr_signature[] = { 0x76, 0x2F, 0x31, 0x01 };
+	uint8_t signature[] = { 0, 0, 0, 0 };
 
 	io->read_proc(signature, 1, 4, handle);
 	return (memcmp(exr_signature, signature, 4) == 0);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (
 		(type == FIT_FLOAT) ||
@@ -164,7 +164,7 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 	);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -181,7 +181,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	}
 
 	try {
-		BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 		// save the stream starting point
 		const long stream_start = io->tell_proc(handle);
@@ -318,18 +318,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			FIBITMAP* thumbnail = FreeImage_Allocate(thWidth, thHeight, 32);
 			if(thumbnail) {
 				const Imf::PreviewRgba *src_line = preview.pixels();
-				BYTE *dst_line = FreeImage_GetScanLine(thumbnail, thHeight - 1);
+				uint8_t *dst_line = FreeImage_GetScanLine(thumbnail, thHeight - 1);
 				const unsigned dstPitch = FreeImage_GetPitch(thumbnail);
 				
 				for (unsigned y = 0; y < thHeight; ++y) {
 					const Imf::PreviewRgba *src_pixel = src_line;
-					RGBQUAD* dst_pixel = (RGBQUAD*)dst_line;
+					FIRGBA8* dst_pixel = (FIRGBA8*)dst_line;
 					
 					for(unsigned x = 0; x < thWidth; ++x) {
-						dst_pixel->rgbRed = src_pixel->r;
-						dst_pixel->rgbGreen = src_pixel->g;
-						dst_pixel->rgbBlue = src_pixel->b;
-						dst_pixel->rgbReserved = src_pixel->a;				
+						dst_pixel->red = src_pixel->r;
+						dst_pixel->green = src_pixel->g;
+						dst_pixel->blue = src_pixel->b;
+						dst_pixel->alpha = src_pixel->a;				
 						src_pixel++;
 						dst_pixel++;
 					}
@@ -349,7 +349,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// load pixels
 		// --------------------------------------------------------------
 
-		const BYTE *bits = FreeImage_GetBits(dib);			// pointer to our pixel buffer
+		const uint8_t *bits = FreeImage_GetBits(dib);			// pointer to our pixel buffer
 		const size_t bytespp = sizeof(float) * components;	// size of our pixel in bytes
 		const unsigned pitch = FreeImage_GetPitch(dib);		// size of our yStride in bytes
 
@@ -360,7 +360,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			const int chunk_size = 16;
 
-			BYTE *scanline = (BYTE*)bits;
+			uint8_t *scanline = (uint8_t*)bits;
 
 			// re-open using the RGBA interface
 			io->seek_proc(handle, stream_start, SEEK_SET);
@@ -446,7 +446,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 /**
 Set the preview image using the dib embedded thumbnail
 */
-static BOOL
+static FIBOOL
 SetPreviewImage(FIBITMAP *dib, Imf::Header& header) {
 	if(!FreeImage_GetThumbnail(dib)) {
 		return FALSE;
@@ -464,19 +464,19 @@ SetPreviewImage(FIBITMAP *dib, Imf::Header& header) {
 
 		// copy thumbnail to 32-bit RGBA preview image
 		
-		const BYTE* src_line = FreeImage_GetScanLine(thumbnail, thHeight - 1);
+		const uint8_t* src_line = FreeImage_GetScanLine(thumbnail, thHeight - 1);
 		Imf::PreviewRgba* dst_line = preview.pixels();
 		const unsigned srcPitch = FreeImage_GetPitch(thumbnail);
 		
 		for (unsigned y = 0; y < thHeight; y++) {
-			const RGBQUAD* src_pixel = (RGBQUAD*)src_line;
+			const FIRGBA8* src_pixel = (FIRGBA8*)src_line;
 			Imf::PreviewRgba* dst_pixel = dst_line;
 			
 			for(unsigned x = 0; x < thWidth; x++) {
-				dst_pixel->r = src_pixel->rgbRed;
-				dst_pixel->g = src_pixel->rgbGreen;
-				dst_pixel->b = src_pixel->rgbBlue;
-				dst_pixel->a = src_pixel->rgbReserved;
+				dst_pixel->r = src_pixel->red;
+				dst_pixel->g = src_pixel->green;
+				dst_pixel->b = src_pixel->blue;
+				dst_pixel->a = src_pixel->alpha;
 				
 				src_pixel++;
 				dst_pixel++;
@@ -495,7 +495,7 @@ SetPreviewImage(FIBITMAP *dib, Imf::Header& header) {
 /**
 Save using EXR_LC compression (works only with RGB[A]F images)
 */
-static BOOL 
+static FIBOOL 
 SaveAsEXR_LC(C_OStream& ostream, FIBITMAP *dib, Imf::Header& header, int width, int height) {
 	int x, y;
 	Imf::RgbaChannels rgbaChannels;
@@ -552,10 +552,10 @@ SaveAsEXR_LC(C_OStream& ostream, FIBITMAP *dib, Imf::Header& header, int width, 
 
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	const char *channel_name[4] = { "R", "G", "B", "A" };
-	BOOL bIsFlipped = FALSE;
+	FIBOOL bIsFlipped = FALSE;
 	half *halfData = NULL;
 
 	if(!dib || !handle) return FALSE;
@@ -656,7 +656,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		// build a frame buffer (i.e. what we have on input)
 		Imf::FrameBuffer frameBuffer;
 
-		BYTE *bits = NULL;	// pointer to our pixel buffer
+		uint8_t *bits = NULL;	// pointer to our pixel buffer
 		size_t bytespp = 0;	// size of our pixel in bytes
 		size_t bytespc = 0;	// size of our pixel component in bytes
 		unsigned pitch = 0;	// size of our yStride in bytes
@@ -680,7 +680,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					dst_bits += components;
 				}
 			}
-			bits = (BYTE*)halfData;
+			bits = (uint8_t*)halfData;
 			bytespc = sizeof(half);
 			bytespp = sizeof(half) * components;
 			pitch = sizeof(half) * width * components;

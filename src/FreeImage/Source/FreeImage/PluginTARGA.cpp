@@ -39,43 +39,43 @@
 #endif
 
 typedef struct tagTGAHEADER {
-	BYTE id_length;				//! length of the image ID field
-	BYTE color_map_type;		//! whether a color map is included
-	BYTE image_type;			//! compression and color types
+	uint8_t id_length;				//! length of the image ID field
+	uint8_t color_map_type;		//! whether a color map is included
+	uint8_t image_type;			//! compression and color types
 
-	WORD cm_first_entry;		//! first entry index (offset into the color map table)
-	WORD cm_length;				//! color map length (number of entries)
-	BYTE cm_size;				//! color map entry size, in bits (number of bits per pixel)
+	uint16_t cm_first_entry;		//! first entry index (offset into the color map table)
+	uint16_t cm_length;				//! color map length (number of entries)
+	uint8_t cm_size;				//! color map entry size, in bits (number of bits per pixel)
 
-	WORD is_xorigin;			//! X-origin of image (absolute coordinate of lower-left corner for displays where origin is at the lower left)
-	WORD is_yorigin;			//! Y-origin of image (as for X-origin)
-	WORD is_width;				//! image width
-	WORD is_height;				//! image height
-	BYTE is_pixel_depth;		//! bits per pixel
-	BYTE is_image_descriptor;	//! image descriptor, bits 3-0 give the alpha channel depth, bits 5-4 give direction
+	uint16_t is_xorigin;			//! X-origin of image (absolute coordinate of lower-left corner for displays where origin is at the lower left)
+	uint16_t is_yorigin;			//! Y-origin of image (as for X-origin)
+	uint16_t is_width;				//! image width
+	uint16_t is_height;				//! image height
+	uint8_t is_pixel_depth;		//! bits per pixel
+	uint8_t is_image_descriptor;	//! image descriptor, bits 3-0 give the alpha channel depth, bits 5-4 give direction
 } TGAHEADER;
 
 typedef struct tagTGAEXTENSIONAREA {
-	WORD extension_size;		// Size in bytes of the extension area, always 495
+	uint16_t extension_size;		// Size in bytes of the extension area, always 495
 	char author_name[41];		// Name of the author. If not used, bytes should be set to NULL (\0) or spaces
 	char author_comments[324];	// A comment, organized as four lines, each consisting of 80 characters plus a NULL
-	WORD datetime_stamp[6];		// Date and time at which the image was created
+	uint16_t datetime_stamp[6];		// Date and time at which the image was created
 	char job_name[41];			// Job ID
-	WORD job_time[3];			// Hours, minutes and seconds spent creating the file (for billing, etc.)
+	uint16_t job_time[3];			// Hours, minutes and seconds spent creating the file (for billing, etc.)
 	char software_id[41];		// The application that created the file
-	BYTE software_version[3];
-	DWORD key_color;
-	WORD pixel_aspect_ratio[2];
-	WORD gamma_value[2];
-	DWORD color_correction_offset;	// Number of bytes from the beginning of the file to the color correction table if present
-	DWORD postage_stamp_offset;		// Number of bytes from the beginning of the file to the postage stamp image if present
-	DWORD scan_line_offset;			// Number of bytes from the beginning of the file to the scan lines table if present
-	BYTE attributes_type;			// Specifies the alpha channel
+	uint8_t software_version[3];
+	uint32_t key_color;
+	uint16_t pixel_aspect_ratio[2];
+	uint16_t gamma_value[2];
+	uint32_t color_correction_offset;	// Number of bytes from the beginning of the file to the color correction table if present
+	uint32_t postage_stamp_offset;		// Number of bytes from the beginning of the file to the postage stamp image if present
+	uint32_t scan_line_offset;			// Number of bytes from the beginning of the file to the scan lines table if present
+	uint8_t attributes_type;			// Specifies the alpha channel
 } TGAEXTENSIONAREA;
 
 typedef struct tagTGAFOOTER {
-	DWORD extension_offset;	// extension area offset : offset in bytes from the beginning of the file
-	DWORD developer_offset;	// developer directory offset : offset in bytes from the beginning of the file
+	uint32_t extension_offset;	// extension area offset : offset in bytes from the beginning of the file
+	uint32_t developer_offset;	// developer directory offset : offset in bytes from the beginning of the file
 	char signature[18];		// signature string : contains "TRUEVISION-XFILE.\0"
 } TGAFOOTER;
 
@@ -115,33 +115,33 @@ public:
 		}
 	}
 
-	BOOL isNull() const { 
+	FIBOOL isNull() const { 
 		return (_data == NULL); 
 	}
 	
-	BOOL read(FreeImageIO *io, fi_handle handle, size_t size) {
+	FIBOOL read(FreeImageIO *io, fi_handle handle, size_t size) {
 		io->read_proc(&_w, 1, 1, handle);
 		io->read_proc(&_h, 1, 1, handle);
 		
 		const size_t sizeofData = size - 2;
-		_data = (BYTE*)malloc(sizeofData);
+		_data = (uint8_t*)malloc(sizeofData);
 		if(_data) {
 			return (io->read_proc(_data, 1, (unsigned)sizeofData, handle) == sizeofData);
 		}
 		return FALSE;
 	}
 	
-	void setDepth(BYTE dp) { 
+	void setDepth(uint8_t dp) { 
 		_depth = dp;
 	}
 	
 	FIBITMAP* toFIBITMAP();
 	
 private:
-	BYTE _w;
-	BYTE _h;
-	BYTE _depth;
-	BYTE* _data;
+	uint8_t _w;
+	uint8_t _h;
+	uint8_t _depth;
+	uint8_t* _data;
 };
 
 #ifdef FREEIMAGE_BIGENDIAN
@@ -156,14 +156,14 @@ swapShortPixels(FIBITMAP* dib) {
 		return;
 	}
 		
-	BYTE* bits = FreeImage_GetBits(dib);
+	uint8_t* bits = FreeImage_GetBits(dib);
 	const unsigned height = FreeImage_GetHeight(dib);
 	const unsigned pitch = FreeImage_GetPitch(dib);
 	
-	BYTE* line = bits;
+	uint8_t* line = bits;
 	for(unsigned y = 0; y < height; y++, line += pitch) {
-		for(BYTE* pixel = line; pixel < line + pitch ; pixel += Bpp) {
-			SwapShort((WORD*)pixel);
+		for(uint8_t* pixel = line; pixel < line + pitch ; pixel += Bpp) {
+			SwapShort((uint16_t*)pixel);
 		}
 	}
 }
@@ -180,10 +180,10 @@ FIBITMAP* TargaThumbnail::toFIBITMAP() {
 		return NULL;
 	}
 
-	const BYTE* line = _data;
-	const BYTE height = _h;
-	for (BYTE h = 0; h < height; ++h, line += line_size) {
-		BYTE* dst_line = FreeImage_GetScanLine(dib, height - 1 - h);
+	const uint8_t* line = _data;
+	const uint8_t height = _h;
+	for (uint8_t h = 0; h < height; ++h, line += line_size) {
+		uint8_t* dst_line = FreeImage_GetScanLine(dib, height - 1 - h);
 		memcpy(dst_line, line, line_size);
 	}
 
@@ -211,7 +211,7 @@ class IOCache
 public:
 	IOCache(FreeImageIO *io, fi_handle handle, size_t size) :
 		_ptr(NULL), _begin(NULL), _end(NULL), _size(size), _io(io), _handle(handle)	{
-			_begin = (BYTE*)malloc(size);
+			_begin = (uint8_t*)malloc(size);
 			if (_begin) {
 			_end = _begin + _size;
 			_ptr = _end;	// will force refill on first access
@@ -224,17 +224,17 @@ public:
 		}	
 	}
 		
-	BOOL isNull() { return _begin == NULL;}
+	FIBOOL isNull() { return _begin == NULL;}
 	
 	inline
-	BYTE getByte() {
+	uint8_t getByte() {
 		if (_ptr >= _end) {
 			// need refill
 			_ptr = _begin;
-			_io->read_proc(_ptr, sizeof(BYTE), (unsigned)_size, _handle);	//### EOF - no problem?
+			_io->read_proc(_ptr, sizeof(uint8_t), (unsigned)_size, _handle);	//### EOF - no problem?
 		}
 
-		BYTE result = *_ptr;
+		uint8_t result = *_ptr;
 
 		_ptr++;
 
@@ -242,7 +242,7 @@ public:
 	}
 	
 	inline
-	BYTE* getBytes(size_t count /*must be < _size!*/) {
+	uint8_t* getBytes(size_t count /*must be < _size!*/) {
 		if (_ptr + count >= _end) {
 			
 			// need refill
@@ -256,10 +256,10 @@ public:
 			_io->seek_proc(_handle, -remaining, SEEK_CUR);
 
 			_ptr = _begin;
-			_io->read_proc(_ptr, sizeof(BYTE), (unsigned)_size, _handle);	//### EOF - no problem?
+			_io->read_proc(_ptr, sizeof(uint8_t), (unsigned)_size, _handle);	//### EOF - no problem?
 		}
 
-		BYTE *result = _ptr;
+		uint8_t *result = _ptr;
 
 		_ptr += count;
 
@@ -271,9 +271,9 @@ private:
 	IOCache(const IOCache& other); // deleted
 
 private:
-	BYTE *_ptr;
-	BYTE *_begin;
-	BYTE *_end;
+	uint8_t *_ptr;
+	uint8_t *_begin;
+	uint8_t *_end;
 	const size_t _size;
 	const FreeImageIO *_io;	
 	const fi_handle _handle;	
@@ -355,12 +355,12 @@ MimeType() {
 	return "image/x-tga";
 }
 
-static BOOL 
+static FIBOOL 
 isTARGA20(FreeImageIO *io, fi_handle handle) {
 	const unsigned sizeofSig = 18;
-	BYTE signature[sizeofSig] = { 0 };
+	uint8_t signature[sizeofSig] = { 0 };
 	// tga_signature = "TRUEVISION-XFILE." (TGA 2.0 only)
-	BYTE tga_signature[sizeofSig] = { 84, 82, 85, 69, 86, 73, 83, 73, 79, 78, 45, 88, 70, 73, 76, 69, 46, 0 };
+	uint8_t tga_signature[sizeofSig] = { 84, 82, 85, 69, 86, 73, 83, 73, 79, 78, 45, 88, 70, 73, 76, 69, 46, 0 };
 	// get the start offset
 	const long start_offset = io->tell_proc(handle);
 	// get the end-of-file
@@ -378,7 +378,7 @@ isTARGA20(FreeImageIO *io, fi_handle handle) {
 	return (memcmp(tga_signature, signature, sizeofSig) == 0);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) { 
 	if(isTARGA20(io, handle)) {
 		return TRUE;
@@ -442,7 +442,7 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	}
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return (
 		(depth == 8) ||
@@ -452,12 +452,12 @@ SupportsExportDepth(int depth) {
 		);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (type == FIT_BITMAP) ? TRUE : FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -468,20 +468,20 @@ SupportsNoPixels() {
 Used for all 32 and 24 bit loading of uncompressed images
 */
 static void 
-loadTrueColor(FIBITMAP* dib, int width, int height, int file_pixel_size, FreeImageIO* io, fi_handle handle, BOOL as24bit) {
+loadTrueColor(FIBITMAP* dib, int width, int height, int file_pixel_size, FreeImageIO* io, fi_handle handle, FIBOOL as24bit) {
 	const int pixel_size = as24bit ? 3 : file_pixel_size;
 
 	// input line cache
-	BYTE* file_line = (BYTE*)malloc( width * file_pixel_size);
+	uint8_t* file_line = (uint8_t*)malloc( width * file_pixel_size);
 
 	if (!file_line) {
 		throw FI_MSG_ERROR_MEMORY;
 	}
 
 	for (int y = 0; y < height; y++) {
-		BYTE *bits = FreeImage_GetScanLine(dib, y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 		io->read_proc(file_line, file_pixel_size, width, handle);
-		BYTE *bgra = file_line;
+		uint8_t *bgra = file_line;
 
 		for (int x = 0; x < width; x++) {
 
@@ -509,39 +509,39 @@ We use a specific overload based on bits-per-pixel for each type of pixel
 
 template <int nBITS>
 inline static void 
-_assignPixel(BYTE* bits, BYTE* val, BOOL as24bit = FALSE) {
+_assignPixel(uint8_t* bits, uint8_t* val, FIBOOL as24bit = FALSE) {
 	// static assert should go here
 	assert(FALSE);
 }
 
 template <>
 inline void 
-_assignPixel<8>(BYTE* bits, BYTE* val, BOOL as24bit) {
+_assignPixel<8>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
 	*bits = *val;
 }
 
 template <>
 inline void 
-_assignPixel<16>(BYTE* bits, BYTE* val, BOOL as24bit) {
-	WORD value(*reinterpret_cast<WORD*>(val));
+_assignPixel<16>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
+	uint16_t value(*reinterpret_cast<uint16_t*>(val));
 
 #ifdef FREEIMAGE_BIGENDIAN
 	SwapShort(&value);
 #endif
 
 	if (as24bit) {
-		bits[FI_RGBA_BLUE]  = (BYTE)((((value & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
-		bits[FI_RGBA_GREEN] = (BYTE)((((value & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
-		bits[FI_RGBA_RED]   = (BYTE)((((value & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
+		bits[FI_RGBA_BLUE]  = (uint8_t)((((value & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
+		bits[FI_RGBA_GREEN] = (uint8_t)((((value & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
+		bits[FI_RGBA_RED]   = (uint8_t)((((value & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
 
 	} else {
-		*reinterpret_cast<WORD *>(bits) = 0x7FFF & value;
+		*reinterpret_cast<uint16_t *>(bits) = 0x7FFF & value;
 	}
 }
 
 template <>
 inline void 
-_assignPixel<24>(BYTE* bits, BYTE* val, BOOL as24bit) {
+_assignPixel<24>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
 	bits[FI_RGBA_BLUE]	= val[0];
 	bits[FI_RGBA_GREEN] = val[1];
 	bits[FI_RGBA_RED]	= val[2];
@@ -549,7 +549,7 @@ _assignPixel<24>(BYTE* bits, BYTE* val, BOOL as24bit) {
 
 template <>
 inline void 
-_assignPixel<32>(BYTE* bits, BYTE* val, BOOL as24bit) {
+_assignPixel<32>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
 	if (as24bit) {
 		_assignPixel<24>(bits, val, TRUE);
 
@@ -570,21 +570,21 @@ Generic RLE loader
 */
 template<int bPP>
 static void 
-loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle, long eof, BOOL as24bit) {
+loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle, long eof, FIBOOL as24bit) {
 	const int file_pixel_size = bPP/8;
 	const int pixel_size = as24bit ? 3 : file_pixel_size;
 
-	const BYTE bpp = as24bit ? 24 : bPP;
+	const uint8_t bpp = as24bit ? 24 : bPP;
 	const int line_size = CalculateLine(width, bpp);
 
 	// Note, many of the params can be computed inside the function.
 	// However, because this is a template function, it will lead to redundant code duplication.
 
-	BYTE rle;
-	BYTE *line_bits;
+	uint8_t rle;
+	uint8_t *line_bits;
 
 	// this is used to guard against writing beyond the end of the image (on corrupted rle block)
-	const BYTE* dib_end = FreeImage_GetScanLine(dib, height);//< one-past-end row
+	const uint8_t* dib_end = FreeImage_GetScanLine(dib, height);//< one-past-end row
 
 	// Compute the rough size of a line...
 	long pixels_offset = io->tell_proc(handle);
@@ -606,10 +606,10 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 		rle = cache.getByte();
 
-		BOOL has_rle = rle & 0x80;
+		FIBOOL has_rle = rle & 0x80;
 		rle &= ~0x80; // remove type-bit
 
-		BYTE packet_count = rle + 1;
+		uint8_t packet_count = rle + 1;
 
 		//packet_count might be corrupt, test if we are not about to write beyond the last image bit
 
@@ -622,7 +622,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 		if (has_rle) {
 
 			// read a pixel value from file...
-			BYTE *val = cache.getBytes(file_pixel_size);
+			uint8_t *val = cache.getBytes(file_pixel_size);
 
 			//...and fill packet_count pixels with it
 
@@ -642,7 +642,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 			// copy packet_count pixels from file to dib
 			for (int ix = 0; ix < packet_count; ix++) {
-				BYTE *val = cache.getBytes(file_pixel_size);
+				uint8_t *val = cache.getBytes(file_pixel_size);
 				_assignPixel<bPP>((line_bits+x), val, as24bit);
 				x += pixel_size;
 
@@ -670,7 +670,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 	try {
 		
-		const BOOL header_only =  (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+		const FIBOOL header_only =  (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 				
 		// remember the start offset
 		long start_offset = io->tell_proc(handle);
@@ -693,7 +693,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #ifdef FREEIMAGE_BIGENDIAN
 			SwapFooter(&footer);
 #endif
-			BOOL hasExtensionArea = footer.extension_offset > 0;
+			FIBOOL hasExtensionArea = footer.extension_offset > 0;
 			if(hasExtensionArea) { 
 				TGAEXTENSIONAREA extensionarea;
 				io->seek_proc(handle, footer.extension_offset, SEEK_SET);
@@ -703,8 +703,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				SwapExtensionArea(&extensionarea);
 #endif
 
-				DWORD postage_stamp_offset = extensionarea.postage_stamp_offset;
-				BOOL hasThumbnail = (postage_stamp_offset > 0) && (postage_stamp_offset < (DWORD)footer_offset);
+				uint32_t postage_stamp_offset = extensionarea.postage_stamp_offset;
+				FIBOOL hasThumbnail = (postage_stamp_offset > 0) && (postage_stamp_offset < (uint32_t)footer_offset);
 				if(hasThumbnail) {
 					io->seek_proc(handle, postage_stamp_offset, SEEK_SET);
 					thumbnail.read(io, handle, footer_offset - postage_stamp_offset);
@@ -745,7 +745,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					
 				// read the palette (even if header only)
 
-				RGBQUAD *palette = FreeImage_GetPalette(dib);
+				FIRGBA8 *palette = FreeImage_GetPalette(dib);
 
 				if (header.color_map_type > 0) {
 					unsigned count, csize;
@@ -754,24 +754,24 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					csize = header.cm_length * header.cm_size / 8;
 					
 					// read the color map
-					BYTE *cmap = (BYTE*)malloc(csize * sizeof(BYTE));
+					uint8_t *cmap = (uint8_t*)malloc(csize * sizeof(uint8_t));
 					if (cmap == NULL) {
 						throw FI_MSG_ERROR_DIB_MEMORY;
 					}
-					io->read_proc(cmap, sizeof(BYTE), csize, handle);
+					io->read_proc(cmap, sizeof(uint8_t), csize, handle);
 
 					// build the palette
 
 					switch (header.cm_size) {
 						case 16: {
-							WORD *rgb555 = (WORD*)&cmap[0];
+							uint16_t *rgb555 = (uint16_t*)&cmap[0];
 							unsigned start = (unsigned)header.cm_first_entry;
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
-								palette[count].rgbRed   = (BYTE)((((*rgb555 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
-								palette[count].rgbGreen = (BYTE)((((*rgb555 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
-								palette[count].rgbBlue  = (BYTE)((((*rgb555 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
+								palette[count].red   = (uint8_t)((((*rgb555 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
+								palette[count].green = (uint8_t)((((*rgb555 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
+								palette[count].blue  = (uint8_t)((((*rgb555 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
 								rgb555++;
 							}
 						}
@@ -783,16 +783,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
-								palette[count].rgbBlue  = bgr->b;
-								palette[count].rgbGreen = bgr->g;
-								palette[count].rgbRed   = bgr->r;
+								palette[count].blue  = bgr->b;
+								palette[count].green = bgr->g;
+								palette[count].red   = bgr->r;
 								bgr++;
 							}
 						}
 						break;
 
 						case 32: {
-							BYTE trns[256];
+							uint8_t trns[256];
 
 							// clear the transparency table
 							memset(trns, 0xFF, 256);
@@ -802,9 +802,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
-								palette[count].rgbBlue  = bgra->b;
-								palette[count].rgbGreen = bgra->g;
-								palette[count].rgbRed   = bgra->r;
+								palette[count].blue  = bgra->b;
+								palette[count].green = bgra->g;
+								palette[count].red   = bgra->r;
 								// alpha
 								trns[count] = bgra->a;
 								bgra++;
@@ -824,8 +824,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				
 				FIBITMAP* th = thumbnail.toFIBITMAP();
 				if(th) {
-					RGBQUAD* pal = FreeImage_GetPalette(dib);
-					RGBQUAD* dst_pal = FreeImage_GetPalette(th);
+					FIRGBA8* pal = FreeImage_GetPalette(dib);
+					FIRGBA8* dst_pal = FreeImage_GetPalette(th);
 					if(dst_pal && pal) {
 						for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
 							dst_pal[i] = pal[i];
@@ -847,11 +847,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				switch (header.image_type) {
 					case TGA_CMAP:
 					case TGA_MONO: {
-						BYTE *bits = NULL;
+						uint8_t *bits = NULL;
 
 						for (unsigned count = 0; count < header.is_height; count++) {
 							bits = FreeImage_GetScanLine(dib, count);
-							io->read_proc(bits, sizeof(BYTE), line, handle);
+							io->read_proc(bits, sizeof(uint8_t), line, handle);
 						}
 					}
 					break;
@@ -909,7 +909,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				int line = CalculateLine(header.is_width, pixel_bits);
 
 				const unsigned pixel_size = unsigned(pixel_bits) / 8;
-				const unsigned src_pixel_size = sizeof(WORD);
+				const unsigned src_pixel_size = sizeof(uint16_t);
 
 				// note header.cm_size is a misleading name, it should be seen as header.cm_bits
 				// ignore current position in file and set filepointer explicitly from the beginning of the file
@@ -931,7 +931,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				switch (header.image_type) {
 					case TGA_RGB: { //(16 bit)
 						// input line cache
-						BYTE *in_line = (BYTE*)malloc(header.is_width * sizeof(WORD));
+						uint8_t *in_line = (uint8_t*)malloc(header.is_width * sizeof(uint16_t));
 
 						if (!in_line)
 							throw FI_MSG_ERROR_MEMORY;
@@ -940,10 +940,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						for (int y = 0; y < h; y++) {
 							
-							BYTE *bits = FreeImage_GetScanLine(dib, y);
+							uint8_t *bits = FreeImage_GetScanLine(dib, y);
 							io->read_proc(in_line, src_pixel_size, header.is_width, handle);
 							
-							BYTE *val = in_line;
+							uint8_t *val = in_line;
 							for (int x = 0; x < line; x += pixel_size) {
 
 								_assignPixel<16>(bits+x, val, TARGA_LOAD_RGB888 & flags);
@@ -1083,7 +1083,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 // --------------------------------------------------------------------------
 
-static BOOL 
+static FIBOOL 
 hasValidThumbnail(FIBITMAP* dib) {
 	FIBITMAP* thumbnail = FreeImage_GetThumbnail(dib);
 	
@@ -1101,14 +1101,14 @@ hasValidThumbnail(FIBITMAP* dib) {
 Writes the ready RLE packet to buffer
 */
 static inline void 
-flushPacket(BYTE*& dest, unsigned pixel_size, BYTE* packet_begin, BYTE*& packet, BYTE& packet_count, BOOL& has_rle) {
+flushPacket(uint8_t*& dest, unsigned pixel_size, uint8_t* packet_begin, uint8_t*& packet, uint8_t& packet_count, FIBOOL& has_rle) {
 	if (packet_count) {
-		const BYTE type_bit = has_rle ? 0x80 : 0x0;
-		const BYTE write_count = has_rle ? 1 : packet_count;
+		const uint8_t type_bit = has_rle ? 0x80 : 0x0;
+		const uint8_t write_count = has_rle ? 1 : packet_count;
 
 		// build packet header: zero-based count + type bit
 		assert(packet_count >= 1);
-		BYTE rle = packet_count - 1;
+		uint8_t rle = packet_count - 1;
 		rle |= type_bit;
 
 		// write packet header
@@ -1128,7 +1128,7 @@ flushPacket(BYTE*& dest, unsigned pixel_size, BYTE* packet_begin, BYTE*& packet,
 
 
 static inline void 
-writeToPacket(BYTE* packet, BYTE* pixel, unsigned pixel_size) {
+writeToPacket(uint8_t* packet, uint8_t* pixel, unsigned pixel_size) {
 	// Take care of channel and byte order here, because packet will be flushed straight to the file
 	switch (pixel_size) {
 		case 1:
@@ -1136,11 +1136,11 @@ writeToPacket(BYTE* packet, BYTE* pixel, unsigned pixel_size) {
 			break;
 
 		case 2: {
-			WORD val(*(WORD*)pixel);
+			uint16_t val(*(uint16_t*)pixel);
 #ifdef FREEIMAGE_BIGENDIAN
 			SwapShort(&val);
 #endif
-			*(WORD*)packet = val;
+			*(uint16_t*)packet = val;
 		}
 		break;
 
@@ -1168,17 +1168,17 @@ writeToPacket(BYTE* packet, BYTE* pixel, unsigned pixel_size) {
 	}
 }
 
-static inline BOOL 
-isEqualPixel(BYTE* lhs, BYTE* rhs, unsigned pixel_size) {
+static inline FIBOOL 
+isEqualPixel(uint8_t* lhs, uint8_t* rhs, unsigned pixel_size) {
 	switch (pixel_size) {
 		case 1:
 			return *lhs == *rhs;
 
 		case 2:
-			return *(WORD*)lhs == *(WORD*)rhs;
+			return *(uint16_t*)lhs == *(uint16_t*)rhs;
 
 		case 3:
-			return *(WORD*)lhs == *(WORD*)rhs && lhs[2] == rhs[2];
+			return *(uint16_t*)lhs == *(uint16_t*)rhs && lhs[2] == rhs[2];
 
 		case 4:
 			return *(unsigned*)lhs == *(unsigned*)rhs;
@@ -1198,14 +1198,14 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 	const unsigned pixel_size = FreeImage_GetBPP(dib)/8;
 	const unsigned line_size = FreeImage_GetLine(dib);
 
-	const BYTE max_packet_size = 128;
-	BYTE packet_count = 0;
-	BOOL has_rle = FALSE;
+	const uint8_t max_packet_size = 128;
+	uint8_t packet_count = 0;
+	FIBOOL has_rle = FALSE;
 
 	// packet (compressed or not) to be written to line
 
-	BYTE* const packet_begin = (BYTE*)malloc(max_packet_size * pixel_size);
-	BYTE* packet = packet_begin;
+	uint8_t* const packet_begin = (uint8_t*)malloc(max_packet_size * pixel_size);
+	uint8_t* packet = packet_begin;
 
 	// line to be written to disk
 	// Note: we need some extra bytes for anti-commpressed lines. The worst case is:
@@ -1216,14 +1216,14 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 	// add extra space for anti-commpressed lines
 	size_t extra_space = (size_t)ceil(width / 3.0);
-	BYTE* const line_begin = (BYTE*)malloc(width * pixel_size + extra_space);
-	BYTE* line = line_begin;
+	uint8_t* const line_begin = (uint8_t*)malloc(width * pixel_size + extra_space);
+	uint8_t* line = line_begin;
 
-	BYTE *current = (BYTE*)malloc(pixel_size);
-	BYTE *next    = (BYTE*)malloc(pixel_size);
+	uint8_t *current = (uint8_t*)malloc(pixel_size);
+	uint8_t *next    = (uint8_t*)malloc(pixel_size);
 
 	for(unsigned y = 0; y < height; y++) {
-		BYTE *bits = FreeImage_GetScanLine(dib, y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		// rewind line pointer
 		line = line_begin;
@@ -1322,13 +1322,13 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 	free(next);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	if ((dib == NULL) || (handle == NULL)) {
 		return FALSE;
 	}
 
-	RGBQUAD *palette = FreeImage_GetPalette(dib);
+	FIRGBA8 *palette = FreeImage_GetPalette(dib);
 	const unsigned bpp = FreeImage_GetBPP(dib);
 
 	// write the file header
@@ -1339,15 +1339,15 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	header.cm_first_entry = 0;
 	header.is_xorigin = 0;
 	header.is_yorigin = 0;
-	header.is_width = (WORD)FreeImage_GetWidth(dib);
-	header.is_height = (WORD)FreeImage_GetHeight(dib);
-	header.is_pixel_depth = (BYTE)bpp;
+	header.is_width = (uint16_t)FreeImage_GetWidth(dib);
+	header.is_height = (uint16_t)FreeImage_GetHeight(dib);
+	header.is_pixel_depth = (uint8_t)bpp;
 	header.is_image_descriptor = (bpp == 32 ? 8 : 0);
 
 	if (palette) {
 		header.color_map_type = 1;
 		header.image_type = (TARGA_SAVE_RLE & flags) ? TGA_RLECMAP : TGA_CMAP;
-		header.cm_length = (WORD)(1 << bpp);
+		header.cm_length = (uint16_t)(1 << bpp);
 
 		if (FreeImage_IsTransparent(dib)) {
 			header.cm_size = 32;
@@ -1381,12 +1381,12 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			FILE_BGRA *bgra_pal = (FILE_BGRA*)malloc(header.cm_length * sizeof(FILE_BGRA));
 
 			// get the transparency table
-			BYTE *trns = FreeImage_GetTransparencyTable(dib);
+			uint8_t *trns = FreeImage_GetTransparencyTable(dib);
 
 			for (unsigned i = 0; i < header.cm_length; i++) {
-				bgra_pal[i].b = palette[i].rgbBlue;
-				bgra_pal[i].g = palette[i].rgbGreen;
-				bgra_pal[i].r = palette[i].rgbRed;
+				bgra_pal[i].b = palette[i].blue;
+				bgra_pal[i].g = palette[i].green;
+				bgra_pal[i].r = palette[i].red;
 				bgra_pal[i].a = trns[i];
 			}
 
@@ -1398,9 +1398,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			FILE_BGR *bgr_pal = (FILE_BGR*)malloc(header.cm_length * sizeof(FILE_BGR));
 
 			for (unsigned i = 0; i < header.cm_length; i++) {
-				bgr_pal[i].b = palette[i].rgbBlue;
-				bgr_pal[i].g = palette[i].rgbGreen;
-				bgr_pal[i].r = palette[i].rgbRed;
+				bgr_pal[i].b = palette[i].blue;
+				bgr_pal[i].g = palette[i].green;
+				bgr_pal[i].r = palette[i].red;
 			}
 
 			io->write_proc(bgr_pal, sizeof(FILE_BGR), header.cm_length, handle);
@@ -1424,11 +1424,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		const unsigned height = header.is_height;
 		const unsigned pixel_size = bpp/8;
 
-		BYTE *line, *const line_begin = (BYTE*)malloc(width * pixel_size);
-		BYTE *line_source = line_begin;
+		uint8_t *line, *const line_begin = (uint8_t*)malloc(width * pixel_size);
+		uint8_t *line_source = line_begin;
 
 		for (unsigned y = 0; y < height; y++) {
-			BYTE *scanline = FreeImage_GetScanLine(dib, y);
+			uint8_t *scanline = FreeImage_GetScanLine(dib, y);
 
 			// rewind the line pointer
 			line = line_begin;
@@ -1442,12 +1442,12 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 				case 16: {
 					for (unsigned x = 0; x < width; x++) {
-						WORD pixel = *(((WORD *)scanline) + x);
+						uint16_t pixel = *(((uint16_t *)scanline) + x);
 						
 #ifdef FREEIMAGE_BIGENDIAN
 						SwapShort(&pixel);
 #endif
-						*(WORD*)line = pixel;
+						*(uint16_t*)line = pixel;
 
 						line += pixel_size;
 					}
@@ -1460,10 +1460,10 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						line_source = scanline;
 #else 
 					for (unsigned x = 0; x < width; ++x) {
-						RGBTRIPLE* trip = ((RGBTRIPLE *)scanline) + x;
-						line[0] = trip->rgbtBlue;
-						line[1] = trip->rgbtGreen;
-						line[2] = trip->rgbtRed;
+						FIRGB8* trip = ((FIRGB8 *)scanline) + x;
+						line[0] = trip->blue;
+						line[1] = trip->green;
+						line[2] = trip->red;
 
 						line += pixel_size;
 					}
@@ -1477,11 +1477,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					line_source = scanline;
 #else 
 					for (unsigned x = 0; x < width; ++x) {
-						RGBQUAD* quad = ((RGBQUAD *)scanline) + x;
-						line[0] = quad->rgbBlue;
-						line[1] = quad->rgbGreen;
-						line[2] = quad->rgbRed;
-						line[3] = quad->rgbReserved;
+						FIRGBA8* quad = ((FIRGBA8 *)scanline) + x;
+						line[0] = quad->blue;
+						line[1] = quad->green;
+						line[2] = quad->red;
+						line[3] = quad->alpha;
 						
 						line += pixel_size;
 					}
@@ -1528,8 +1528,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		io->seek_proc(handle, ex.postage_stamp_offset, SEEK_SET);
 		
 		FIBITMAP* thumbnail = FreeImage_GetThumbnail(dib);
-		BYTE width = (BYTE)FreeImage_GetWidth(thumbnail);
-		BYTE height = (BYTE)FreeImage_GetHeight(thumbnail);
+		uint8_t width = (uint8_t)FreeImage_GetWidth(thumbnail);
+		uint8_t height = (uint8_t)FreeImage_GetHeight(thumbnail);
 		
 		io->write_proc(&width, 1, 1, handle); 
 		io->write_proc(&height, 1, 1, handle); 
@@ -1544,8 +1544,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		
 		const unsigned line_size = FreeImage_GetLine(thumbnail);
 
-		for (BYTE h = 0; h < height; ++h) {
-			BYTE* src_line = FreeImage_GetScanLine(thumbnail, height - 1 - h);
+		for (uint8_t h = 0; h < height; ++h) {
+			uint8_t* src_line = FreeImage_GetScanLine(thumbnail, height - 1 - h);
 			io->write_proc(src_line, 1, line_size, handle); 
 		}
 	}

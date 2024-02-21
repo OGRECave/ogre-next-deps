@@ -58,13 +58,13 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 
 	// Allocate 3D arrays
 	gm2 = (float*)malloc(SIZE_3D * sizeof(float));
-	wt = (LONG*)malloc(SIZE_3D * sizeof(LONG));
-	mr = (LONG*)malloc(SIZE_3D * sizeof(LONG));
-	mg = (LONG*)malloc(SIZE_3D * sizeof(LONG));
-	mb = (LONG*)malloc(SIZE_3D * sizeof(LONG));
+	wt = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
+	mr = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
+	mg = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
+	mb = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
 
 	// Allocate Qadd
-	Qadd = (WORD *)malloc(sizeof(WORD) * width * height);
+	Qadd = (uint16_t *)malloc(sizeof(uint16_t) * width * height);
 
 	if(!gm2 || !wt || !mr || !mg || !mb || !Qadd) {
 		if(gm2)	free(gm2);
@@ -76,11 +76,11 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 		throw FI_MSG_ERROR_MEMORY;
 	}
 	memset(gm2, 0, SIZE_3D * sizeof(float));
-	memset(wt, 0, SIZE_3D * sizeof(LONG));
-	memset(mr, 0, SIZE_3D * sizeof(LONG));
-	memset(mg, 0, SIZE_3D * sizeof(LONG));
-	memset(mb, 0, SIZE_3D * sizeof(LONG));
-	memset(Qadd, 0, sizeof(WORD) * width * height);
+	memset(wt, 0, SIZE_3D * sizeof(int32_t));
+	memset(mr, 0, SIZE_3D * sizeof(int32_t));
+	memset(mg, 0, SIZE_3D * sizeof(int32_t));
+	memset(mb, 0, SIZE_3D * sizeof(int32_t));
+	memset(Qadd, 0, sizeof(uint16_t) * width * height);
 }
 
 WuQuantizer::~WuQuantizer() {
@@ -99,7 +99,7 @@ WuQuantizer::~WuQuantizer() {
 
 // Build 3-D color histogram of counts, r/g/b, c^2
 void 
-WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int ReserveSize, RGBQUAD *ReservePalette) {
+WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, float *m2, int ReserveSize, FIRGBA8 *ReservePalette) {
 	int ind = 0;
 	int inr, ing, inb, table[256];
 	int i;
@@ -110,14 +110,14 @@ WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int R
 
 	if (FreeImage_GetBPP(m_dib) == 24) {
 		for(y = 0; y < height; y++) {
-			BYTE *bits = FreeImage_GetScanLine(m_dib, y);
+			uint8_t *bits = FreeImage_GetScanLine(m_dib, y);
 
 			for(x = 0; x < width; x++)	{
 				inr = (bits[FI_RGBA_RED] >> 3) + 1;
 				ing = (bits[FI_RGBA_GREEN] >> 3) + 1;
 				inb = (bits[FI_RGBA_BLUE] >> 3) + 1;
 				ind = INDEX(inr, ing, inb);
-				Qadd[y*width + x] = (WORD)ind;
+				Qadd[y*width + x] = (uint16_t)ind;
 				// [inr][ing][inb]
 				vwt[ind]++;
 				vmr[ind] += bits[FI_RGBA_RED];
@@ -129,14 +129,14 @@ WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int R
 		}
 	} else {
 		for(y = 0; y < height; y++) {
-			BYTE *bits = FreeImage_GetScanLine(m_dib, y);
+			uint8_t *bits = FreeImage_GetScanLine(m_dib, y);
 
 			for(x = 0; x < width; x++)	{
 				inr = (bits[FI_RGBA_RED] >> 3) + 1;
 				ing = (bits[FI_RGBA_GREEN] >> 3) + 1;
 				inb = (bits[FI_RGBA_BLUE] >> 3) + 1;
 				ind = INDEX(inr, ing, inb);
-				Qadd[y*width + x] = (WORD)ind;
+				Qadd[y*width + x] = (uint16_t)ind;
 				// [inr][ing][inb]
 				vwt[ind]++;
 				vmr[ind] += bits[FI_RGBA_RED];
@@ -155,15 +155,15 @@ WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int R
 		}
 		max++;
 		for(i = 0; i < ReserveSize; i++) {
-			inr = (ReservePalette[i].rgbRed >> 3) + 1;
-			ing = (ReservePalette[i].rgbGreen >> 3) + 1;
-			inb = (ReservePalette[i].rgbBlue >> 3) + 1;
+			inr = (ReservePalette[i].red >> 3) + 1;
+			ing = (ReservePalette[i].green >> 3) + 1;
+			inb = (ReservePalette[i].blue >> 3) + 1;
 			ind = INDEX(inr, ing, inb);
 			wt[ind] = max;
-			mr[ind] = max * ReservePalette[i].rgbRed;
-			mg[ind] = max * ReservePalette[i].rgbGreen;
-			mb[ind] = max * ReservePalette[i].rgbBlue;
-			gm2[ind] = (float)max * (float)(table[ReservePalette[i].rgbRed] + table[ReservePalette[i].rgbGreen] + table[ReservePalette[i].rgbBlue]);
+			mr[ind] = max * ReservePalette[i].red;
+			mg[ind] = max * ReservePalette[i].green;
+			mb[ind] = max * ReservePalette[i].blue;
+			gm2[ind] = (float)max * (float)(table[ReservePalette[i].red] + table[ReservePalette[i].green] + table[ReservePalette[i].blue]);
 		}
 	}
 }
@@ -182,11 +182,11 @@ WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int R
 
 // Compute cumulative moments
 void 
-WuQuantizer::M3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2) {
+WuQuantizer::M3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, float *m2) {
 	unsigned ind1, ind2;
-	BYTE i, r, g, b;
-	LONG line, line_r, line_g, line_b;
-	LONG area[33], area_r[33], area_g[33], area_b[33];
+	uint8_t i, r, g, b;
+	int32_t line, line_r, line_g, line_b;
+	int32_t area[33], area_r[33], area_g[33], area_b[33];
 	float line2, area2[33];
 
     for(r = 1; r <= 32; r++) {
@@ -221,8 +221,8 @@ WuQuantizer::M3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2) {
 }
 
 // Compute sum over a box of any given statistic
-LONG 
-WuQuantizer::Vol( Box *cube, LONG *mmt ) {
+int32_t 
+WuQuantizer::Vol( Box *cube, int32_t *mmt ) {
     return( mmt[INDEX(cube->r1, cube->g1, cube->b1)] 
 		  - mmt[INDEX(cube->r1, cube->g1, cube->b0)]
 		  - mmt[INDEX(cube->r1, cube->g0, cube->b1)]
@@ -242,8 +242,8 @@ WuQuantizer::Vol( Box *cube, LONG *mmt ) {
 // Compute part of Vol(cube, mmt) that doesn't depend on r1, g1, or b1
 // (depending on dir)
 
-LONG 
-WuQuantizer::Bottom(Box *cube, BYTE dir, LONG *mmt) {
+int32_t 
+WuQuantizer::Bottom(Box *cube, uint8_t dir, int32_t *mmt) {
     switch(dir)
 	{
 		case FI_RGBA_RED:
@@ -273,8 +273,8 @@ WuQuantizer::Bottom(Box *cube, BYTE dir, LONG *mmt) {
 // Compute remainder of Vol(cube, mmt), substituting pos for
 // r1, g1, or b1 (depending on dir)
 
-LONG 
-WuQuantizer::Top(Box *cube, BYTE dir, int pos, LONG *mmt) {
+int32_t 
+WuQuantizer::Top(Box *cube, uint8_t dir, int pos, int32_t *mmt) {
     switch(dir)
 	{
 		case FI_RGBA_RED:
@@ -327,15 +327,15 @@ WuQuantizer::Var(Box *cube) {
 // so we drop the minus sign and MAXIMIZE the sum of the two terms.
 
 float
-WuQuantizer::Maximize(Box *cube, BYTE dir, int first, int last , int *cut, LONG whole_r, LONG whole_g, LONG whole_b, LONG whole_w) {
-	LONG half_r, half_g, half_b, half_w;
+WuQuantizer::Maximize(Box *cube, uint8_t dir, int first, int last , int *cut, int32_t whole_r, int32_t whole_g, int32_t whole_b, int32_t whole_w) {
+	int32_t half_r, half_g, half_b, half_w;
 	int i;
 	float temp;
 
-    LONG base_r = Bottom(cube, dir, mr);
-    LONG base_g = Bottom(cube, dir, mg);
-    LONG base_b = Bottom(cube, dir, mb);
-    LONG base_w = Bottom(cube, dir, wt);
+    int32_t base_r = Bottom(cube, dir, mr);
+    int32_t base_g = Bottom(cube, dir, mg);
+    int32_t base_b = Bottom(cube, dir, mb);
+    int32_t base_w = Bottom(cube, dir, wt);
 
     float max = 0.0;
 
@@ -377,13 +377,13 @@ WuQuantizer::Maximize(Box *cube, BYTE dir, int first, int last , int *cut, LONG 
 
 bool
 WuQuantizer::Cut(Box *set1, Box *set2) {
-	BYTE dir;
+	uint8_t dir;
 	int cutr, cutg, cutb;
 
-    LONG whole_r = Vol(set1, mr);
-    LONG whole_g = Vol(set1, mg);
-    LONG whole_b = Vol(set1, mb);
-    LONG whole_w = Vol(set1, wt);
+    int32_t whole_r = Vol(set1, mr);
+    int32_t whole_g = Vol(set1, mg);
+    int32_t whole_b = Vol(set1, mb);
+    int32_t whole_w = Vol(set1, wt);
 
     float maxr = Maximize(set1, FI_RGBA_RED, set1->r0+1, set1->r1, &cutr, whole_r, whole_g, whole_b, whole_w);    
 	float maxg = Maximize(set1, FI_RGBA_GREEN, set1->g0+1, set1->g1, &cutg, whole_r, whole_g, whole_b, whole_w);    
@@ -433,11 +433,11 @@ WuQuantizer::Cut(Box *set1, Box *set2) {
 
 
 void
-WuQuantizer::Mark(Box *cube, int label, BYTE *tag) {
+WuQuantizer::Mark(Box *cube, int label, uint8_t *tag) {
     for (int r = cube->r0 + 1; r <= cube->r1; r++) {
 		for (int g = cube->g0 + 1; g <= cube->g1; g++) {
 			for (int b = cube->b0 + 1; b <= cube->b1; b++) {
-				tag[INDEX(r, g, b)] = (BYTE)label;
+				tag[INDEX(r, g, b)] = (uint8_t)label;
 			}
 		}
 	}
@@ -445,13 +445,13 @@ WuQuantizer::Mark(Box *cube, int label, BYTE *tag) {
 
 // Wu Quantization algorithm
 FIBITMAP *
-WuQuantizer::Quantize(int PaletteSize, int ReserveSize, RGBQUAD *ReservePalette) {
-	BYTE *tag = NULL;
+WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette) {
+	uint8_t *tag = NULL;
 
 	try {
 		Box	cube[MAXCOLOR];
 		int	next;
-		LONG i, weight;
+		int32_t i, weight;
 		int k;
 		float vv[MAXCOLOR], temp;
 		
@@ -512,33 +512,33 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, RGBQUAD *ReservePalette)
 
 		// create an optimized palette
 
-		RGBQUAD *new_pal = FreeImage_GetPalette(new_dib);
+		FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
-		tag = (BYTE*) malloc(SIZE_3D * sizeof(BYTE));
+		tag = (uint8_t*) malloc(SIZE_3D * sizeof(uint8_t));
 		if (tag == NULL) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
-		memset(tag, 0, SIZE_3D * sizeof(BYTE));
+		memset(tag, 0, SIZE_3D * sizeof(uint8_t));
 
 		for (k = 0; k < PaletteSize ; k++) {
 			Mark(&cube[k], k, tag);
 			weight = Vol(&cube[k], wt);
 
 			if (weight) {
-				new_pal[k].rgbRed	= (BYTE)(((float)Vol(&cube[k], mr) / (float)weight) + 0.5f);
-				new_pal[k].rgbGreen = (BYTE)(((float)Vol(&cube[k], mg) / (float)weight) + 0.5f);
-				new_pal[k].rgbBlue	= (BYTE)(((float)Vol(&cube[k], mb) / (float)weight) + 0.5f);
+				new_pal[k].red	= (uint8_t)(((float)Vol(&cube[k], mr) / (float)weight) + 0.5f);
+				new_pal[k].green = (uint8_t)(((float)Vol(&cube[k], mg) / (float)weight) + 0.5f);
+				new_pal[k].blue	= (uint8_t)(((float)Vol(&cube[k], mb) / (float)weight) + 0.5f);
 			} else {
 				// Error: bogus box 'k'
 
-				new_pal[k].rgbRed = new_pal[k].rgbGreen = new_pal[k].rgbBlue = 0;		
+				new_pal[k].red = new_pal[k].green = new_pal[k].blue = 0;		
 			}
 		}
 
 		int npitch = FreeImage_GetPitch(new_dib);
 
 		for (unsigned y = 0; y < height; y++) {
-			BYTE *new_bits = FreeImage_GetBits(new_dib) + (y * npitch);
+			uint8_t *new_bits = FreeImage_GetBits(new_dib) + (y * npitch);
 
 			for (unsigned x = 0; x < width; x++) {
 				new_bits[x] = tag[Qadd[y*width + x]];

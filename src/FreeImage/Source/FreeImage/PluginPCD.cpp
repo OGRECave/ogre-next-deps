@@ -51,7 +51,7 @@ YUV2RGB(int y, int cb, int cr, int &r, int &g, int &b) {
 	b = clamp(c31 * y + c32 * (cb - 156) + c33 * (cr - 137));
 }
 
-static BOOL
+static FIBOOL
 VerticalOrientation(FreeImageIO *io, fi_handle handle) {
 	char buffer[128];
 
@@ -95,17 +95,17 @@ MimeType() {
 	return "image/x-photo-cd";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -121,9 +121,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	int scan_line_add   = 1;
 	int start_scan_line = 0;
 	
-	BYTE *y1 = NULL, *y2 = NULL, *cbcr = NULL;
+	uint8_t *y1 = NULL, *y2 = NULL, *cbcr = NULL;
 
-	BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	// to make absolute seeks possible we store the current position in the file
 	
@@ -170,12 +170,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// temporary stuff to load PCD
 
-		BYTE *y1 = (BYTE*)malloc(width * sizeof(BYTE));
-		BYTE *y2 = (BYTE*)malloc(width * sizeof(BYTE));
-		BYTE *cbcr = (BYTE*)malloc(width * sizeof(BYTE));
+		uint8_t *y1 = (uint8_t*)malloc(width * sizeof(uint8_t));
+		uint8_t *y2 = (uint8_t*)malloc(width * sizeof(uint8_t));
+		uint8_t *cbcr = (uint8_t*)malloc(width * sizeof(uint8_t));
 		if(!y1 || !y2 || !cbcr) throw FI_MSG_ERROR_MEMORY;
 
-		BYTE *yl[] = { y1, y2 };
+		uint8_t *yl[] = { y1, y2 };
 
 		// seek to the part where the bitmap data begins
 
@@ -190,15 +190,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			io->read_proc(cbcr, width, 1, handle);
 
 			for (int i = 0; i < 2; i++) {
-				BYTE *bits = FreeImage_GetScanLine(dib, start_scan_line);
+				uint8_t *bits = FreeImage_GetScanLine(dib, start_scan_line);
 				for (unsigned x = 0; x < width; x++) {
 					int r, g, b;
 
 					YUV2RGB(yl[i][x], cbcr[x / 2], cbcr[(width / 2) + (x / 2)], r, g, b);
 
-					bits[FI_RGBA_BLUE]  = (BYTE)b;
-					bits[FI_RGBA_GREEN] = (BYTE)g;
-					bits[FI_RGBA_RED]   = (BYTE)r;
+					bits[FI_RGBA_BLUE]  = (uint8_t)b;
+					bits[FI_RGBA_GREEN] = (uint8_t)g;
+					bits[FI_RGBA_RED]   = (uint8_t)r;
 					bits += 3;
 				}
 

@@ -21,7 +21,7 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
-#include "../LibOpenJPEG/openjpeg.h"
+#include "openjp2/openjpeg.h"
 #include "J2KHelper.h"
 
 // ==========================================================
@@ -76,10 +76,10 @@ MimeType() {
 	return "image/j2k";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	BYTE jpc_signature[] = { 0xFF, 0x4F };
-	BYTE signature[2] = { 0, 0 };
+	uint8_t jpc_signature[] = { 0xFF, 0x4F };
+	uint8_t signature[2] = { 0, 0 };
 
 	long tell = io->tell_proc(handle);
 	io->read_proc(signature, 1, sizeof(jpc_signature), handle);
@@ -88,7 +88,7 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	return (memcmp(jpc_signature, signature, sizeof(jpc_signature)) == 0);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return (
 		(depth == 8) ||
@@ -97,7 +97,7 @@ SupportsExportDepth(int depth) {
 	);
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (
 		(type == FIT_BITMAP)  ||
@@ -110,7 +110,7 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 // ----------------------------------------------------------
 
 static void * DLL_CALLCONV
-Open(FreeImageIO *io, fi_handle handle, BOOL read) {
+Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 	// create the stream wrapper
 	J2KFIO_t *fio = opj_freeimage_stream_create(io, handle, read);
 	return fio;
@@ -140,7 +140,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			return NULL;
 		}
 
-		BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 		// get the OpenJPEG stream
 		opj_stream_t *d_stream = fio->stream;
@@ -221,11 +221,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	return NULL;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	J2KFIO_t *fio = (J2KFIO_t*)data;
 	if (dib && handle && fio) {
-		BOOL bSuccess;
+		FIBOOL bSuccess;
 		opj_codec_t *c_codec = NULL;	// handle to a compressor
 		opj_cparameters_t parameters;	// compression parameters
 		opj_image_t *image = NULL;		// image to encode

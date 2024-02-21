@@ -64,7 +64,7 @@ Log mapping operator
 @param exposure Exposure parameter (default to 0)
 @return Returns TRUE if successful, returns FALSE otherwise
 */
-static BOOL 
+static FIBOOL 
 ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float biasParam, const float exposure) {
 	const float LOG05 = -0.693147F;	// log(0.5) 
 
@@ -96,7 +96,7 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 	Normal tone mapping of every pixel
 	further acceleration is obtained by a Padé approximation of log(x + 1)
 	*/
-	BYTE *bits = (BYTE*)FreeImage_GetBits(dib);
+	uint8_t *bits = (uint8_t*)FreeImage_GetBits(dib);
 	for(y = 0; y < height; y++) {
 		FIRGBF *pixel = (FIRGBF*)bits;
 		for(x = 0; x < width; x++) {
@@ -165,10 +165,10 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 	/**
 	Normal tone mapping of every pixel for the remaining right and bottom bands
 	*/
-	BYTE *bits;
+	uint8_t *bits;
 
 	// right band
-	bits = (BYTE*)FreeImage_GetBits(dib);
+	bits = (uint8_t*)FreeImage_GetBits(dib);
 	for(y = 0; y < height; y++) {
 		FIRGBF *pixel = (FIRGBF*)bits;
 		for(x = max_width; x < width; x++) {
@@ -182,7 +182,7 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 		bits += pitch;
 	}
 	// bottom band
-	bits = (BYTE*)FreeImage_GetBits(dib);
+	bits = (uint8_t*)FreeImage_GetBits(dib);
 	for(y = max_height; y < height; y++) {
 		FIRGBF *pixel = (FIRGBF*)bits;
 		for(x = 0; x < max_width; x++) {
@@ -207,7 +207,7 @@ Custom gamma correction based on the ITU-R BT.709 standard
 @param gammaval Gamma value (2.2 is a good default value)
 @return Returns TRUE if successful, returns FALSE otherwise
 */
-static BOOL 
+static FIBOOL 
 REC709GammaCorrection(FIBITMAP *dib, const float gammaval) {
 	if(FreeImage_GetImageType(dib) != FIT_RGBF)
 		return FALSE;
@@ -228,7 +228,7 @@ REC709GammaCorrection(FIBITMAP *dib, const float gammaval) {
 	const unsigned height = FreeImage_GetHeight(dib);
 	const unsigned pitch  = FreeImage_GetPitch(dib);
 
-	BYTE *bits = (BYTE*)FreeImage_GetBits(dib);
+	uint8_t *bits = (uint8_t*)FreeImage_GetBits(dib);
 	for(unsigned y = 0; y < height; y++) {
 		float *pixel = (float*)bits;
 		for(unsigned x = 0; x < width; x++) {

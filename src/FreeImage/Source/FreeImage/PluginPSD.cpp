@@ -57,10 +57,10 @@ MimeType() {
 	return "image/vnd.adobe.photoshop";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	BYTE psd_id[] = { 0x38, 0x42, 0x50, 0x53 };
-	BYTE signature[4] = { 0, 0, 0, 0 };
+	uint8_t psd_id[] = { 0x38, 0x42, 0x50, 0x53 };
+	uint8_t signature[4] = { 0, 0, 0, 0 };
 
 	io->read_proc(signature, 1, 4, handle);
 
@@ -70,7 +70,7 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return (
 			(depth == 1)  ||
@@ -80,7 +80,7 @@ SupportsExportDepth(int depth) {
 		);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (
 		(type == FIT_BITMAP)  ||
@@ -94,12 +94,12 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 	);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsICCProfiles() {
 	return TRUE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 } 
@@ -124,7 +124,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	}
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	if(!handle) {
 		return NULL;

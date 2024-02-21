@@ -30,34 +30,34 @@
 // ----------------------------------------------------------
 
 void DLL_CALLCONV
-FreeImage_ConvertLine1To24(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
+FreeImage_ConvertLine1To24(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		BYTE index = (source[cols >> 3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
+		uint8_t index = (source[cols >> 3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
 
-		target[FI_RGBA_BLUE] = palette[index].rgbBlue;
-		target[FI_RGBA_GREEN] = palette[index].rgbGreen;
-		target[FI_RGBA_RED] = palette[index].rgbRed;
+		target[FI_RGBA_BLUE] = palette[index].blue;
+		target[FI_RGBA_GREEN] = palette[index].green;
+		target[FI_RGBA_RED] = palette[index].red;
 
 		target += 3;
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine4To24(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
-	BOOL low_nibble = FALSE;
+FreeImage_ConvertLine4To24(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
+	FIBOOL low_nibble = FALSE;
 	int x = 0;
 
 	for (int cols = 0; cols < width_in_pixels; ++cols ) {
 		if (low_nibble) {
-			target[FI_RGBA_BLUE] = palette[LOWNIBBLE(source[x])].rgbBlue;
-			target[FI_RGBA_GREEN] = palette[LOWNIBBLE(source[x])].rgbGreen;
-			target[FI_RGBA_RED] = palette[LOWNIBBLE(source[x])].rgbRed;
+			target[FI_RGBA_BLUE] = palette[LOWNIBBLE(source[x])].blue;
+			target[FI_RGBA_GREEN] = palette[LOWNIBBLE(source[x])].green;
+			target[FI_RGBA_RED] = palette[LOWNIBBLE(source[x])].red;
 
 			x++;
 		} else {
-			target[FI_RGBA_BLUE] = palette[HINIBBLE(source[x]) >> 4].rgbBlue;
-			target[FI_RGBA_GREEN] = palette[HINIBBLE(source[x]) >> 4].rgbGreen;
-			target[FI_RGBA_RED] = palette[HINIBBLE(source[x]) >> 4].rgbRed;
+			target[FI_RGBA_BLUE] = palette[HINIBBLE(source[x]) >> 4].blue;
+			target[FI_RGBA_GREEN] = palette[HINIBBLE(source[x]) >> 4].green;
+			target[FI_RGBA_RED] = palette[HINIBBLE(source[x]) >> 4].red;
 		}
 
 		low_nibble = !low_nibble;
@@ -67,44 +67,44 @@ FreeImage_ConvertLine4To24(BYTE *target, BYTE *source, int width_in_pixels, RGBQ
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine8To24(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
+FreeImage_ConvertLine8To24(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_BLUE] = palette[source[cols]].rgbBlue;
-		target[FI_RGBA_GREEN] = palette[source[cols]].rgbGreen;
-		target[FI_RGBA_RED] = palette[source[cols]].rgbRed;
+		target[FI_RGBA_BLUE] = palette[source[cols]].blue;
+		target[FI_RGBA_GREEN] = palette[source[cols]].green;
+		target[FI_RGBA_RED] = palette[source[cols]].red;
 
 		target += 3;
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To24_555(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *bits = (WORD *)source;
+FreeImage_ConvertLine16To24_555(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *bits = (uint16_t *)source;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_RED]   = (BYTE)((((bits[cols] & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
-		target[FI_RGBA_GREEN] = (BYTE)((((bits[cols] & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
-		target[FI_RGBA_BLUE]  = (BYTE)((((bits[cols] & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_RED]   = (uint8_t)((((bits[cols] & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_GREEN] = (uint8_t)((((bits[cols] & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_BLUE]  = (uint8_t)((((bits[cols] & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
 
 		target += 3;
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To24_565(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *bits = (WORD *)source;
+FreeImage_ConvertLine16To24_565(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *bits = (uint16_t *)source;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_RED]   = (BYTE)((((bits[cols] & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
-		target[FI_RGBA_GREEN] = (BYTE)((((bits[cols] & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
-		target[FI_RGBA_BLUE]  = (BYTE)((((bits[cols] & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_RED]   = (uint8_t)((((bits[cols] & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_GREEN] = (uint8_t)((((bits[cols] & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
+		target[FI_RGBA_BLUE]  = (uint8_t)((((bits[cols] & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
 
 		target += 3;
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine32To24(BYTE *target, BYTE *source, int width_in_pixels) {
+FreeImage_ConvertLine32To24(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		target[FI_RGBA_BLUE] = source[FI_RGBA_BLUE];
 		target[FI_RGBA_GREEN] = source[FI_RGBA_GREEN];
@@ -204,15 +204,15 @@ FreeImage_ConvertTo24Bits(FIBITMAP *dib) {
 
 		const unsigned src_pitch = FreeImage_GetPitch(dib);
 		const unsigned dst_pitch = FreeImage_GetPitch(new_dib);
-		const BYTE *src_bits = FreeImage_GetBits(dib);
-		BYTE *dst_bits = FreeImage_GetBits(new_dib);
+		const uint8_t *src_bits = FreeImage_GetBits(dib);
+		uint8_t *dst_bits = FreeImage_GetBits(new_dib);
 		for (int rows = 0; rows < height; rows++) {
 			const FIRGB16 *src_pixel = (FIRGB16*)src_bits;
-			RGBTRIPLE *dst_pixel = (RGBTRIPLE*)dst_bits;
+			FIRGB8 *dst_pixel = (FIRGB8*)dst_bits;
 			for(int cols = 0; cols < width; cols++) {
-				dst_pixel[cols].rgbtRed   = (BYTE)(src_pixel[cols].red   >> 8);
-				dst_pixel[cols].rgbtGreen = (BYTE)(src_pixel[cols].green >> 8);
-				dst_pixel[cols].rgbtBlue  = (BYTE)(src_pixel[cols].blue  >> 8);
+				dst_pixel[cols].red   = (uint8_t)(src_pixel[cols].red   >> 8);
+				dst_pixel[cols].green = (uint8_t)(src_pixel[cols].green >> 8);
+				dst_pixel[cols].blue  = (uint8_t)(src_pixel[cols].blue  >> 8);
 			}
 			src_bits += src_pitch;
 			dst_bits += dst_pitch;
@@ -231,15 +231,15 @@ FreeImage_ConvertTo24Bits(FIBITMAP *dib) {
 
 		const unsigned src_pitch = FreeImage_GetPitch(dib);
 		const unsigned dst_pitch = FreeImage_GetPitch(new_dib);
-		const BYTE *src_bits = FreeImage_GetBits(dib);
-		BYTE *dst_bits = FreeImage_GetBits(new_dib);
+		const uint8_t *src_bits = FreeImage_GetBits(dib);
+		uint8_t *dst_bits = FreeImage_GetBits(new_dib);
 		for (int rows = 0; rows < height; rows++) {
 			const FIRGBA16 *src_pixel = (FIRGBA16*)src_bits;
-			RGBTRIPLE *dst_pixel = (RGBTRIPLE*)dst_bits;
+			FIRGB8 *dst_pixel = (FIRGB8*)dst_bits;
 			for(int cols = 0; cols < width; cols++) {
-				dst_pixel[cols].rgbtRed   = (BYTE)(src_pixel[cols].red   >> 8);
-				dst_pixel[cols].rgbtGreen = (BYTE)(src_pixel[cols].green >> 8);
-				dst_pixel[cols].rgbtBlue  = (BYTE)(src_pixel[cols].blue  >> 8);
+				dst_pixel[cols].red   = (uint8_t)(src_pixel[cols].red   >> 8);
+				dst_pixel[cols].green = (uint8_t)(src_pixel[cols].green >> 8);
+				dst_pixel[cols].blue  = (uint8_t)(src_pixel[cols].blue  >> 8);
 			}
 			src_bits += src_pitch;
 			dst_bits += dst_pitch;

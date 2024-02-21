@@ -17,7 +17,7 @@ typedef struct tagJ2KFIO_t {
 /**
 Stream constructor
 */
-J2KFIO_t* opj_freeimage_stream_create(FreeImageIO *io, fi_handle handle, BOOL bRead);
+J2KFIO_t* opj_freeimage_stream_create(FreeImageIO *io, fi_handle handle, FIBOOL bRead);
 
 /**
 Stream destructor
@@ -27,7 +27,7 @@ void opj_freeimage_stream_destroy(J2KFIO_t* fio);
 /**
 Conversion opj_image_t => FIBITMAP
 */
-FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, BOOL header_only);
+FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL header_only);
 /**
 Conversion FIBITMAP => opj_image_t
 */

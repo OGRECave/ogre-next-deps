@@ -31,16 +31,16 @@
 // ----------------------------------------------------------
 
 void DLL_CALLCONV
-FreeImage_ConvertLine1To8(BYTE *target, BYTE *source, int width_in_pixels) {
+FreeImage_ConvertLine1To8(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	for (unsigned cols = 0; cols < (unsigned)width_in_pixels; cols++)
 		target[cols] = (source[cols >> 3] & (0x80 >> (cols & 0x07))) != 0 ? 255 : 0;	
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine4To8(BYTE *target, BYTE *source, int width_in_pixels) {
+FreeImage_ConvertLine4To8(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	unsigned count_new = 0;
 	unsigned count_org = 0;
-	BOOL hinibble = TRUE;
+	FIBOOL hinibble = TRUE;
 
 	while (count_new < (unsigned)width_in_pixels) {
 		if (hinibble) {
@@ -55,8 +55,8 @@ FreeImage_ConvertLine4To8(BYTE *target, BYTE *source, int width_in_pixels) {
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To8_555(BYTE *target, BYTE *source, int width_in_pixels) {
-	const WORD *const bits = (WORD *)source;
+FreeImage_ConvertLine16To8_555(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	const uint16_t *const bits = (uint16_t *)source;
 	for (unsigned cols = 0; cols < (unsigned)width_in_pixels; cols++) {
 		target[cols] = GREY((((bits[cols] & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F,
 			                (((bits[cols] & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F,
@@ -65,8 +65,8 @@ FreeImage_ConvertLine16To8_555(BYTE *target, BYTE *source, int width_in_pixels) 
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To8_565(BYTE *target, BYTE *source, int width_in_pixels) {
-	const WORD *const bits = (WORD *)source;
+FreeImage_ConvertLine16To8_565(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	const uint16_t *const bits = (uint16_t *)source;
 	for (unsigned cols = 0; cols < (unsigned)width_in_pixels; cols++) {
 		target[cols] = GREY((((bits[cols] & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F,
 			        (((bits[cols] & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F,
@@ -75,7 +75,7 @@ FreeImage_ConvertLine16To8_565(BYTE *target, BYTE *source, int width_in_pixels) 
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine24To8(BYTE *target, BYTE *source, int width_in_pixels) {
+FreeImage_ConvertLine24To8(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	for (unsigned cols = 0; cols < (unsigned)width_in_pixels; cols++) {
 		target[cols] = GREY(source[FI_RGBA_RED], source[FI_RGBA_GREEN], source[FI_RGBA_BLUE]);
 		source += 3;
@@ -83,7 +83,7 @@ FreeImage_ConvertLine24To8(BYTE *target, BYTE *source, int width_in_pixels) {
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine32To8(BYTE *target, BYTE *source, int width_in_pixels) {
+FreeImage_ConvertLine32To8(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	for (unsigned cols = 0; cols < (unsigned)width_in_pixels; cols++) {
 		target[cols] = GREY(source[FI_RGBA_RED], source[FI_RGBA_GREEN], source[FI_RGBA_BLUE]);
 		source += 4;
@@ -122,7 +122,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 		FreeImage_CloneMetadata(new_dib, dib);
 
 		// Palette of destination image has already been initialized
-		RGBQUAD *new_pal = FreeImage_GetPalette(new_dib);
+		FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
 		const FREE_IMAGE_COLOR_TYPE color_type = FreeImage_GetColorType(dib);
 
@@ -133,7 +133,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 				{
 					if (color_type == FIC_PALETTE) {
 						// Copy the palette
-						RGBQUAD *old_pal = FreeImage_GetPalette(dib);
+						FIRGBA8 *old_pal = FreeImage_GetPalette(dib);
 						new_pal[0] = old_pal[0];
 						new_pal[255] = old_pal[1];
 
@@ -153,7 +153,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 				{
 					if (color_type == FIC_PALETTE) {
 						// Copy the palette
-						memcpy(new_pal, FreeImage_GetPalette(dib), 16 * sizeof(RGBQUAD));
+						memcpy(new_pal, FreeImage_GetPalette(dib), 16 * sizeof(FIRGBA8));
 					}
 
 					// Expand and copy the bitmap data
@@ -201,14 +201,14 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 
 			const unsigned src_pitch = FreeImage_GetPitch(dib);
 			const unsigned dst_pitch = FreeImage_GetPitch(new_dib);
-			const BYTE *src_bits = FreeImage_GetBits(dib);
-			BYTE *dst_bits = FreeImage_GetBits(new_dib);
+			const uint8_t *src_bits = FreeImage_GetBits(dib);
+			uint8_t *dst_bits = FreeImage_GetBits(new_dib);
 
 			for (unsigned rows = 0; rows < height; rows++) {
-				const WORD *const src_pixel = (WORD*)src_bits;
-				BYTE *dst_pixel = (BYTE*)dst_bits;
+				const uint16_t *const src_pixel = (uint16_t*)src_bits;
+				uint8_t *dst_pixel = (uint8_t*)dst_bits;
 				for(unsigned cols = 0; cols < width; cols++) {
-					dst_pixel[cols] = (BYTE)(src_pixel[cols] >> 8);
+					dst_pixel[cols] = (uint8_t)(src_pixel[cols] >> 8);
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -244,16 +244,16 @@ FreeImage_ConvertToGreyscale(FIBITMAP *dib) {
 		FreeImage_CloneMetadata(new_dib, dib);
 
 		// Create a greyscale palette
-		BYTE grey_pal[256];
-		const RGBQUAD *pal = FreeImage_GetPalette(dib);
+		uint8_t grey_pal[256];
+		const FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		const unsigned size = CalculateUsedPaletteEntries(bpp);
 		for (unsigned i = 0; i < size; i++) {
-			grey_pal[i] = GREY(pal->rgbRed, pal->rgbGreen, pal->rgbBlue);
+			grey_pal[i] = GREY(pal->red, pal->green, pal->blue);
 			pal++;
 		}
 
-		const BYTE *src_bits = FreeImage_GetBits(dib);
-		BYTE *dst_bits = FreeImage_GetBits(new_dib);
+		const uint8_t *src_bits = FreeImage_GetBits(dib);
+		uint8_t *dst_bits = FreeImage_GetBits(new_dib);
 
 		const unsigned src_pitch = FreeImage_GetPitch(dib);
 		const unsigned dst_pitch = FreeImage_GetPitch(new_dib);

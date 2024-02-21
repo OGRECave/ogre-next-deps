@@ -48,12 +48,12 @@ static int s_format_id;
 // ==========================================================
 
 // read in and skip all junk until we find a certain char
-static BOOL
-FindChar(FreeImageIO *io, fi_handle handle, BYTE look_for) {
-	BYTE c;
-	io->read_proc(&c, sizeof(BYTE), 1, handle);
+static FIBOOL
+FindChar(FreeImageIO *io, fi_handle handle, uint8_t look_for) {
+	uint8_t c;
+	io->read_proc(&c, sizeof(uint8_t), 1, handle);
 	while(c != look_for) {
-		if( io->read_proc(&c, sizeof(BYTE), 1, handle) != 1 )
+		if( io->read_proc(&c, sizeof(uint8_t), 1, handle) != 1 )
 			return FALSE;
 	}
 	return TRUE;
@@ -64,12 +64,12 @@ static char *
 ReadString(FreeImageIO *io, fi_handle handle) {
 	if( !FindChar(io, handle,'"') )
 		return NULL;
-	BYTE c;
+	uint8_t c;
 	std::string s;
-	io->read_proc(&c, sizeof(BYTE), 1, handle);
+	io->read_proc(&c, sizeof(uint8_t), 1, handle);
 	while(c != '"') {
 		s += c;
-		if( io->read_proc(&c, sizeof(BYTE), 1, handle) != 1 )
+		if( io->read_proc(&c, sizeof(uint8_t), 1, handle) != 1 )
 			return NULL;
 	}
 	char *cstr = (char *)malloc(s.length()+1);
@@ -119,7 +119,7 @@ MimeType() {
 	return "image/x-xpixmap";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
 	char buffer[256];
 
@@ -133,7 +133,7 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return (
 			(depth == 8) ||
@@ -141,12 +141,12 @@ SupportsExportDepth(int depth) {
 		);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (type == FIT_BITMAP) ? TRUE : FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -163,7 +163,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
     try {
 		char *str;
 		
-		BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 		
 		//find the starting brace
 		if( !FindChar(io, handle,'{') )
@@ -248,9 +248,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						free(str);
 						throw "Improperly formed hex color value";
 					}
-					rgba.r = (BYTE)red;
-					rgba.g = (BYTE)green;
-					rgba.b = (BYTE)blue;
+					rgba.r = (uint8_t)red;
+					rgba.g = (uint8_t)green;
+					rgba.b = (uint8_t)blue;
 				} else if( !strncmp(clr,"None",4) || !strncmp(clr,"none",4) ) {
 					rgba.r = rgba.g = rgba.b = 0xFF;
 				} else {
@@ -289,15 +289,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 
 			//add color to map
-			rgba.a = (BYTE)((colors > 256) ? 0 : i);
+			rgba.a = (uint8_t)((colors > 256) ? 0 : i);
 			rawpal[chrs] = rgba;
 
 			//build palette if needed
 			if( colors <= 256 ) {
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
-				pal[i].rgbBlue = rgba.b;
-				pal[i].rgbGreen = rgba.g;
-				pal[i].rgbRed = rgba.r;
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				pal[i].blue = rgba.b;
+				pal[i].green = rgba.g;
+				pal[i].red = rgba.r;
 			}
 
 			free(str);
@@ -311,7 +311,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		//read in pixel data
 		for(int y = 0; y < height; y++ ) {
-			BYTE *line = FreeImage_GetScanLine(dib, height - y - 1);
+			uint8_t *line = FreeImage_GetScanLine(dib, height - y - 1);
 			str = ReadString(io, handle);
 			if(!str)
 				throw "Error reading pixel strings";
@@ -350,7 +350,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
     }
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	if ((dib != NULL) && (handle != NULL)) {
 		char header[] = "/* XPM */\nstatic char *freeimage[] = {\n/* width height num_colors chars_per_pixel */\n\"",
@@ -364,22 +364,22 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			return FALSE;
 
 		int width = FreeImage_GetWidth(dib), height = FreeImage_GetHeight(dib), bpp = FreeImage_GetBPP(dib);
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		int x,y;
 
 		//map base92 chrs to the rgb value to create the palette
-		std::map<DWORD,FILE_RGB> chrs2color;
+		std::map<uint32_t,FILE_RGB> chrs2color;
 		//map 8bpp index or 24bpp rgb value to the base92 chrs to create pixel data
 		typedef union {
-			DWORD index;
+			uint32_t index;
 			FILE_RGBA rgba;
 		} DWORDRGBA;
-		std::map<DWORD,std::string> color2chrs;
+		std::map<uint32_t,std::string> color2chrs;
 
 		//loop thru entire dib, if new color, inc num_colors and add to both maps
 		int num_colors = 0;
 		for(y = 0; y < height; y++ ) {
-			BYTE *line = FreeImage_GetScanLine(dib, height - y - 1);
+			uint8_t *line = FreeImage_GetScanLine(dib, height - y - 1);
 			for(x = 0; x < width; x++ ) {
 				FILE_RGB rgb;
 				DWORDRGBA u;
@@ -391,9 +391,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					line += 3;
 				} else {
 					u.index = *line;
-					rgb.b = pal[u.index].rgbBlue;
-					rgb.g = pal[u.index].rgbGreen;
-					rgb.r = pal[u.index].rgbRed;
+					rgb.b = pal[u.index].blue;
+					rgb.g = pal[u.index].green;
+					rgb.r = pal[u.index].red;
 					line++;
 				}
 				if( color2chrs.find(u.index) == color2chrs.end() ) { //new color
@@ -431,7 +431,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		//write pixels, using map of rgb(if 24bpp) or index(if 8bpp)->chrs
 		for(y = 0; y < height; y++ ) {
-			BYTE *line = FreeImage_GetScanLine(dib, height - y - 1);
+			uint8_t *line = FreeImage_GetScanLine(dib, height - y - 1);
 			for(x = 0; x < width; x++ ) {
 				DWORDRGBA u;
 				if( bpp > 8 ) {

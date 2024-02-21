@@ -43,7 +43,7 @@
 /**
 Get a line from a ASCII io stream
 */
-static BOOL 
+static FIBOOL 
 pfm_get_line(FreeImageIO *io, fi_handle handle, char *buffer, int length) {
 	int i;
 	memset(buffer, 0, length);
@@ -63,7 +63,7 @@ Get an integer value from the actual position pointed by handle
 static int
 pfm_get_int(FreeImageIO *io, fi_handle handle) {
     char c = 0;
-	BOOL bFirstChar;
+	FIBOOL bFirstChar;
 
     // skip forward to start of next number
 
@@ -157,11 +157,11 @@ MimeType() {
 	return "image/x-portable-floatmap";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	BYTE pfm_id1[] = { 0x50, 0x46 };
-	BYTE pfm_id2[] = { 0x50, 0x66 };
-	BYTE signature[2] = { 0, 0 };
+	uint8_t pfm_id1[] = { 0x50, 0x46 };
+	uint8_t pfm_id2[] = { 0x50, 0x66 };
+	uint8_t signature[2] = { 0, 0 };
 
 	io->read_proc(signature, 1, sizeof(pfm_id1), handle);
 
@@ -174,12 +174,12 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (
 		(type == FIT_FLOAT) ||
@@ -187,7 +187,7 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 	);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -205,7 +205,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return NULL;
 	}
 
-	BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	try {
 		FREE_IMAGE_TYPE image_type = FIT_UNKNOWN;
@@ -234,7 +234,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		unsigned height = (unsigned) pfm_get_int(io, handle);
 		float scalefactor = 1;
 
-		BOOL bResult = pfm_get_line(io, handle, line_buffer, PFM_MAXLINE);
+		FIBOOL bResult = pfm_get_line(io, handle, line_buffer, PFM_MAXLINE);
 		if(bResult) {
 			bResult = (sscanf(line_buffer, "%f", &scalefactor) == 1) ? TRUE : FALSE;
 		}
@@ -335,7 +335,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	if(!dib || !handle) return FALSE;
 
@@ -375,7 +375,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	// Write the image data
 	for (unsigned y = 0; y < height; y++) {	
-		BYTE *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
 		io->write_proc(bits, 1, lineWidth, handle);
 	}
 

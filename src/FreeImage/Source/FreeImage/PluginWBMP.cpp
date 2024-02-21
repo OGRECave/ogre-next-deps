@@ -54,11 +54,11 @@
 #endif
 
 typedef struct tagWBMPHEADER {
-	WORD TypeField;			// Image type identifier of multi-byte length
-	BYTE FixHeaderField;	// Octet of general header information
-	BYTE ExtHeaderFields;	// Zero or more extension header fields
-	WORD Width;				// Multi-byte width field
-	WORD Height;			// Multi-byte height field
+	uint16_t TypeField;			// Image type identifier of multi-byte length
+	uint8_t FixHeaderField;	// Octet of general header information
+	uint8_t ExtHeaderFields;	// Zero or more extension header fields
+	uint16_t Width;				// Multi-byte width field
+	uint16_t Height;			// Multi-byte height field
 } WBMPHEADER;
 
 #ifdef _WIN32
@@ -85,7 +85,7 @@ typedef struct tagWBMPHEADER {
 // Internal functions
 // ==========================================================
 
-static DWORD
+static uint32_t
 multiByteRead(FreeImageIO *io, fi_handle handle) {
 	// Multi-byte encoding / decoding
 	// -------------------------------
@@ -94,8 +94,8 @@ multiByteRead(FreeImageIO *io, fi_handle handle) {
 	// The continuation flag is used to indicate that an octet is not the end of the multi-byte
 	// sequence.
 
-	DWORD Out = 0;
-	BYTE In = 0;
+	uint32_t Out = 0;
+	uint8_t In = 0;
 
 	while (io->read_proc(&In, 1, 1, handle)) {
 		Out += (In & 0x7F);
@@ -110,8 +110,8 @@ multiByteRead(FreeImageIO *io, fi_handle handle) {
 }
 
 static void
-multiByteWrite(FreeImageIO *io, fi_handle handle, DWORD In) {
-	BYTE Out, k = 1;
+multiByteWrite(FreeImageIO *io, fi_handle handle, uint32_t In) {
+	uint8_t Out, k = 1;
   
 	while (In & (0x7F << 7*k))
 		k++;
@@ -119,18 +119,18 @@ multiByteWrite(FreeImageIO *io, fi_handle handle, DWORD In) {
 	while (k > 1) {
 		k--;
 
-		Out = (BYTE)(0x80 | (In >> 7*k) & 0xFF);
+		Out = (uint8_t)(0x80 | (In >> 7*k) & 0xFF);
 
 		io->write_proc(&Out, 1, 1, handle);
 	}
 
-	Out = (BYTE)(In & 0x7F);
+	Out = (uint8_t)(In & 0x7F);
 
 	io->write_proc(&Out, 1, 1, handle);
 }
 
 static void
-readExtHeader(FreeImageIO *io, fi_handle handle, BYTE b) {
+readExtHeader(FreeImageIO *io, fi_handle handle, uint8_t b) {
     // Extension header fields
     // ------------------------
     // Read the extension header fields
@@ -141,7 +141,7 @@ readExtHeader(FreeImageIO *io, fi_handle handle, BYTE b) {
 
 		case 0x00:
 		{
-			DWORD info = multiByteRead(io, handle);
+			uint32_t info = multiByteRead(io, handle);
 			break;
 		}		
 
@@ -149,11 +149,11 @@ readExtHeader(FreeImageIO *io, fi_handle handle, BYTE b) {
 
 		case 0x60:
 		{
-			BYTE sizeParamIdent = (b & 0x70) >> 4;	// Size of Parameter Identifier (in bytes)
-			BYTE sizeParamValue = (b & 0x0F);		// Size of Parameter Value (in bytes)
+			uint8_t sizeParamIdent = (b & 0x70) >> 4;	// Size of Parameter Identifier (in bytes)
+			uint8_t sizeParamValue = (b & 0x0F);		// Size of Parameter Value (in bytes)
 			
-			BYTE *Ident = (BYTE*)malloc(sizeParamIdent * sizeof(BYTE));
-			BYTE *Value = (BYTE*)malloc(sizeParamValue * sizeof(BYTE));
+			uint8_t *Ident = (uint8_t*)malloc(sizeParamIdent * sizeof(uint8_t));
+			uint8_t *Value = (uint8_t*)malloc(sizeParamValue * sizeof(uint8_t));
 		
 			io->read_proc(Ident, sizeParamIdent, 1, handle);
 			io->read_proc(Value, sizeParamValue, 1, handle);
@@ -206,14 +206,14 @@ MimeType() {
 	return "image/vnd.wap.wbmp";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return (
 		(depth == 1)
 		);
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (type == FIT_BITMAP) ? TRUE : FALSE;
 }
@@ -222,10 +222,10 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	WORD x, y, width, height;
+	uint16_t x, y, width, height;
 	FIBITMAP *dib;
-    BYTE *bits;		// pointer to dib data
-	RGBQUAD *pal;	// pointer to dib palette
+    uint8_t *bits;		// pointer to dib data
+	FIRGBA8 *pal;	// pointer to dib palette
 
 	WBMPHEADER header;
 
@@ -236,7 +236,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// Type
 
-			header.TypeField = (WORD)multiByteRead(io, handle);
+			header.TypeField = (uint16_t)multiByteRead(io, handle);
 
 			if (header.TypeField != 0) {
 				throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
@@ -261,8 +261,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// width & height
 
-			width  = (WORD)multiByteRead(io, handle);
-			height = (WORD)multiByteRead(io, handle);
+			width  = (uint16_t)multiByteRead(io, handle);
+			height = (uint16_t)multiByteRead(io, handle);
 
 			// Allocate a new dib
 
@@ -274,8 +274,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// write the palette data
 
 			pal = FreeImage_GetPalette(dib);
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 
 			// read the bitmap data
 			
@@ -302,9 +302,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	return NULL;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
-    BYTE *bits;	// pointer to dib data
+    uint8_t *bits;	// pointer to dib data
 
 	if ((dib) && (handle)) {
 		try {
@@ -316,8 +316,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			WBMPHEADER header;
 			header.TypeField = 0;								// Type 0: B/W, no compression
 			header.FixHeaderField = 0;							// No ExtHeaderField
-			header.Width = (WORD)FreeImage_GetWidth(dib);		// Image width
-			header.Height = (WORD)FreeImage_GetHeight(dib);		// Image height
+			header.Width = (uint16_t)FreeImage_GetWidth(dib);		// Image width
+			header.Height = (uint16_t)FreeImage_GetHeight(dib);		// Image height
 
 			multiByteWrite(io, handle, header.TypeField);
 			
@@ -328,9 +328,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// write the bitmap data
 
-			WORD linelength = (WORD)FreeImage_GetLine(dib);
+			uint16_t linelength = (uint16_t)FreeImage_GetLine(dib);
 
-			for (WORD y = 0; y < header.Height; y++) {
+			for (uint16_t y = 0; y < header.Height; y++) {
 				bits = FreeImage_GetScanLine(dib, header.Height - 1 - y);
 
 				io->write_proc(&bits[0], linelength, 1, handle);

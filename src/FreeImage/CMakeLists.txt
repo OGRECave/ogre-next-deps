@@ -1,11 +1,22 @@
 project(FreeImage)
 
+set(FREEIMAGERE_MAJOR_VERSION "0")
+set(FREEIMAGERE_MINOR_VERSION "2")
+
 set(FreeImage_SOURCES
 	Source/CacheFile.h
 	Source/FreeImage.h
 	Source/FreeImage/BitmapAccess.cpp
 	Source/FreeImage/CacheFile.cpp
 	Source/FreeImage/ColorLookup.cpp
+	Source/FreeImage.hpp
+	Source/FreeImage/ConversionColor.cpp
+	Source/FreeImage/ConversionYUV.cpp
+	Source/FreeImage/ConversionYUV.h
+	Source/FreeImage/SimpleTools.cpp
+	Source/FreeImage/SimpleTools.h
+	Source/FreeImage/tmoClamp.cpp
+	Source/FreeImage/tmoLinear.cpp
 	Source/FreeImage/Conversion.cpp
 	Source/FreeImage/Conversion16_555.cpp
 	Source/FreeImage/Conversion16_565.cpp
@@ -147,52 +158,50 @@ set(FreeImage_SOURCES
 	Source/LibJPEG/jversion.h
 	Source/LibJPEG/transupp.c
 	Source/LibJPEG/transupp.h
-	Source/LibOpenJPEG/bio.c
-	Source/LibOpenJPEG/bio.h
-	# Source/LibOpenJPEG/cidx_manager.c
-	# Source/LibOpenJPEG/cidx_manager.h
-	Source/LibOpenJPEG/cio.c
-	Source/LibOpenJPEG/cio.h
-	Source/LibOpenJPEG/dwt.c
-	Source/LibOpenJPEG/dwt.h
-	Source/LibOpenJPEG/event.c
-	Source/LibOpenJPEG/event.h
-	Source/LibOpenJPEG/function_list.c
-	Source/LibOpenJPEG/function_list.h
-	Source/LibOpenJPEG/image.c
-	Source/LibOpenJPEG/image.h
-	Source/LibOpenJPEG/invert.c
-	Source/LibOpenJPEG/indexbox_manager.h
-	Source/LibOpenJPEG/j2k.c
-	Source/LibOpenJPEG/j2k.h
-	Source/LibOpenJPEG/jp2.c
-	Source/LibOpenJPEG/jp2.h
-	Source/LibOpenJPEG/mct.c
-	Source/LibOpenJPEG/mct.h
-	Source/LibOpenJPEG/mqc.c
-	Source/LibOpenJPEG/mqc.h
-	Source/LibOpenJPEG/openjpeg.c
-	Source/LibOpenJPEG/openjpeg.h
-    Source/LibOpenJPEG/opj_config.h
-	Source/LibOpenJPEG/opj_includes.h
-	Source/LibOpenJPEG/opj_malloc.h
-	# Source/LibOpenJPEG/phix_manager.c
-	Source/LibOpenJPEG/pi.c
-	Source/LibOpenJPEG/pi.h
-	# Source/LibOpenJPEG/ppix_manager.c
-	Source/LibOpenJPEG/raw.c
-	Source/LibOpenJPEG/raw.h
-	Source/LibOpenJPEG/t1.c
-	Source/LibOpenJPEG/t1.h
-	Source/LibOpenJPEG/t1_luts.h
-	Source/LibOpenJPEG/t2.c
-	Source/LibOpenJPEG/t2.h
-	Source/LibOpenJPEG/tcd.c
-	Source/LibOpenJPEG/tcd.h
-	Source/LibOpenJPEG/tgt.c
-	Source/LibOpenJPEG/tgt.h
-	# Source/LibOpenJPEG/thix_manager.c
-	# Source/LibOpenJPEG/tpix_manager.c
+	Source/openjp2/bio.c
+	Source/openjp2/bio.h
+	# Source/openjp2/cidx_manager.c
+	# Source/openjp2/cidx_manager.h
+	Source/openjp2/cio.c
+	Source/openjp2/cio.h
+	Source/openjp2/dwt.c
+	Source/openjp2/dwt.h
+	Source/openjp2/event.c
+	Source/openjp2/event.h
+	Source/openjp2/function_list.c
+	Source/openjp2/function_list.h
+	Source/openjp2/image.c
+	Source/openjp2/image.h
+	Source/openjp2/invert.c
+	Source/openjp2/indexbox_manager.h
+	Source/openjp2/j2k.c
+	Source/openjp2/j2k.h
+	Source/openjp2/jp2.c
+	Source/openjp2/jp2.h
+	Source/openjp2/mct.c
+	Source/openjp2/mct.h
+	Source/openjp2/mqc.c
+	Source/openjp2/mqc.h
+	Source/openjp2/openjpeg.c
+	Source/openjp2/openjpeg.h
+	Source/openjp2/opj_config.h
+	Source/openjp2/opj_includes.h
+	Source/openjp2/opj_malloc.h
+	# Source/openjp2/phix_manager.c
+	Source/openjp2/pi.c
+	Source/openjp2/pi.h
+	# Source/openjp2/ppix_manager.c
+	Source/openjp2/t1.c
+	Source/openjp2/t1.h
+	Source/openjp2/t1_luts.h
+	Source/openjp2/t2.c
+	Source/openjp2/t2.h
+	Source/openjp2/tcd.c
+	Source/openjp2/tcd.h
+	Source/openjp2/tgt.c
+	Source/openjp2/tgt.h
+	# Source/openjp2/thix_manager.c
+	# Source/openjp2/tpix_manager.c
 	Source/LibPNG/png.c
 	Source/LibPNG/png.h
 	Source/LibPNG/pngconf.h
@@ -789,10 +798,9 @@ include_directories(Source/LibJPEG)
 #include_directories(Source/LibJXR/jxrgluelib)
 #include_directories(Source/LibJXR/image/sys)
 include_directories(Source/LibMNG)
-include_directories(Source/LibOpenJPEG)
 include_directories(Source/LibPNG)
 include_directories(Source/LibRawLite)
-include_directories(Source/LibTIFF)
+include_directories(Source/LibTIFF4)
 include_directories(Source/LibWebP)
 include_directories(Source/OpenEXR)
 include_directories(Source/OpenEXR/Half)
@@ -801,9 +809,12 @@ include_directories(Source/OpenEXR/IexMath)
 include_directories(Source/OpenEXR/IlmImf)
 include_directories(Source/OpenEXR/IlmThread)
 include_directories(Source/OpenEXR/Imath)
+include_directories(Source/openjp2)
 include_directories(Source/ZLib)
 
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DPNG_INTEL_SSE_OPT=1)
+add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")
+add_definitions("-DFREEIMAGERE_MINOR_VERSION=${FREEIMAGERE_MINOR_VERSION}")
 
 add_library(FreeImage STATIC ${FreeImage_SOURCES})
 if (OGRE_PROJECT_FOLDERS)

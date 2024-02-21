@@ -21,13 +21,15 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include "SimpleTools.h"
 
 // ----------------------------------------------------------
 //   smart convert X to Float
 // ----------------------------------------------------------
 
+
 FIBITMAP * DLL_CALLCONV
-FreeImage_ConvertToFloat(FIBITMAP *dib) {
+FreeImage_ConvertToFloat(FIBITMAP *dib, FIBOOL scale_linear) {
 	FIBITMAP *src = NULL;
 	FIBITMAP *dst = NULL;
 
@@ -48,7 +50,13 @@ FreeImage_ConvertToFloat(FIBITMAP *dib) {
 			}
 			break;
 		}
+		case FIT_DOUBLE:
+		case FIT_UINT32:
+		case FIT_INT32:
 		case FIT_UINT16:
+		case FIT_INT16:
+		case FIT_RGB32:
+		case FIT_RGBA32:
 		case FIT_RGB16:
 		case FIT_RGBA16:
 		case FIT_RGBF:
@@ -79,110 +87,126 @@ FreeImage_ConvertToFloat(FIBITMAP *dib) {
 	FreeImage_CloneMetadata(dst, src);
 
 	// convert from src type to float
-
-	const unsigned src_pitch = FreeImage_GetPitch(src);
-	const unsigned dst_pitch = FreeImage_GetPitch(dst);
-
-	const BYTE *src_bits = (BYTE*)FreeImage_GetBits(src);
-	BYTE *dst_bits = (BYTE*)FreeImage_GetBits(dst);
-
 	switch(src_type) {
 		case FIT_BITMAP:
-		{
-			for(unsigned y = 0; y < height; y++) {
-				const BYTE *src_pixel = (BYTE*)src_bits;
-				float *dst_pixel = (float*)dst_bits;
-				for(unsigned x = 0; x < width; x++) {
-					// convert and scale to the range [0..1]
-					dst_pixel[x] = (float)(src_pixel[x]) / 255;
-				}
-				src_bits += src_pitch;
-				dst_bits += dst_pitch;
+			if (scale_linear) {
+				BitmapTransform<float, uint8_t>(dst, src, [](uint8_t v) { 
+					return static_cast<float>(v) / static_cast<float>(std::numeric_limits<uint8_t>::max()); });
 			}
-		}
-		break;
+			else {
+				BitmapTransform<float, uint8_t>(dst, src, [](uint8_t v) { return static_cast<float>(v); });
+			}
+			break;
 
 		case FIT_UINT16:
-		{
-			for(unsigned y = 0; y < height; y++) {
-				const WORD *src_pixel = (WORD*)src_bits;
-				float *dst_pixel = (float*)dst_bits;
-
-				for(unsigned x = 0; x < width; x++) {
-					// convert and scale to the range [0..1]
-					dst_pixel[x] = (float)(src_pixel[x]) / 65535;
-				}
-				src_bits += src_pitch;
-				dst_bits += dst_pitch;
+			if (scale_linear) {
+				BitmapTransform<float, uint16_t>(dst, src, [](uint16_t v) { 
+					return static_cast<float>(v) / static_cast<float>(std::numeric_limits<uint16_t>::max()); });
 			}
-		}
-		break;
+			else {
+				BitmapTransform<float, uint16_t>(dst, src, [](uint16_t v) { return static_cast<float>(v); });
+			}
+			break;
+
+		case FIT_INT16:
+			if (scale_linear) {
+				BitmapTransform<float, int16_t>(dst, src, [](int16_t v) {
+					return static_cast<float>(v) / static_cast<float>(std::numeric_limits<int16_t>::max()); });
+			}
+			else {
+				BitmapTransform<float, int16_t>(dst, src, [](int16_t v) { return static_cast<float>(v); });
+			}
+			break;
+
+		case FIT_UINT32:
+			if (scale_linear) {
+				BitmapTransform<float, uint32_t>(dst, src, [](uint32_t v) {
+					return static_cast<float>(static_cast<double>(v) / static_cast<double>(std::numeric_limits<uint32_t>::max())); });
+			}
+			else {
+				BitmapTransform<float, uint32_t>(dst, src, [](uint32_t v) { return static_cast<float>(v); });
+			}
+			break;
+
+		case FIT_INT32:
+			if (scale_linear) {
+				BitmapTransform<float, int32_t>(dst, src, [](int32_t v) { 
+					return static_cast<float>(static_cast<double>(v) / static_cast<double>(std::numeric_limits<int32_t>::max())); });
+			}
+			else {
+				BitmapTransform<float, int32_t>(dst, src, [](int32_t v) { return static_cast<float>(v); });
+			}
+			break;
+
+		case FIT_RGB32:
+			if (scale_linear) {
+				BitmapTransform<float, FIRGB32>(dst, src, [](const FIRGB32& p) {
+					return static_cast<float>(LUMA_REC709(p.red, p.green, p.blue) / static_cast<double>(std::numeric_limits<uint32_t>::max())); });
+			}
+			else {
+				BitmapTransform<float, FIRGB32>(dst, src, [](const FIRGB32& p) {
+					return LUMA_REC709(p.red, p.green, p.blue); });
+			}
+			break;
+
+		case FIT_RGBA32:
+			if (scale_linear) {
+				BitmapTransform<float, FIRGBA32>(dst, src, [](const FIRGBA32& p) {
+					return static_cast<float>(LUMA_REC709(p.red, p.green, p.blue) / static_cast<double>(std::numeric_limits<uint32_t>::max())); });
+			}
+			else {
+				BitmapTransform<float, FIRGBA32>(dst, src, [](const FIRGBA32& p) {
+					return LUMA_REC709(p.red, p.green, p.blue); });
+			}
+			break;
 
 		case FIT_RGB16:
-		{
-			for(unsigned y = 0; y < height; y++) {
-				const FIRGB16 *src_pixel = (FIRGB16*)src_bits;
-				float *dst_pixel = (float*)dst_bits;
-
-				for(unsigned x = 0; x < width; x++) {
-					// convert and scale to the range [0..1]
-					dst_pixel[x] = LUMA_REC709(src_pixel[x].red, src_pixel[x].green, src_pixel[x].blue) / 65535.0F;
-				}
-				src_bits += src_pitch;
-				dst_bits += dst_pitch;
+			if (scale_linear) {
+				BitmapTransform<float, FIRGB16>(dst, src, [](const FIRGB16& p) {
+					return LUMA_REC709(p.red, p.green, p.blue) / static_cast<float>(std::numeric_limits<uint16_t>::max()); });
 			}
-		}
-		break;
+			else {
+				BitmapTransform<float, FIRGB16>(dst, src, [](const FIRGB16& p) {
+					return LUMA_REC709(p.red, p.green, p.blue); });
+			}
+			break;
 
 		case FIT_RGBA16:
-		{
-			for(unsigned y = 0; y < height; y++) {
-				const FIRGBA16 *src_pixel = (FIRGBA16*)src_bits;
-				float *dst_pixel = (float*)dst_bits;
-
-				for(unsigned x = 0; x < width; x++) {
-					// convert and scale to the range [0..1]
-					dst_pixel[x] = LUMA_REC709(src_pixel[x].red, src_pixel[x].green, src_pixel[x].blue) / 65535.0F;
-				}
-				src_bits += src_pitch;
-				dst_bits += dst_pitch;
+			if (scale_linear) {
+				BitmapTransform<float, FIRGBA16>(dst, src, [](const FIRGBA16& p) {
+					return LUMA_REC709(p.red, p.green, p.blue) / static_cast<float>(std::numeric_limits<uint16_t>::max()); });
 			}
-		}
-		break;
+			else {
+				BitmapTransform<float, FIRGBA16>(dst, src, [](const FIRGBA16& p) {
+					return LUMA_REC709(p.red, p.green, p.blue); });
+			}
+			break;
 
 		case FIT_RGBF:
-		{
-			for(unsigned y = 0; y < height; y++) {
-				const FIRGBF *src_pixel = (FIRGBF*)src_bits;
-				float *dst_pixel = (float*)dst_bits;
-
-				for(unsigned x = 0; x < width; x++) {
-					// convert (assume pixel values are in the range [0..1])
-					dst_pixel[x] = LUMA_REC709(src_pixel[x].red, src_pixel[x].green, src_pixel[x].blue);
-					dst_pixel[x] = CLAMP(dst_pixel[x], 0.0F, 1.0F);
-				}
-				src_bits += src_pitch;
-				dst_bits += dst_pitch;
+			if (scale_linear) {
+				BitmapTransform<float, FIRGBF>(dst, src, [](const FIRGBF& p) {
+					return CLAMP(LUMA_REC709(p.red, p.green, p.blue), 0.0F, 1.0F); });
 			}
-		}
-		break;
+			else {
+				BitmapTransform<float, FIRGBF>(dst, src, [](const FIRGBF& p) {
+					return LUMA_REC709(p.red, p.green, p.blue); });
+			}
+			break;
 
 		case FIT_RGBAF:
-		{
-			for(unsigned y = 0; y < height; y++) {
-				const FIRGBAF *src_pixel = (FIRGBAF*)src_bits;
-				float *dst_pixel = (float*)dst_bits;
-
-				for(unsigned x = 0; x < width; x++) {
-					// convert (assume pixel values are in the range [0..1])
-					dst_pixel[x] = LUMA_REC709(src_pixel[x].red, src_pixel[x].green, src_pixel[x].blue);
-					dst_pixel[x] = CLAMP(dst_pixel[x], 0.0F, 1.0F);
-				}
-				src_bits += src_pitch;
-				dst_bits += dst_pitch;
+			if (scale_linear) {
+				BitmapTransform<float, FIRGBAF>(dst, src, [](const FIRGBAF& p) {
+					return CLAMP(LUMA_REC709(p.red, p.green, p.blue), 0.0F, 1.0F); });
 			}
-		}
-		break;
+			else {
+				BitmapTransform<float, FIRGBAF>(dst, src, [](const FIRGBAF& p) {
+					return LUMA_REC709(p.red, p.green, p.blue); });
+			}
+			break;
+
+		case FIT_DOUBLE:
+			BitmapTransform<float, double>(dst, src, [](double v) { return static_cast<float>(v); });
+			break;
 	}
 
 	if(src != dib) {

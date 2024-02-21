@@ -67,17 +67,17 @@ CONVERT_TYPE<Tdst, Tsrc>::convert(FIBITMAP *src, FREE_IMAGE_TYPE dst_type) {
 
 /** Convert a greyscale image of type Tsrc to a 8-bit grayscale dib.
 	Conversion is done using either a linear scaling from [min, max] to [0, 255]
-	or a rounding from src_pixel to (BYTE) MIN(255, MAX(0, q)) where int q = int(src_pixel + 0.5); 
+	or a rounding from src_pixel to (uint8_t) MIN(255, MAX(0, q)) where int q = int(src_pixel + 0.5); 
 */
 template<class Tsrc>
 class CONVERT_TO_BYTE
 {
 public:
-	FIBITMAP* convert(FIBITMAP *src, BOOL scale_linear);
+	FIBITMAP* convert(FIBITMAP *src, FIBOOL scale_linear);
 };
 
 template<class Tsrc> FIBITMAP* 
-CONVERT_TO_BYTE<Tsrc>::convert(FIBITMAP *src, BOOL scale_linear) {
+CONVERT_TO_BYTE<Tsrc>::convert(FIBITMAP *src, FIBOOL scale_linear) {
 	FIBITMAP *dst = NULL;
 	unsigned x, y;
 
@@ -90,11 +90,11 @@ CONVERT_TO_BYTE<Tsrc>::convert(FIBITMAP *src, BOOL scale_linear) {
 	if(!dst) return NULL;
 
 	// build a greyscale palette
-	RGBQUAD *pal = FreeImage_GetPalette(dst);
+	FIRGBA8 *pal = FreeImage_GetPalette(dst);
 	for(int i = 0; i < 256; i++) {
-		pal[i].rgbRed = (BYTE)i;
-		pal[i].rgbGreen = (BYTE)i;
-		pal[i].rgbBlue = (BYTE)i;
+		pal[i].red = (uint8_t)i;
+		pal[i].green = (uint8_t)i;
+		pal[i].blue = (uint8_t)i;
 	}
 
 	// convert the src image to dst
@@ -122,19 +122,19 @@ CONVERT_TO_BYTE<Tsrc>::convert(FIBITMAP *src, BOOL scale_linear) {
 		// scale to 8-bit
 		for(y = 0; y < height; y++) {
 			Tsrc *src_bits = reinterpret_cast<Tsrc*>(FreeImage_GetScanLine(src, y));
-			BYTE *dst_bits = FreeImage_GetScanLine(dst, y);
+			uint8_t *dst_bits = FreeImage_GetScanLine(dst, y);
 			for(x = 0; x < width; x++) {
-				dst_bits[x] = (BYTE)( scale * (src_bits[x] - min) + 0.5);
+				dst_bits[x] = (uint8_t)( scale * (src_bits[x] - min) + 0.5);
 			}
 		}
 	} else {
 		for(y = 0; y < height; y++) {
 			Tsrc *src_bits = reinterpret_cast<Tsrc*>(FreeImage_GetScanLine(src, y));
-			BYTE *dst_bits = FreeImage_GetScanLine(dst, y);
+			uint8_t *dst_bits = FreeImage_GetScanLine(dst, y);
 			for(x = 0; x < width; x++) {
 				// rounding
 				int q = int(src_bits[x] + 0.5);
-				dst_bits[x] = (BYTE) MIN(255, MAX(0, q));
+				dst_bits[x] = (uint8_t) MIN(255, MAX(0, q));
 			}
 		}
 	}
@@ -180,41 +180,41 @@ CONVERT_TO_COMPLEX<Tsrc>::convert(FIBITMAP *src) {
 
 // ----------------------------------------------------------
 
-// Convert from type BYTE to type X
-CONVERT_TYPE<unsigned short, BYTE>	convertByteToUShort;
-CONVERT_TYPE<short, BYTE>			convertByteToShort;
-CONVERT_TYPE<DWORD, BYTE>			convertByteToULong;
-CONVERT_TYPE<LONG, BYTE>			convertByteToLong;
-CONVERT_TYPE<float, BYTE>			convertByteToFloat;
-CONVERT_TYPE<double, BYTE>			convertByteToDouble;
+// Convert from type uint8_t to type X
+CONVERT_TYPE<unsigned short, uint8_t>	convertByteToUShort;
+CONVERT_TYPE<short, uint8_t>			convertByteToShort;
+CONVERT_TYPE<uint32_t, uint8_t>			convertByteToULong;
+CONVERT_TYPE<int32_t, uint8_t>			convertByteToLong;
+CONVERT_TYPE<float, uint8_t>			convertByteToFloat;
+CONVERT_TYPE<double, uint8_t>			convertByteToDouble;
 
-// Convert from type X to type BYTE
+// Convert from type X to type uint8_t
 CONVERT_TO_BYTE<unsigned short>	convertUShortToByte;
 CONVERT_TO_BYTE<short>			convertShortToByte;
-CONVERT_TO_BYTE<DWORD>			convertULongToByte;
-CONVERT_TO_BYTE<LONG>			convertLongToByte;
+CONVERT_TO_BYTE<uint32_t>			convertULongToByte;
+CONVERT_TO_BYTE<int32_t>			convertLongToByte;
 CONVERT_TO_BYTE<float>			convertFloatToByte;
 CONVERT_TO_BYTE<double>			convertDoubleToByte;
 
 // Convert from type X to type float
 CONVERT_TYPE<float, unsigned short>	convertUShortToFloat;
 CONVERT_TYPE<float, short>			convertShortToFloat;
-CONVERT_TYPE<float, DWORD>			convertULongToFloat;
-CONVERT_TYPE<float, LONG>			convertLongToFloat;
+CONVERT_TYPE<float, uint32_t>			convertULongToFloat;
+CONVERT_TYPE<float, int32_t>			convertLongToFloat;
 
 // Convert from type X to type double
 CONVERT_TYPE<double, unsigned short>	convertUShortToDouble;
 CONVERT_TYPE<double, short>				convertShortToDouble;
-CONVERT_TYPE<double, DWORD>				convertULongToDouble;
-CONVERT_TYPE<double, LONG>				convertLongToDouble;
+CONVERT_TYPE<double, uint32_t>				convertULongToDouble;
+CONVERT_TYPE<double, int32_t>				convertLongToDouble;
 CONVERT_TYPE<double, float>				convertFloatToDouble;
 
 // Convert from type X to type FICOMPLEX
-CONVERT_TO_COMPLEX<BYTE>			convertByteToComplex;
+CONVERT_TO_COMPLEX<uint8_t>			convertByteToComplex;
 CONVERT_TO_COMPLEX<unsigned short>	convertUShortToComplex;
 CONVERT_TO_COMPLEX<short>			convertShortToComplex;
-CONVERT_TO_COMPLEX<DWORD>			convertULongToComplex;
-CONVERT_TO_COMPLEX<LONG>			convertLongToComplex;
+CONVERT_TO_COMPLEX<uint32_t>			convertULongToComplex;
+CONVERT_TO_COMPLEX<int32_t>			convertLongToComplex;
 CONVERT_TO_COMPLEX<float>			convertFloatToComplex;
 CONVERT_TO_COMPLEX<double>			convertDoubleToComplex;
 
@@ -234,7 +234,7 @@ For complex images, the magnitude is extracted as a double image, then converted
 @param scale_linear Linear scaling / rounding switch
 */
 FIBITMAP* DLL_CALLCONV
-FreeImage_ConvertToStandardType(FIBITMAP *src, BOOL scale_linear) {
+FreeImage_ConvertToStandardType(FIBITMAP *src, FIBOOL scale_linear) {
 	FIBITMAP *dst = NULL;
 
 	if(!src) return NULL;
@@ -304,7 +304,7 @@ FreeImage_ConvertToStandardType(FIBITMAP *src, BOOL scale_linear) {
 // ----------------------------------------------------------
 
 FIBITMAP* DLL_CALLCONV
-FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, BOOL scale_linear) {
+FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, FIBOOL scale_linear) {
 	FIBITMAP *dst = NULL;
 
 	if(!FreeImage_HasPixels(src)) return NULL;

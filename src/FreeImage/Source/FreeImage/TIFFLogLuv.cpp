@@ -22,7 +22,7 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 
-void tiff_ConvertLineXYZToRGB(BYTE *target, BYTE *source, double stonits, int width_in_pixels) {
+void tiff_ConvertLineXYZToRGB(uint8_t *target, uint8_t *source, double stonits, int width_in_pixels) {
 	FIRGBF *rgbf = (FIRGBF*)target;
 	float *xyz = (float*)source;
 	
@@ -46,7 +46,7 @@ void tiff_ConvertLineXYZToRGB(BYTE *target, BYTE *source, double stonits, int wi
 	}
 }
 
-void tiff_ConvertLineRGBToXYZ(BYTE *target, BYTE *source, int width_in_pixels) {
+void tiff_ConvertLineRGBToXYZ(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	FIRGBF *rgbf = (FIRGBF*)source;
 	float *xyz = (float*)target;
 	

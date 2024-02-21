@@ -27,9 +27,9 @@
 
 typedef struct tagNamedColor {
 	const char *name;	//! color name
-	BYTE  r;			//! red value
-	BYTE  g;			//! green value
-	BYTE  b;			//! blue value
+	uint8_t  r;			//! red value
+	uint8_t  g;			//! green value
+	uint8_t  b;			//! blue value
 } NamedColor;
 
 // --------------------------------------------------------------------------
@@ -554,8 +554,8 @@ static NamedColor X11ColorMap[] = {
 };
 
 
-BOOL DLL_CALLCONV
-FreeImage_LookupX11Color(const char *szColor, BYTE *nRed, BYTE *nGreen, BYTE *nBlue) {
+FIBOOL DLL_CALLCONV
+FreeImage_LookupX11Color(const char *szColor, uint8_t *nRed, uint8_t *nGreen, uint8_t *nBlue) {
     int i;
 
     // lookup color
@@ -575,7 +575,7 @@ FreeImage_LookupX11Color(const char *szColor, BYTE *nRed, BYTE *nGreen, BYTE *nB
 
         // grey<num>, or gray<num>, num 1...100
         i = strtol(szColor+4, NULL, 10);
-        *nRed   = (BYTE)(255.0/100.0 * i);
+        *nRed   = (uint8_t)(255.0/100.0 * i);
         *nGreen = *nRed;
         *nBlue  = *nRed;
 
@@ -748,8 +748,8 @@ static NamedColor SVGColorMap[] = {
 };
 
 
-BOOL DLL_CALLCONV
-FreeImage_LookupSVGColor(const char *szColor, BYTE *nRed, BYTE *nGreen, BYTE *nBlue) {
+FIBOOL DLL_CALLCONV
+FreeImage_LookupSVGColor(const char *szColor, uint8_t *nRed, uint8_t *nGreen, uint8_t *nBlue) {
     int i;
 
     // lookup color
@@ -769,7 +769,7 @@ FreeImage_LookupSVGColor(const char *szColor, BYTE *nRed, BYTE *nGreen, BYTE *nB
 
         // grey<num>, or gray<num>, num 1...100
         i = strtol(szColor+4, NULL, 10);
-        *nRed   = (BYTE)(255.0/100.0 * i);
+        *nRed   = (uint8_t)(255.0/100.0 * i);
         *nGreen = *nRed;
         *nBlue  = *nRed;
         return TRUE;

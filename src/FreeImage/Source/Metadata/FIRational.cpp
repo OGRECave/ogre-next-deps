@@ -24,7 +24,7 @@
 #include "FIRational.h"
 
 /// Initialize and normalize a rational number
-void FIRational::initialize(LONG n, LONG d) {
+void FIRational::initialize(int32_t n, int32_t d) {
 	if(d) {
 		_numerator = n;
 		_denominator = d;
@@ -43,7 +43,7 @@ FIRational::FIRational() {
 }
 
 /// Constructor with longs
-FIRational::FIRational(LONG n, LONG d) {
+FIRational::FIRational(int32_t n, int32_t d) {
 	initialize(n, d);
 }
 
@@ -52,27 +52,27 @@ FIRational::FIRational(const FITAG *tag) {
 	switch(FreeImage_GetTagType((FITAG*)tag)) {
 		case FIDT_RATIONAL:		// 64-bit unsigned fraction 
 		{
-			DWORD *pvalue = (DWORD*)FreeImage_GetTagValue((FITAG*)tag);
-			initialize((LONG)pvalue[0], (LONG)pvalue[1]);
+			uint32_t *pvalue = (uint32_t*)FreeImage_GetTagValue((FITAG*)tag);
+			initialize((int32_t)pvalue[0], (int32_t)pvalue[1]);
 			break;
 		}
 
 		case FIDT_SRATIONAL:	// 64-bit signed fraction 
 		{
-			LONG *pvalue = (LONG*)FreeImage_GetTagValue((FITAG*)tag);
-			initialize((LONG)pvalue[0], (LONG)pvalue[1]);
+			int32_t *pvalue = (int32_t*)FreeImage_GetTagValue((FITAG*)tag);
+			initialize((int32_t)pvalue[0], (int32_t)pvalue[1]);
 			break;
 		}
 	}
 }
 
 FIRational::FIRational(float value) {
-	if (value == (float)((LONG)value)) {
-	   _numerator = (LONG)value;
+	if (value == (float)((int32_t)value)) {
+	   _numerator = (int32_t)value;
 	   _denominator = 1L;
 	} else {
 		int k, count;
-		LONG n[4];
+		int32_t n[4];
 
 		float x = fabs(value);
 		int sign = (value > 0) ? 1 : -1;
@@ -80,7 +80,7 @@ FIRational::FIRational(float value) {
 		// make a continued-fraction expansion of x
 		count = -1;
 		for(k = 0; k < 4; k++) {
-			n[k] = (LONG)floor(x);
+			n[k] = (int32_t)floor(x);
 			count++;
 			x -= (float)n[k];
 			if(x == 0) break;
@@ -92,8 +92,8 @@ FIRational::FIRational(float value) {
 
 		for(int i = count - 1; i >= 0; i--) {
 			if(n[i] == 0) break;
-			LONG _num = (n[i] * _numerator + _denominator);
-			LONG _den = _numerator;
+			int32_t _num = (n[i] * _numerator + _denominator);
+			int32_t _den = _numerator;
 			_numerator = _num;
 			_denominator = _den;
 		}
@@ -119,18 +119,18 @@ FIRational& FIRational::operator=(FIRational& r) {
 }
 
 /// Get the numerator
-LONG FIRational::getNumerator() {
+int32_t FIRational::getNumerator() {
 	return _numerator;
 }
 
 /// Get the denominator
-LONG FIRational::getDenominator() {
+int32_t FIRational::getDenominator() {
 	return _denominator;
 }
 
 /// Calculate GCD
-LONG FIRational::gcd(LONG a, LONG b) {
-	LONG temp;
+int32_t FIRational::gcd(int32_t a, int32_t b) {
+	int32_t temp;
 	while (b) {		// While non-zero value
 		temp = b;	// Save current value
 		b = a % b;	// Assign remainder of division
@@ -143,7 +143,7 @@ LONG FIRational::gcd(LONG a, LONG b) {
 void FIRational::normalize() {
 	if (_numerator != 1 && _denominator != 1) {	// Is there something to do?
 		 // Calculate GCD
-		LONG common = gcd(_numerator, _denominator);
+		int32_t common = gcd(_numerator, _denominator);
 		if (common != 1) { // If GCD is not one			
 			_numerator /= common;	// Calculate new numerator
 			_denominator /= common;	// Calculate new denominator
@@ -156,7 +156,7 @@ void FIRational::normalize() {
 }
 
 /// Checks if this rational number is an Integer, either positive or negative
-BOOL FIRational::isInteger() {
+FIBOOL FIRational::isInteger() {
 	if(_denominator == 1 || (_denominator != 0 && (_numerator % _denominator == 0)) || (_denominator == 0 && _numerator == 0))
 		return TRUE;
 	return FALSE;

@@ -124,7 +124,7 @@ Compute a Gaussian pyramid using the specified number of levels.
 @param nlevels Number of resolution levels
 @return Returns TRUE if successful, returns FALSE otherwise
 */
-static BOOL GaussianPyramid(FIBITMAP *H, FIBITMAP **pyramid, int nlevels) {
+static FIBOOL GaussianPyramid(FIBITMAP *H, FIBITMAP **pyramid, int nlevels) {
 	try {
 		// first level is the original image
 		pyramid[0] = FreeImage_Clone(H);
@@ -212,7 +212,7 @@ Calculate gradient magnitude and its average value on each pyramid level
 @param avgGrad [out] Average gradient on each level (array of size nlevels)
 @return Returns TRUE if successful, returns FALSE otherwise
 */
-static BOOL GradientPyramid(FIBITMAP **pyramid, int nlevels, FIBITMAP **gradients, float *avgGrad) {
+static FIBOOL GradientPyramid(FIBITMAP **pyramid, int nlevels, FIBITMAP **gradients, float *avgGrad) {
 	try {
 		for(int k = 0; k < nlevels; k++) {
 			FIBITMAP *Hk = pyramid[k];
@@ -430,7 +430,7 @@ static FIBITMAP* LogLuminance(FIBITMAP *Y) {
 		// find max & min luminance values
 		float maxLum = -1e20F, minLum = 1e20F;
 
-		BYTE *bits = (BYTE*)FreeImage_GetBits(H);
+		uint8_t *bits = (uint8_t*)FreeImage_GetBits(H);
 		for(unsigned y = 0; y < height; y++) {
 			const float *pixel = (float*)bits;
 			for(unsigned x = 0; x < width; x++) {
@@ -445,7 +445,7 @@ static FIBITMAP* LogLuminance(FIBITMAP *Y) {
 
 		// normalize to range 0..100 and take the logarithm
 		const float scale = 100.F / (maxLum - minLum);
-		bits = (BYTE*)FreeImage_GetBits(H);
+		bits = (uint8_t*)FreeImage_GetBits(H);
 		for(unsigned y = 0; y < height; y++) {
 			float *pixel = (float*)bits;
 			for(unsigned x = 0; x < width; x++) {
@@ -473,7 +473,7 @@ static void ExpLuminance(FIBITMAP *Y) {
 	const unsigned height = FreeImage_GetHeight(Y);
 	const unsigned pitch = FreeImage_GetPitch(Y);
 
-	BYTE *bits = (BYTE*)FreeImage_GetBits(Y);
+	uint8_t *bits = (uint8_t*)FreeImage_GetBits(Y);
 	for(unsigned y = 0; y < height; y++) {
 		float *pixel = (float*)bits;
 		for(unsigned x = 0; x < width; x++) {
@@ -646,9 +646,9 @@ FreeImage_TmoFattal02(FIBITMAP *dib, double color_saturation, double attenuation
 		const unsigned rgb_pitch = FreeImage_GetPitch(src);
 		const unsigned y_pitch = FreeImage_GetPitch(Yin);
 
-		BYTE *bits      = (BYTE*)FreeImage_GetBits(src);
-		BYTE *bits_yin  = (BYTE*)FreeImage_GetBits(Yin);
-		BYTE *bits_yout = (BYTE*)FreeImage_GetBits(Yout);
+		uint8_t *bits      = (uint8_t*)FreeImage_GetBits(src);
+		uint8_t *bits_yin  = (uint8_t*)FreeImage_GetBits(Yin);
+		uint8_t *bits_yout = (uint8_t*)FreeImage_GetBits(Yout);
 
 		for(unsigned y = 0; y < height; y++) {
 			float *Lin = (float*)bits_yin;

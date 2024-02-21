@@ -20,7 +20,7 @@
 // Use at your own risk!
 // ==========================================================
 
-#include "../LibTIFF4/tiffiop.h"
+#include "tiffiop.h"
 
 #include "FreeImage.h"
 #include "Utilities.h"
@@ -37,7 +37,7 @@ static int s_format_id;
 
 #define G3_DEFAULT_WIDTH	1728
 
-#define TIFFhowmany8(x) (((x)&0x07)?((uint32)(x)>>3)+1:(uint32)(x)>>3)
+#define TIFFhowmany8(x) (((x)&0x07)?((uint32_t)(x)>>3)+1:(uint32_t)(x)>>3)
 
 // ==========================================================
 //   libtiff interface 
@@ -90,8 +90,8 @@ G3GetFileSize(FreeImageIO *io, fi_handle handle) {
     return fileSize;
 }
 
-static BOOL 
-G3ReadFile(FreeImageIO *io, fi_handle handle, uint8 *tif_rawdata, tmsize_t tif_rawdatasize) {
+static FIBOOL 
+G3ReadFile(FreeImageIO *io, fi_handle handle, uint8_t *tif_rawdata, tmsize_t tif_rawdatasize) {
 	return ((tmsize_t)(io->read_proc(tif_rawdata, (unsigned)tif_rawdatasize, 1, handle) * tif_rawdatasize) == tif_rawdatasize);
 }
 
@@ -100,20 +100,20 @@ G3ReadFile(FreeImageIO *io, fi_handle handle, uint8 *tif_rawdata, tmsize_t tif_r
 // ==========================================================
 
 static int 
-copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32 xsize, int stretch, FIMEMORY *memory) {
-	BYTE *rowbuf = NULL;
-	BYTE *refbuf = NULL;
-	uint32 row;
-	uint16 badrun;
-	uint16	badfaxrun;
-	uint32	badfaxlines;
+copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32_t xsize, int stretch, FIMEMORY *memory) {
+	uint8_t *rowbuf = NULL;
+	uint8_t *refbuf = NULL;
+	uint32_t row;
+	uint16_t badrun;
+	uint16_t	badfaxrun;
+	uint32_t	badfaxlines;
 	int ok;
 
 	try {
 
-		uint32 linesize = TIFFhowmany8(xsize);
-		rowbuf = (BYTE*) _TIFFmalloc(linesize);
-		refbuf = (BYTE*) _TIFFmalloc(linesize);
+		uint32_t linesize = TIFFhowmany8(xsize);
+		rowbuf = (uint8_t*) _TIFFmalloc(linesize);
+		refbuf = (uint8_t*) _TIFFmalloc(linesize);
 		if (rowbuf == NULL || refbuf == NULL) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
@@ -131,7 +131,7 @@ copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32 xsize, int st
 		tifin->tif_rawcc = tifin->tif_rawdatasize;
 
 		(*tifin->tif_setupdecode)(tifin);
-		(*tifin->tif_predecode)(tifin, (uint16) 0);
+		(*tifin->tif_predecode)(tifin, (uint16_t) 0);
 		tifin->tif_row = 0;
 		badfaxlines = 0;
 		badfaxrun = 0;
@@ -223,7 +223,7 @@ MimeType() {
 	return "image/fax-g3";
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportDepth(int depth) {
 	return	FALSE;
 }
@@ -242,11 +242,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	float resX = 204.0;
 	float resY = 196.0;
 
-	uint32 xsize = G3_DEFAULT_WIDTH;
+	uint32_t xsize = G3_DEFAULT_WIDTH;
 	int compression_in = COMPRESSION_CCITTFAX3;
 	int fillorder_in = FILLORDER_LSB2MSB;
-	uint32 group3options_in = 0;	// 1d-encoded 
-	uint32 group4options_in = 0;	// compressed 
+	uint32_t group3options_in = 0;	// 1d-encoded 
+	uint32_t group4options_in = 0;	// compressed 
 	int photometric_in = PHOTOMETRIC_MINISWHITE;
 
 	if(handle==NULL) return NULL;
@@ -302,7 +302,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					resY = (float) atof(optarg);
 					break;
 				case 'X':		// input width 
-					xsize = (uint32) atoi(optarg);
+					xsize = (uint32_t) atoi(optarg);
 					break;
 
 					// output-related options 
@@ -365,17 +365,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// allocate the output dib
 		dib = FreeImage_Allocate(xsize, rows, 1);
 		unsigned pitch = FreeImage_GetPitch(dib);
-		uint32 linesize = TIFFhowmany8(xsize);
+		uint32_t linesize = TIFFhowmany8(xsize);
 
 		// fill the bitmap structure ...
 		// ... palette
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		if(photometric_in == PHOTOMETRIC_MINISWHITE) {
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 255;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 0;
+			pal[0].red = pal[0].green = pal[0].blue = 255;
+			pal[1].red = pal[1].green = pal[1].blue = 0;
 		} else {
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 		// ... resolution
 		FreeImage_SetDotsPerMeterX(dib, (unsigned)(resX/0.0254000 + 0.5));
@@ -383,7 +383,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// read the decoded scanline and fill the bitmap data
 		FreeImage_SeekMemory(memory, 0, SEEK_SET);
-		BYTE *bits = FreeImage_GetScanLine(dib, rows - 1);
+		uint8_t *bits = FreeImage_GetScanLine(dib, rows - 1);
 		for(int k = 0; k < rows; k++) {
 			FreeImage_ReadMemory(bits, linesize, 1, memory);
 			bits -= pitch;

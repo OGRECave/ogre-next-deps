@@ -185,7 +185,7 @@ PluginList::Size() const {
 	return (int)m_plugin_map.size();
 }
 
-BOOL
+FIBOOL
 PluginList::IsEmpty() const {
 	return m_plugin_map.empty();
 }
@@ -216,7 +216,7 @@ FreeImage_GetPluginList() {
 // =====================================================================
 
 void DLL_CALLCONV
-FreeImage_Initialise(BOOL load_local_plugins_only) {
+FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 	if (s_plugin_reference_count++ == 0) {
 		
 		/*
@@ -273,7 +273,7 @@ FreeImage_Initialise(BOOL load_local_plugins_only) {
 			s_plugins->AddNode(InitRAW);
 			s_plugins->AddNode(InitWEBP);
 #if !(defined(_MSC_VER) && (_MSC_VER <= 1310))
-            // s_plugins->AddNode(InitJXR);
+			s_plugins->AddNode(InitJXR);
 #endif // unsupported by MS Visual Studio 2003 !!!
 			
 			// external plugin initialization
@@ -283,7 +283,7 @@ FreeImage_Initialise(BOOL load_local_plugins_only) {
 				int count = 0;
 				char buffer[MAX_PATH + 200];
 				wchar_t current_dir[2 * _MAX_PATH], module[2 * _MAX_PATH];
-				BOOL bOk = FALSE;
+				FIBOOL bOk = FALSE;
 
 				// store the current directory. then set the directory to the application location
 
@@ -357,7 +357,7 @@ FreeImage_DeInitialise() {
 // =====================================================================
 
 void * DLL_CALLCONV
-FreeImage_Open(PluginNode *node, FreeImageIO *io, fi_handle handle, BOOL open_for_reading) {
+FreeImage_Open(PluginNode *node, FreeImageIO *io, fi_handle handle, FIBOOL open_for_reading) {
 	if (node->m_plugin->open_proc != NULL) {
        return node->m_plugin->open_proc(io, handle, open_for_reading);
 	}
@@ -437,7 +437,7 @@ FreeImage_LoadU(FREE_IMAGE_FORMAT fif, const wchar_t *filename, int flags) {
 	return NULL;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi_handle handle, int flags) {
 	// cannot save "header only" formats
 	if(FreeImage_HasPixels(dib) == FALSE) {
@@ -452,7 +452,7 @@ FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi
 			if(node->m_plugin->save_proc != NULL) {
 				void *data = FreeImage_Open(node, io, handle, FALSE);
 					
-				BOOL result = node->m_plugin->save_proc(io, dib, handle, -1, flags, data);
+				FIBOOL result = node->m_plugin->save_proc(io, dib, handle, -1, flags, data);
 					
 				FreeImage_Close(node, io, handle, data);
 					
@@ -465,7 +465,7 @@ FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi
 }
 
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_Save(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const char *filename, int flags) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
@@ -473,7 +473,7 @@ FreeImage_Save(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const char *filename, int f
 	FILE *handle = fopen(filename, "w+b");
 	
 	if (handle) {
-		BOOL success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
+		FIBOOL success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
 
 		fclose(handle);
 
@@ -485,7 +485,7 @@ FreeImage_Save(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const char *filename, int f
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_SaveU(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const wchar_t *filename, int flags) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
@@ -493,7 +493,7 @@ FreeImage_SaveU(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const wchar_t *filename, i
 	FILE *handle = _wfopen(filename, L"w+b");
 	
 	if (handle) {
-		BOOL success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
+		FIBOOL success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
 
 		fclose(handle);
 
@@ -537,12 +537,12 @@ FreeImage_RegisterExternalPlugin(const char *path, const char *format, const cha
 #endif // _WIN32
 
 int DLL_CALLCONV
-FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, BOOL enable) {
+FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable) {
 	if (s_plugins != NULL) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
 
 		if (node != NULL) {
-			BOOL previous_state = node->m_enabled;
+			FIBOOL previous_state = node->m_enabled;
 
 			node->m_enabled = enable;
 
@@ -650,7 +650,7 @@ FreeImage_GetFIFRegExpr(FREE_IMAGE_FORMAT fif) {
 	return NULL;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsReading(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins != NULL) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
@@ -661,7 +661,7 @@ FreeImage_FIFSupportsReading(FREE_IMAGE_FORMAT fif) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsWriting(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins != NULL) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
@@ -672,7 +672,7 @@ FreeImage_FIFSupportsWriting(FREE_IMAGE_FORMAT fif) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsExportBPP(FREE_IMAGE_FORMAT fif, int depth) {
 	if (s_plugins != NULL) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
@@ -685,7 +685,7 @@ FreeImage_FIFSupportsExportBPP(FREE_IMAGE_FORMAT fif, int depth) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsExportType(FREE_IMAGE_FORMAT fif, FREE_IMAGE_TYPE type) {
 	if (s_plugins != NULL) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
@@ -698,7 +698,7 @@ FreeImage_FIFSupportsExportType(FREE_IMAGE_FORMAT fif, FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsICCProfiles(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins != NULL) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
@@ -711,7 +711,7 @@ FreeImage_FIFSupportsICCProfiles(FREE_IMAGE_FORMAT fif) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsNoPixels(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins != NULL) {
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
@@ -800,10 +800,10 @@ FreeImage_GetFIFFromFilenameU(const wchar_t *filename) {
 #endif // _WIN32
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle) {
 	if (s_plugins != NULL) {
-		BOOL validated = FALSE;
+		FIBOOL validated = FALSE;
 
 		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
 

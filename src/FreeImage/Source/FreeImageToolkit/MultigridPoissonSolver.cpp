@@ -297,7 +297,7 @@ The dimension n must be of the form 2^j + 1 for some integer j. (j is actually t
 grid levels used in the solution, called ng below.) ncycle is the number of V-cycles to be
 used at each level.
 */
-static BOOL fmg_mglin(FIBITMAP *U, int n, int ncycle) {
+static FIBOOL fmg_mglin(FIBITMAP *U, int n, int ncycle) {
 	int j, jcycle, jj, jpost, jpre, nf, ngrid;
 
 	FIBITMAP **IRHO = NULL;

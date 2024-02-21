@@ -44,8 +44,8 @@ CacheFile::~CacheFile() {
   close();
 }
 
-BOOL
-CacheFile::open(const std::string& filename, BOOL keep_in_memory) {
+FIBOOL
+CacheFile::open(const std::string& filename, FIBOOL keep_in_memory) {
 
   assert(!m_file);
 
@@ -113,7 +113,7 @@ CacheFile::cleanupMemCache() {
 int
 CacheFile::allocateBlock() {
 	Block *block = new Block;
-	block->data = new BYTE[BLOCK_SIZE];
+	block->data = new uint8_t[BLOCK_SIZE];
 	block->next = 0;
 
 	if (!m_free_pages.empty()) {
@@ -144,7 +144,7 @@ CacheFile::lockBlock(int nr) {
 			// again as soon as the memory buffer fills up
 
 			if (m_current_block->data == NULL) {
-				m_current_block->data = new BYTE[BLOCK_SIZE];
+				m_current_block->data = new uint8_t[BLOCK_SIZE];
 
 				fseek(m_file, m_current_block->nr * BLOCK_SIZE, SEEK_SET);
 				fread(m_current_block->data, BLOCK_SIZE, 1, m_file);
@@ -166,7 +166,7 @@ CacheFile::lockBlock(int nr) {
 	return NULL;
 }
 
-BOOL
+FIBOOL
 CacheFile::unlockBlock(int nr) {
 	if (m_current_block) {
 		m_current_block = NULL;
@@ -175,7 +175,7 @@ CacheFile::unlockBlock(int nr) {
 	return FALSE;
 }
 
-BOOL
+FIBOOL
 CacheFile::deleteBlock(int nr) {
 	if (!m_current_block) {
 		PageMapIt it = m_page_map.find(nr);
@@ -196,8 +196,8 @@ CacheFile::deleteBlock(int nr) {
 	return FALSE;
 }
 
-BOOL
-CacheFile::readFile(BYTE *data, int nr, int size) {
+FIBOOL
+CacheFile::readFile(uint8_t *data, int nr, int size) {
 	if ((data) && (size > 0)) {
 		int s = 0;
 		int block_nr = nr;
@@ -223,7 +223,7 @@ CacheFile::readFile(BYTE *data, int nr, int size) {
 }
 
 int
-CacheFile::writeFile(BYTE *data, int size) {
+CacheFile::writeFile(uint8_t *data, int size) {
 	if ((data) && (size > 0)) {
 		int nr_blocks_required = 1 + (size / BLOCK_SIZE);
 		int count = 0;

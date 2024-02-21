@@ -71,7 +71,7 @@ Get a char from the stream
 */
 static int 
 readChar(FreeImageIO *io, fi_handle handle) {
-	BYTE c;
+	uint8_t c;
 	io->read_proc(&c, 1, 1, handle);
 	return c;
 }
@@ -95,12 +95,12 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, char *
 	int bytes, bytes_per_line, padding;
 	int c1, c2, value1, value2;
 	int hex_table[256];
-	BOOL found_declaration;
+	FIBOOL found_declaration;
 	/* in scanning through the bitmap file, we have found the first
 	 line of the C declaration of the array (the "static char ..."
 	 or whatever line)
 	 */
-	BOOL eof;	// we've encountered end of file while searching file
+	FIBOOL eof;	// we've encountered end of file while searching file
 
 	*widthP = *heightP = -1;
 
@@ -289,7 +289,7 @@ MimeType() {
 	return "image/x-xbitmap";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
 	char magic[8];
 	if(readLine(magic, 7, io, handle)) {
@@ -299,12 +299,12 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
@@ -330,16 +330,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if(!dib) throw (char*)ERR_XBM_MEMORY;
 
 		// write the palette data
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
-		pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-		pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
+		pal[0].red = pal[0].green = pal[0].blue = 0;
+		pal[1].red = pal[1].green = pal[1].blue = 255;
 
 		// copy the bitmap
-		BYTE *bP = (BYTE*)buffer;
+		uint8_t *bP = (uint8_t*)buffer;
 		for(int y = 0; y < height; y++) {
-			BYTE count = 0;
-			BYTE mask = 1;
-			BYTE *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+			uint8_t count = 0;
+			uint8_t mask = 1;
+			uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
 
 			for(int x = 0; x < width; x++) {
 				if(count >= 8) {

@@ -41,7 +41,7 @@ static FIBITMAP* FloydSteinberg(FIBITMAP *dib) {
 	int seed = 0;
 	int x, y, p, pixel, threshold, error;
 	int width, height, pitch;
-	BYTE *bits, *new_bits;
+	uint8_t *bits, *new_bits;
 	FIBITMAP *new_dib = NULL;
 
 	// allocate a 8-bit DIB
@@ -67,7 +67,7 @@ static FIBITMAP* FloydSteinberg(FIBITMAP *dib) {
 		pixel = bits[0] + error;
 		p = (pixel > threshold) ? WHITE : BLACK;
 		error = pixel - p;
-		new_bits[0] = (BYTE)p;
+		new_bits[0] = (uint8_t)p;
 	}
 	// right border
 	error = 0;
@@ -79,7 +79,7 @@ static FIBITMAP* FloydSteinberg(FIBITMAP *dib) {
 		pixel = bits[width-1] + error;
 		p = (pixel > threshold) ? WHITE : BLACK;
 		error = pixel - p;
-		new_bits[width-1] = (BYTE)p;
+		new_bits[width-1] = (uint8_t)p;
 	}
 	// top border
 	bits = FreeImage_GetBits(dib);
@@ -90,7 +90,7 @@ static FIBITMAP* FloydSteinberg(FIBITMAP *dib) {
 		pixel = bits[x] + error;
 		p = (pixel > threshold) ? WHITE : BLACK;
 		error = pixel - p;
-		new_bits[x] = (BYTE)p;
+		new_bits[x] = (uint8_t)p;
 		lerr[x] = INITERR(bits[x], p);
 	}
 
@@ -162,7 +162,7 @@ static int dithervalue(int x, int y, int size) {
 static FIBITMAP* OrderedDispersedDot(FIBITMAP *dib, int order) {
 	int x, y;
 	int width, height;
-	BYTE *bits, *new_bits;
+	uint8_t *bits, *new_bits;
 	FIBITMAP *new_dib = NULL;
 
 	// allocate a 8-bit DIB
@@ -173,10 +173,10 @@ static FIBITMAP* OrderedDispersedDot(FIBITMAP *dib, int order) {
 
 	// build the dithering matrix
 	int l = (1 << order);	// square of dither matrix order; the dimensions of the matrix
-	BYTE *matrix = (BYTE*)malloc(l*l * sizeof(BYTE));
+	uint8_t *matrix = (uint8_t*)malloc(l*l * sizeof(uint8_t));
 	for(int i = 0; i < l*l; i++) {
 		// according to "Purdue University: Digital Image Processing Laboratory: Image Halftoning, April 30th, 2006
-		matrix[i] = (BYTE)( 255 * (((double)dithervalue(i / l, i % l, order) + 0.5) / (l*l)) );
+		matrix[i] = (uint8_t)( 255 * (((double)dithervalue(i / l, i % l, order) + 0.5) / (l*l)) );
 	}
 
 	// perform the dithering
@@ -252,7 +252,7 @@ static FIBITMAP* OrderedClusteredDot(FIBITMAP *dib, int order) {
 
 	int x, y, pixel;
 	int width, height;
-	BYTE *bits, *new_bits;
+	uint8_t *bits, *new_bits;
 	FIBITMAP *new_dib = NULL;
 
 	// allocate a 8-bit DIB
@@ -322,9 +322,9 @@ FreeImage_Dither(FIBITMAP *dib, FREE_IMAGE_DITHER algorithm) {
 		if(NULL == new_dib) return NULL;
 		if(FreeImage_GetColorType(new_dib) == FIC_PALETTE) {
 			// Build a monochrome palette
-			RGBQUAD *pal = FreeImage_GetPalette(new_dib);
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+			FIRGBA8 *pal = FreeImage_GetPalette(new_dib);
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 		return new_dib;
 	}
@@ -377,11 +377,11 @@ FreeImage_Dither(FIBITMAP *dib, FREE_IMAGE_DITHER algorithm) {
 	}
 
 	// Build a greyscale palette (needed by threshold)
-	RGBQUAD *grey_pal = FreeImage_GetPalette(dib8);
+	FIRGBA8 *grey_pal = FreeImage_GetPalette(dib8);
 	for(int i = 0; i < 256; i++) {
-		grey_pal[i].rgbRed	= (BYTE)i;
-		grey_pal[i].rgbGreen = (BYTE)i;
-		grey_pal[i].rgbBlue	= (BYTE)i;
+		grey_pal[i].red	= (uint8_t)i;
+		grey_pal[i].green = (uint8_t)i;
+		grey_pal[i].blue	= (uint8_t)i;
 	}
 
 	// Convert to 1-bit
@@ -398,7 +398,7 @@ FreeImage_Dither(FIBITMAP *dib, FREE_IMAGE_DITHER algorithm) {
 // Thresholding function
 //
 FIBITMAP * DLL_CALLCONV
-FreeImage_Threshold(FIBITMAP *dib, BYTE T) {
+FreeImage_Threshold(FIBITMAP *dib, uint8_t T) {
 	FIBITMAP *dib8 = NULL;
 
 	if(!FreeImage_HasPixels(dib)) return NULL;
@@ -411,9 +411,9 @@ FreeImage_Threshold(FIBITMAP *dib, BYTE T) {
 		if(NULL == new_dib) return NULL;
 		if(FreeImage_GetColorType(new_dib) == FIC_PALETTE) {
 			// Build a monochrome palette
-			RGBQUAD *pal = FreeImage_GetPalette(new_dib);
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+			FIRGBA8 *pal = FreeImage_GetPalette(new_dib);
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 		return new_dib;
 	}
@@ -443,15 +443,15 @@ FreeImage_Threshold(FIBITMAP *dib, BYTE T) {
 	FIBITMAP *new_dib = FreeImage_Allocate(width, height, 1);
 	if(NULL == new_dib) return NULL;
 	// Build a monochrome palette
-	RGBQUAD *pal = FreeImage_GetPalette(new_dib);
-	pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-	pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+	FIRGBA8 *pal = FreeImage_GetPalette(new_dib);
+	pal[0].red = pal[0].green = pal[0].blue = 0;
+	pal[1].red = pal[1].green = pal[1].blue = 255;
 
 	// Perform the thresholding
 	//
 	for(int y = 0; y < height; y++) {
-		BYTE *bits8 = FreeImage_GetScanLine(dib8, y);
-		BYTE *bits1 = FreeImage_GetScanLine(new_dib, y);
+		uint8_t *bits8 = FreeImage_GetScanLine(dib8, y);
+		uint8_t *bits1 = FreeImage_GetScanLine(new_dib, y);
 		for(int x = 0; x < width; x++) {
 			if(bits8[x] < T) {
 				// Set bit(x, y) to 0

@@ -31,14 +31,14 @@ Table 2-12: File header section.
 The file header contains the basic properties of the image. 
 */
 typedef struct psdHeader {
-	BYTE Signature[4];	//! Always equal 8BPS, do not try to read the file if the signature does not match this value.
-	BYTE Version[2];	//! Version of file, PSD=1, PSB=2.
+	uint8_t Signature[4];	//! Always equal 8BPS, do not try to read the file if the signature does not match this value.
+	uint8_t Version[2];	//! Version of file, PSD=1, PSB=2.
 	char Reserved[6];	//! Must be zero.
-	BYTE Channels[2];	//! Number of channels including any alpha channels, supported range is 1 to 24.
-	BYTE Rows[4];		//! The height of the image in pixels. Supported range is 1 to 30,000.
-	BYTE Columns[4];	//! The width of the image in pixels. Supported range is 1 to 30,000.
-	BYTE Depth[2];		//! The number of bits per channel. Supported values are 1, 8, and 16.
-	BYTE Mode[2];		//! Colour mode of the file, Bitmap=0, Grayscale=1, Indexed=2, RGB=3, CMYK=4, Multichannel=7, Duotone=8, Lab=9. 
+	uint8_t Channels[2];	//! Number of channels including any alpha channels, supported range is 1 to 24.
+	uint8_t Rows[4];		//! The height of the image in pixels. Supported range is 1 to 30,000.
+	uint8_t Columns[4];	//! The width of the image in pixels. Supported range is 1 to 30,000.
+	uint8_t Depth[2];		//! The number of bits per channel. Supported values are 1, 8, and 16.
+	uint8_t Mode[2];		//! Colour mode of the file, Bitmap=0, Grayscale=1, Indexed=2, RGB=3, CMYK=4, Multichannel=7, Duotone=8, Lab=9. 
 } psdHeader;
 
 /**
@@ -87,7 +87,7 @@ the file.
 class psdColourModeData {
 public:
 	int _Length;			//! The length of the following color data
-	BYTE * _plColourData;	//! The color data
+	uint8_t * _plColourData;	//! The color data
 
 public:
 	psdColourModeData();
@@ -112,7 +112,7 @@ public:
 	int     _Length;
 	char    _OSType[4];	//! Photoshop always uses its signature, 8BIM
 	short   _ID;		//! Unique identifier. Image resource IDs on page 8
-	BYTE * _plName;		//! A pascal string, padded to make size even (a null name consists of two bytes of 0)
+	uint8_t * _plName;		//! A pascal string, padded to make size even (a null name consists of two bytes of 0)
 	int     _Size;		//! Actual size of resource data. This does not include the Type, ID, Name or Size fields.
 
 public:
@@ -186,8 +186,8 @@ public:
 	short _ColourSpace;
 	short _Colour[4];
 	short _Opacity;  //! 0..100
-	BYTE _Kind;     //! selected = 0, protected = 1
-	BYTE _padding;  //! should be zero
+	uint8_t _Kind;     //! selected = 0, protected = 1
+	uint8_t _padding;  //! should be zero
 	
 public:
 	psdDisplayInfo();
@@ -247,7 +247,7 @@ private:
 class psdICCProfile {
 public:
 	int _ProfileSize;
-	BYTE * _ProfileData;
+	uint8_t * _ProfileData;
 	bool _owned;
 public:
 	psdICCProfile();
@@ -266,7 +266,7 @@ public:
 class psdData {
 public:
 	unsigned _Size;
-	BYTE * _Data;
+	uint8_t * _Data;
 	bool _owned;
 public:
 	psdData();
@@ -315,12 +315,12 @@ private:
 	unsigned GetChannelOffset(FIBITMAP* bitmap, unsigned c) const;
 	/**	Actually ignore it */
 	bool ReadLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle);
-	void ReadImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, unsigned dstBpp, unsigned bytes);
-	void UnpackRLE(BYTE* dst, const BYTE* src, BYTE* dst_end, unsigned srcSize);
+	void ReadImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSize, unsigned dstBpp, unsigned bytes);
+	void UnpackRLE(uint8_t* dst, const uint8_t* src, uint8_t* dst_end, unsigned srcSize);
 	FIBITMAP* ReadImageData(FreeImageIO *io, fi_handle handle);
 	bool WriteLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle);
-	void WriteImageLine(BYTE* dst, const BYTE* src, unsigned lineSize, unsigned srcBpp, unsigned bytes);
-	unsigned PackRLE(BYTE* line_start, const BYTE* src_line, unsigned srcSize);
+	void WriteImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSize, unsigned srcBpp, unsigned bytes);
+	unsigned PackRLE(uint8_t* line_start, const uint8_t* src_line, unsigned srcSize);
 	bool WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib);
 
 public:
@@ -329,7 +329,7 @@ public:
 	FIBITMAP* Load(FreeImageIO *io, fi_handle handle, int s_format_id, int flags=0);
 	bool Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data);
 	/** Also used by the TIFF plugin */
-	bool ReadImageResources(FreeImageIO *io, fi_handle handle, LONG length=0);
+	bool ReadImageResources(FreeImageIO *io, fi_handle handle, int32_t length=0);
 	/** Used by the TIFF plugin */
 	FIBITMAP* GetThumbnail() {
 		return _thumbnail.getDib();

@@ -101,7 +101,7 @@ public:
  CResizeEngine<br>
  This class performs filtered zoom. It scales an image to the desired dimensions with 
  any of the CGenericFilter derived filter class.<br>
- It works with FIT_BITMAP buffers, WORD buffers (FIT_UINT16, FIT_RGB16, FIT_RGBA16) 
+ It works with FIT_BITMAP buffers, uint16_t buffers (FIT_UINT16, FIT_RGB16, FIT_RGBA16) 
  and float buffers (FIT_FLOAT, FIT_RGBF, FIT_RGBAF).<br><br>
 
  <b>References</b> : <br>
@@ -174,7 +174,7 @@ private:
 	@param dst_width Destination image width
 	*/
 	void horizontalFilter(FIBITMAP * const src, const unsigned height, const unsigned src_width,
-			const unsigned src_offset_x, const unsigned src_offset_y, const RGBQUAD * const src_pal,
+			const unsigned src_offset_x, const unsigned src_offset_y, const FIRGBA8 * const src_pal,
 			FIBITMAP * const dst, const unsigned dst_width);
 
 	/**
@@ -189,7 +189,7 @@ private:
 	@param dst_height Destination image height
 	*/
 	void verticalFilter(FIBITMAP * const src, const unsigned width, const unsigned src_height,
-			const unsigned src_offset_x, const unsigned src_offset_y, const RGBQUAD * const src_pal,
+			const unsigned src_offset_x, const unsigned src_offset_y, const FIRGBA8 * const src_pal,
 			FIBITMAP * const dst, const unsigned dst_height);
 };
 

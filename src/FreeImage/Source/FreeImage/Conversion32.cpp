@@ -30,34 +30,34 @@
 // ----------------------------------------------------------
 
 void DLL_CALLCONV
-FreeImage_ConvertLine1To32(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
+FreeImage_ConvertLine1To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		int index = (source[cols>>3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
 
-		target[FI_RGBA_BLUE]	= palette[index].rgbBlue;
-		target[FI_RGBA_GREEN]	= palette[index].rgbGreen;
-		target[FI_RGBA_RED]		= palette[index].rgbRed;
+		target[FI_RGBA_BLUE]	= palette[index].blue;
+		target[FI_RGBA_GREEN]	= palette[index].green;
+		target[FI_RGBA_RED]		= palette[index].red;
 		target[FI_RGBA_ALPHA]	= 0xFF;
 		target += 4;
 	}	
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine4To32(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
-	BOOL low_nibble = FALSE;
+FreeImage_ConvertLine4To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
+	FIBOOL low_nibble = FALSE;
 	int x = 0;
 
 	for (int cols = 0 ; cols < width_in_pixels ; ++cols) {
 		if (low_nibble) {
-			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].rgbBlue;
-			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].rgbGreen;
-			target[FI_RGBA_RED]		= palette[LOWNIBBLE(source[x])].rgbRed;
+			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].blue;
+			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].green;
+			target[FI_RGBA_RED]		= palette[LOWNIBBLE(source[x])].red;
 
 			x++;
 		} else {
-			target[FI_RGBA_BLUE]	= palette[HINIBBLE(source[x]) >> 4].rgbBlue;
-			target[FI_RGBA_GREEN]	= palette[HINIBBLE(source[x]) >> 4].rgbGreen;
-			target[FI_RGBA_RED]		= palette[HINIBBLE(source[x]) >> 4].rgbRed;
+			target[FI_RGBA_BLUE]	= palette[HINIBBLE(source[x]) >> 4].blue;
+			target[FI_RGBA_GREEN]	= palette[HINIBBLE(source[x]) >> 4].green;
+			target[FI_RGBA_RED]		= palette[HINIBBLE(source[x]) >> 4].red;
 		}
 
 		low_nibble = !low_nibble;
@@ -68,46 +68,46 @@ FreeImage_ConvertLine4To32(BYTE *target, BYTE *source, int width_in_pixels, RGBQ
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine8To32(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
+FreeImage_ConvertLine8To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_BLUE]	= palette[source[cols]].rgbBlue;
-		target[FI_RGBA_GREEN]	= palette[source[cols]].rgbGreen;
-		target[FI_RGBA_RED]		= palette[source[cols]].rgbRed;
+		target[FI_RGBA_BLUE]	= palette[source[cols]].blue;
+		target[FI_RGBA_GREEN]	= palette[source[cols]].green;
+		target[FI_RGBA_RED]		= palette[source[cols]].red;
 		target[FI_RGBA_ALPHA]	= 0xFF;
 		target += 4;
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To32_555(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *bits = (WORD *)source;
+FreeImage_ConvertLine16To32_555(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *bits = (uint16_t *)source;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_RED]   = (BYTE)((((bits[cols] & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
-		target[FI_RGBA_GREEN] = (BYTE)((((bits[cols] & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
-		target[FI_RGBA_BLUE]  = (BYTE)((((bits[cols] & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_RED]   = (uint8_t)((((bits[cols] & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_GREEN] = (uint8_t)((((bits[cols] & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_BLUE]  = (uint8_t)((((bits[cols] & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
 		target[FI_RGBA_ALPHA] = 0xFF;
 		target += 4;
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To32_565(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *bits = (WORD *)source;
+FreeImage_ConvertLine16To32_565(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *bits = (uint16_t *)source;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_RED]   = (BYTE)((((bits[cols] & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
-		target[FI_RGBA_GREEN] = (BYTE)((((bits[cols] & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
-		target[FI_RGBA_BLUE]  = (BYTE)((((bits[cols] & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_RED]   = (uint8_t)((((bits[cols] & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
+		target[FI_RGBA_GREEN] = (uint8_t)((((bits[cols] & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
+		target[FI_RGBA_BLUE]  = (uint8_t)((((bits[cols] & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
 		target[FI_RGBA_ALPHA] = 0xFF;
 		target += 4;
 	}
 }
 /*
 void DLL_CALLCONV
-FreeImage_ConvertLine24To32(BYTE *target, BYTE *source, int width_in_pixels) {
+FreeImage_ConvertLine24To32(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		*(DWORD *)target = (*(DWORD *) source & FI_RGBA_RGB_MASK) | FI_RGBA_ALPHA_MASK;
+		*(uint32_t *)target = (*(uint32_t *) source & FI_RGBA_RGB_MASK) | FI_RGBA_ALPHA_MASK;
 		target += 4;
 		source += 3;
 	}
@@ -119,7 +119,7 @@ The bug occurs in release mode only, when the image height is equal to 537
 (try e.g. a size of 432x537 to reproduce the bug with the optimized function).
 */
 void DLL_CALLCONV
-FreeImage_ConvertLine24To32(BYTE *target, BYTE *source, int width_in_pixels) {
+FreeImage_ConvertLine24To32(uint8_t *target, uint8_t *source, int width_in_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		target[FI_RGBA_RED]   = source[FI_RGBA_RED];
 		target[FI_RGBA_GREEN] = source[FI_RGBA_GREEN];
@@ -133,35 +133,35 @@ FreeImage_ConvertLine24To32(BYTE *target, BYTE *source, int width_in_pixels) {
 // ----------------------------------------------------------
 
 void DLL_CALLCONV
-FreeImage_ConvertLine1To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels) {
+FreeImage_ConvertLine1To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		int index = (source[cols>>3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
 
-		target[FI_RGBA_BLUE]	= palette[index].rgbBlue;
-		target[FI_RGBA_GREEN]	= palette[index].rgbGreen;
-		target[FI_RGBA_RED]		= palette[index].rgbRed;
+		target[FI_RGBA_BLUE]	= palette[index].blue;
+		target[FI_RGBA_GREEN]	= palette[index].green;
+		target[FI_RGBA_RED]		= palette[index].red;
 		target[FI_RGBA_ALPHA] = (index < transparent_pixels) ? table[index] : 255;		
 		target += 4;
 	}	
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine4To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels) {
-	BOOL low_nibble = FALSE;
+FreeImage_ConvertLine4To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels) {
+	FIBOOL low_nibble = FALSE;
 	int x = 0;
 
 	for (int cols = 0 ; cols < width_in_pixels ; ++cols) {
 		if (low_nibble) {
-			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].rgbBlue;
-			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].rgbGreen;
-			target[FI_RGBA_RED]		= palette[LOWNIBBLE(source[x])].rgbRed;
+			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].blue;
+			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].green;
+			target[FI_RGBA_RED]		= palette[LOWNIBBLE(source[x])].red;
 			target[FI_RGBA_ALPHA]	= (LOWNIBBLE(source[x]) < transparent_pixels) ? table[LOWNIBBLE(source[x])] : 255;
 
 			x++;
 		} else {
-			target[FI_RGBA_BLUE]	= palette[HINIBBLE(source[x]) >> 4].rgbBlue;
-			target[FI_RGBA_GREEN]	= palette[HINIBBLE(source[x]) >> 4].rgbGreen;
-			target[FI_RGBA_RED]		= palette[HINIBBLE(source[x]) >> 4].rgbRed;
+			target[FI_RGBA_BLUE]	= palette[HINIBBLE(source[x]) >> 4].blue;
+			target[FI_RGBA_GREEN]	= palette[HINIBBLE(source[x]) >> 4].green;
+			target[FI_RGBA_RED]		= palette[HINIBBLE(source[x]) >> 4].red;
 			target[FI_RGBA_ALPHA]	= (HINIBBLE(source[x] >> 4) < transparent_pixels) ? table[HINIBBLE(source[x]) >> 4] : 255;
 		}
 
@@ -172,11 +172,11 @@ FreeImage_ConvertLine4To32MapTransparency(BYTE *target, BYTE *source, int width_
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine8To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels) {
+FreeImage_ConvertLine8To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_BLUE]	= palette[source[cols]].rgbBlue;
-		target[FI_RGBA_GREEN]	= palette[source[cols]].rgbGreen;
-		target[FI_RGBA_RED]		= palette[source[cols]].rgbRed;
+		target[FI_RGBA_BLUE]	= palette[source[cols]].blue;
+		target[FI_RGBA_GREEN]	= palette[source[cols]].green;
+		target[FI_RGBA_RED]		= palette[source[cols]].red;
 		target[FI_RGBA_ALPHA] = (source[cols] < transparent_pixels) ? table[source[cols]] : 255;
 		target += 4;		
 	}
@@ -212,7 +212,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 		// copy metadata from src to dst
 		FreeImage_CloneMetadata(new_dib, dib);
 
-		BOOL bIsTransparent = FreeImage_IsTransparent(dib);
+		FIBOOL bIsTransparent = FreeImage_IsTransparent(dib);
 
 		switch(bpp) {
 			case 1:
@@ -295,16 +295,16 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 
 		const unsigned src_pitch = FreeImage_GetPitch(dib);
 		const unsigned dst_pitch = FreeImage_GetPitch(new_dib);
-		const BYTE *src_bits = FreeImage_GetBits(dib);
-		BYTE *dst_bits = FreeImage_GetBits(new_dib);
+		const uint8_t *src_bits = FreeImage_GetBits(dib);
+		uint8_t *dst_bits = FreeImage_GetBits(new_dib);
 		for (int rows = 0; rows < height; rows++) {
 			const FIRGB16 *src_pixel = (FIRGB16*)src_bits;
-			RGBQUAD *dst_pixel = (RGBQUAD*)dst_bits;
+			FIRGBA8 *dst_pixel = (FIRGBA8*)dst_bits;
 			for(int cols = 0; cols < width; cols++) {
-				dst_pixel[cols].rgbRed		= (BYTE)(src_pixel[cols].red   >> 8);
-				dst_pixel[cols].rgbGreen	= (BYTE)(src_pixel[cols].green >> 8);
-				dst_pixel[cols].rgbBlue		= (BYTE)(src_pixel[cols].blue  >> 8);
-				dst_pixel[cols].rgbReserved = (BYTE)0xFF;
+				dst_pixel[cols].red		= (uint8_t)(src_pixel[cols].red   >> 8);
+				dst_pixel[cols].green	= (uint8_t)(src_pixel[cols].green >> 8);
+				dst_pixel[cols].blue		= (uint8_t)(src_pixel[cols].blue  >> 8);
+				dst_pixel[cols].alpha = (uint8_t)0xFF;
 			}
 			src_bits += src_pitch;
 			dst_bits += dst_pitch;
@@ -323,16 +323,16 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 
 		const unsigned src_pitch = FreeImage_GetPitch(dib);
 		const unsigned dst_pitch = FreeImage_GetPitch(new_dib);
-		const BYTE *src_bits = FreeImage_GetBits(dib);
-		BYTE *dst_bits = FreeImage_GetBits(new_dib);
+		const uint8_t *src_bits = FreeImage_GetBits(dib);
+		uint8_t *dst_bits = FreeImage_GetBits(new_dib);
 		for (int rows = 0; rows < height; rows++) {
 			const FIRGBA16 *src_pixel = (FIRGBA16*)src_bits;
-			RGBQUAD *dst_pixel = (RGBQUAD*)dst_bits;
+			FIRGBA8 *dst_pixel = (FIRGBA8*)dst_bits;
 			for(int cols = 0; cols < width; cols++) {
-				dst_pixel[cols].rgbRed		= (BYTE)(src_pixel[cols].red   >> 8);
-				dst_pixel[cols].rgbGreen	= (BYTE)(src_pixel[cols].green >> 8);
-				dst_pixel[cols].rgbBlue		= (BYTE)(src_pixel[cols].blue  >> 8);
-				dst_pixel[cols].rgbReserved = (BYTE)(src_pixel[cols].alpha >> 8);
+				dst_pixel[cols].red		= (uint8_t)(src_pixel[cols].red   >> 8);
+				dst_pixel[cols].green	= (uint8_t)(src_pixel[cols].green >> 8);
+				dst_pixel[cols].blue		= (uint8_t)(src_pixel[cols].blue  >> 8);
+				dst_pixel[cols].alpha = (uint8_t)(src_pixel[cols].alpha >> 8);
 			}
 			src_bits += src_pitch;
 			dst_bits += dst_pitch;

@@ -36,15 +36,15 @@
 #endif
 
 typedef struct {
-    WORD w, h;                    /* raster width & height in pixels */
-    WORD x, y;                    /* position for this image */
-    BYTE nPlanes;                 /* # source bitplanes */
-    BYTE masking;                 /* masking technique */
-    BYTE compression;             /* compression algorithm */
-    BYTE pad1;                    /* UNUSED.  For consistency, put 0 here.*/
-    WORD transparentColor;        /* transparent "color number" */
-    BYTE xAspect, yAspect;        /* aspect ratio, a rational number x/y */
-    WORD pageWidth, pageHeight;   /* source "page" size in pixels */
+    uint16_t w, h;                    /* raster width & height in pixels */
+    uint16_t x, y;                    /* position for this image */
+    uint8_t nPlanes;                 /* # source bitplanes */
+    uint8_t masking;                 /* masking technique */
+    uint8_t compression;             /* compression algorithm */
+    uint8_t pad1;                    /* UNUSED.  For consistency, put 0 here.*/
+    uint16_t transparentColor;        /* transparent "color number" */
+    uint8_t xAspect, yAspect;        /* aspect ratio, a rational number x/y */
+    uint16_t pageWidth, pageHeight;   /* source "page" size in pixels */
 } BMHD;
 
 #ifdef _WIN32
@@ -70,7 +70,7 @@ SwapHeader(BMHD *header) {
 
 /* IFF chunk IDs */
 
-typedef DWORD IFF_ID;
+typedef uint32_t IFF_ID;
 
 #define MAKE_ID(a, b, c, d)         ((IFF_ID)(a)<<24 | (IFF_ID)(b)<<16 | (IFF_ID)(c)<<8 | (IFF_ID)(d))
 
@@ -156,9 +156,9 @@ MimeType() {
 	return "image/x-iff";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	DWORD type = 0;
+	uint32_t type = 0;
 
 	// read chunk type
 	io->read_proc(&type, 4, 1, handle);
@@ -183,12 +183,12 @@ Validate(FreeImageIO *io, fi_handle handle) {
 }
 
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
@@ -200,7 +200,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if (handle != NULL) {
 		FIBITMAP *dib = NULL;
 
-		DWORD type, size;
+		uint32_t type, size;
 
 		io->read_proc(&type, 4, 1, handle);
 #ifndef FREEIMAGE_BIGENDIAN
@@ -228,7 +228,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		unsigned width = 0, height = 0, planes = 0, depth = 0, comp = 0;
 
 		while (size) {
-			DWORD ch_type,ch_size;
+			uint32_t ch_type,ch_size;
 
 			io->read_proc(&ch_type, 4, 1, handle);
 #ifndef FREEIMAGE_BIGENDIAN
@@ -275,13 +275,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (!dib)
 					return NULL;
 
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 				if(pal != NULL) {
 					unsigned palette_entries = MIN((unsigned)ch_size / 3, FreeImage_GetColorsUsed(dib));
 					for (unsigned k = 0; k < palette_entries; k++) {					
-						io->read_proc(&pal[k].rgbRed, 1, 1, handle );
-						io->read_proc(&pal[k].rgbGreen, 1, 1, handle );
-						io->read_proc(&pal[k].rgbBlue, 1, 1, handle );
+						io->read_proc(&pal[k].red, 1, 1, handle );
+						io->read_proc(&pal[k].green, 1, 1, handle );
+						io->read_proc(&pal[k].blue, 1, 1, handle );
 					}
 				}
 			} else if (ch_type == ID_BODY) {
@@ -294,14 +294,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					unsigned line = FreeImage_GetLine(dib) + 1 & ~1;
 					
 					for (unsigned i = 0; i < FreeImage_GetHeight(dib); i++) {
-						BYTE *bits = FreeImage_GetScanLine(dib, FreeImage_GetHeight(dib) - i - 1);
+						uint8_t *bits = FreeImage_GetScanLine(dib, FreeImage_GetHeight(dib) - i - 1);
 
 						if (comp == 1) {
 							// use RLE compression
 
-							DWORD number_of_bytes_written = 0;
-							BYTE rle_count;
-							BYTE byte;
+							uint32_t number_of_bytes_written = 0;
+							uint8_t rle_count;
+							uint8_t byte;
 
 							while (number_of_bytes_written < line) {
 								io->read_proc(&rle_count, 1, 1, handle);
@@ -335,8 +335,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					unsigned n_width=(width+15)&~15;
 					unsigned plane_size = n_width/8;
 					unsigned src_size = plane_size * planes;
-					BYTE *src = (BYTE*)malloc(src_size);
-					BYTE *dest = FreeImage_GetBits(dib);
+					uint8_t *src = (uint8_t*)malloc(src_size);
+					uint8_t *dest = FreeImage_GetBits(dib);
 
 					dest += FreeImage_GetPitch(dib) * height;
 
@@ -369,7 +369,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									}
 								} else if (t != -128) {
 									// t = [-1..-127]  => replicate the next byte -t+1 times
-									BYTE b = 0;
+									uint8_t b = 0;
 									io->read_proc(&b, 1, 1, handle);
 									unsigned size_to_copy = (unsigned)(-(int)t + 1);
 
@@ -393,7 +393,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						for (unsigned x = 0; x < width; x++) {
 							for (unsigned n = 0; n < planes; n++) {
-								BYTE bit = (BYTE)( src[n * plane_size + (x / 8)] >> ((x^7) & 7) );
+								uint8_t bit = (uint8_t)( src[n * plane_size + (x / 8)] >> ((x^7) & 7) );
 
 								dest[x * pixel_size + (n / 8)] |= (bit & 1) << (n & 7);
 							}

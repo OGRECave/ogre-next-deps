@@ -94,7 +94,7 @@ FreeImage_Rescale(FIBITMAP *src, int dst_width, int dst_height, FREE_IMAGE_FILTE
 }
 
 FIBITMAP * DLL_CALLCONV
-FreeImage_MakeThumbnail(FIBITMAP *dib, int max_pixel_size, BOOL convert) {
+FreeImage_MakeThumbnail(FIBITMAP *dib, int max_pixel_size, FIBOOL convert) {
 	FIBITMAP *thumbnail = NULL;
 	int new_width, new_height;
 

@@ -116,11 +116,11 @@ struct MULTIBITMAPHEADER {
 	fi_handle handle;
 	CacheFile m_cachefile;
 	std::map<FIBITMAP *, int> locked_pages;
-	BOOL changed;
+	FIBOOL changed;
 	int page_count;
 	BlockList m_blocks;
 	std::string m_filename;
-	BOOL read_only;
+	FIBOOL read_only;
 	FREE_IMAGE_FORMAT cache_fif;
 	int load_flags;
 };
@@ -246,7 +246,7 @@ FreeImage_InternalGetPageCount(FIMULTIBITMAP *bitmap) {
 // =====================================================================
 
 FIMULTIBITMAP * DLL_CALLCONV
-FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, BOOL create_new, BOOL read_only, BOOL keep_cache_in_memory, int flags) {
+FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, FIBOOL create_new, FIBOOL read_only, FIBOOL keep_cache_in_memory, int flags) {
 
 	FILE *handle = NULL;
 	try {
@@ -271,8 +271,8 @@ FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, BOOL crea
 					}
 				}
 
-				std::auto_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
-				std::auto_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
+				std::unique_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
+				std::unique_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
 				header->m_filename = filename;
 				// io is default
 				header->node = node;
@@ -326,7 +326,7 @@ FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, BOOL crea
 FIMULTIBITMAP * DLL_CALLCONV
 FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle, int flags) {
 	try {
-		BOOL read_only = FALSE;	// modifications (if any) will be stored into the memory cache
+		FIBOOL read_only = FALSE;	// modifications (if any) will be stored into the memory cache
 
 		if (io && handle) {
 		
@@ -337,8 +337,8 @@ FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_h
 				PluginNode *node = list->FindNodeFromFIF(fif);
 			
 				if (node) {
-					std::auto_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
-					std::auto_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
+					std::unique_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
+					std::unique_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
 					header->io = *io;
 					header->node = node;
 					header->fif = fif;
@@ -372,13 +372,13 @@ FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_h
 	return NULL;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_SaveMultiBitmapToHandle(FREE_IMAGE_FORMAT fif, FIMULTIBITMAP *bitmap, FreeImageIO *io, fi_handle handle, int flags) {
 	if(!bitmap || !bitmap->data || !io || !handle) {
 		return FALSE;
 	}
 
-	BOOL success = TRUE;
+	FIBOOL success = TRUE;
 
 	// retrieve the plugin list to find the node belonging to this plugin
 	PluginList *list = FreeImage_GetPluginList();
@@ -428,9 +428,9 @@ FreeImage_SaveMultiBitmapToHandle(FREE_IMAGE_FORMAT fif, FIMULTIBITMAP *bitmap, 
 						{
 							// read the compressed data
 							
-							BYTE *compressed_data = (BYTE*)malloc(i->getSize() * sizeof(BYTE));
+							uint8_t *compressed_data = (uint8_t*)malloc(i->getSize() * sizeof(uint8_t));
 							
-							header->m_cachefile.readFile((BYTE *)compressed_data, i->getReference(), i->getSize());
+							header->m_cachefile.readFile((uint8_t *)compressed_data, i->getReference(), i->getSize());
 							
 							// uncompress the data
 							
@@ -472,10 +472,10 @@ FreeImage_SaveMultiBitmapToHandle(FREE_IMAGE_FORMAT fif, FIMULTIBITMAP *bitmap, 
 }
 
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_CloseMultiBitmap(FIMULTIBITMAP *bitmap, int flags) {
 	if (bitmap) {
-		BOOL success = TRUE;
+		FIBOOL success = TRUE;
 		
 		if (bitmap->data) {
 			MULTIBITMAPHEADER *header = FreeImage_GetMultiBitmapHeader(bitmap);			
@@ -580,8 +580,8 @@ FreeImage_SavePageToBlock(MULTIBITMAPHEADER *header, FIBITMAP *data) {
 		return res;
 	}
 
-	DWORD compressed_size = 0;
-	BYTE *compressed_data = NULL;
+	uint32_t compressed_size = 0;
+	uint8_t *compressed_data = NULL;
 
 	// compress the bitmap data
 
@@ -725,7 +725,7 @@ FreeImage_LockPage(FIMULTIBITMAP *bitmap, int page) {
 }
 
 void DLL_CALLCONV
-FreeImage_UnlockPage(FIMULTIBITMAP *bitmap, FIBITMAP *page, BOOL changed) {
+FreeImage_UnlockPage(FIMULTIBITMAP *bitmap, FIBITMAP *page, FIBOOL changed) {
 	if ((bitmap) && (page)) {
 		MULTIBITMAPHEADER *header = FreeImage_GetMultiBitmapHeader(bitmap);
 
@@ -743,8 +743,8 @@ FreeImage_UnlockPage(FIMULTIBITMAP *bitmap, FIBITMAP *page, BOOL changed) {
 
 				// compress the data
 
-				DWORD compressed_size = 0;
-				BYTE *compressed_data = NULL;
+				uint32_t compressed_size = 0;
+				uint8_t *compressed_data = NULL;
 
 				// open a memory handle
 				FIMEMORY *hmem = FreeImage_OpenMemory();
@@ -777,7 +777,7 @@ FreeImage_UnlockPage(FIMULTIBITMAP *bitmap, FIBITMAP *page, BOOL changed) {
 	}
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_MovePage(FIMULTIBITMAP *bitmap, int target, int source) {
 	if (bitmap) {
 		MULTIBITMAPHEADER *header = FreeImage_GetMultiBitmapHeader(bitmap);
@@ -800,7 +800,7 @@ FreeImage_MovePage(FIMULTIBITMAP *bitmap, int target, int source) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_GetLockedPageNumbers(FIMULTIBITMAP *bitmap, int *pages, int *count) {
 	if ((bitmap) && (count)) {
 		MULTIBITMAPHEADER *header = FreeImage_GetMultiBitmapHeader(bitmap);
@@ -833,7 +833,7 @@ FreeImage_GetLockedPageNumbers(FIMULTIBITMAP *bitmap, int *pages, int *count) {
 
 FIMULTIBITMAP * DLL_CALLCONV
 FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int flags) {
-	BOOL read_only = FALSE;	// modifications (if any) will be stored into the memory cache
+	FIBOOL read_only = FALSE;	// modifications (if any) will be stored into the memory cache
 
 	// retrieve the plugin list to find the node belonging to this plugin
 
@@ -884,7 +884,7 @@ FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int
 	return NULL;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_SaveMultiBitmapToMemory(FREE_IMAGE_FORMAT fif, FIMULTIBITMAP *bitmap, FIMEMORY *stream, int flags) {
 	if (stream && stream->data) {
 		FreeImageIO io;

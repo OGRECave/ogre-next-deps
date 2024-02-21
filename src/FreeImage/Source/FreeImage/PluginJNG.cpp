@@ -39,7 +39,7 @@ static int s_format_id;
 // ----------------------------------------------------------
 
 FIBITMAP* mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, int flags = 0);
-BOOL mng_WriteJNG(int format_id, FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int flags);
+FIBOOL mng_WriteJNG(int format_id, FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int flags);
 
 // ==========================================================
 // Plugin Implementation
@@ -70,17 +70,17 @@ MimeType() {
 	return "image/x-mng";
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	BYTE jng_signature[8] = { 139, 74, 78, 71, 13, 10, 26, 10 };
-	BYTE signature[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	uint8_t jng_signature[8] = { 139, 74, 78, 71, 13, 10, 26, 10 };
+	uint8_t signature[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	io->read_proc(&signature, 1, JNG_SIGNATURE_SIZE, handle);
 
 	return (memcmp(jng_signature, signature, JNG_SIGNATURE_SIZE) == 0) ? TRUE : FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return (
 			(depth == 8) ||
@@ -89,17 +89,17 @@ SupportsExportDepth(int depth) {
 		);
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (type == FIT_BITMAP) ? TRUE : FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsICCProfiles() {
 	return TRUE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -108,7 +108,7 @@ SupportsNoPixels() {
 // ----------------------------------------------------------
 
 static void * DLL_CALLCONV
-Open(FreeImageIO *io, fi_handle handle, BOOL read) {
+Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 	return NULL;
 }
 
@@ -129,7 +129,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	return mng_ReadChunks(s_format_id, io, handle, offset, flags);
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 
 	return mng_WriteJNG(s_format_id, io, dib, handle, flags);

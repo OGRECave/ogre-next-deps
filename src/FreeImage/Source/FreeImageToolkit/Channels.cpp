@@ -65,9 +65,9 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 		FIBITMAP *dst = FreeImage_Allocate(width, height, 8) ;
 		if(!dst) return NULL;
 		// build a greyscale palette
-		RGBQUAD *pal = FreeImage_GetPalette(dst);
+		FIRGBA8 *pal = FreeImage_GetPalette(dst);
 		for(int i = 0; i < 256; i++) {
-			pal[i].rgbBlue = pal[i].rgbGreen = pal[i].rgbRed = (BYTE)i;
+			pal[i].blue = pal[i].green = pal[i].red = (uint8_t)i;
 		}
 
 		// perform extraction
@@ -75,8 +75,8 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 		int bytespp = bpp / 8;	// bytes / pixel
 
 		for(unsigned y = 0; y < height; y++) {
-			BYTE *src_bits = FreeImage_GetScanLine(src, y);
-			BYTE *dst_bits = FreeImage_GetScanLine(dst, y);
+			uint8_t *src_bits = FreeImage_GetScanLine(src, y);
+			uint8_t *dst_bits = FreeImage_GetScanLine(dst, y);
 			for(unsigned x = 0; x < width; x++) {
 				dst_bits[x] = src_bits[c];
 				src_bits += bytespp;
@@ -195,7 +195,7 @@ Both src and dst must have the same width and height.
 @param channel Color channel to modify
 @return Returns TRUE if successful, FALSE otherwise.
 */
-BOOL DLL_CALLCONV 
+FIBOOL DLL_CALLCONV 
 FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	int c;
 
@@ -252,8 +252,8 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 		int bytespp = dst_bpp / 8;	// bytes / pixel
 
 		for(unsigned y = 0; y < dst_height; y++) {
-			BYTE *src_bits = FreeImage_GetScanLine(src, y);
-			BYTE *dst_bits = FreeImage_GetScanLine(dst, y);
+			uint8_t *src_bits = FreeImage_GetScanLine(src, y);
+			uint8_t *dst_bits = FreeImage_GetScanLine(dst, y);
 			for(unsigned x = 0; x < dst_width; x++) {
 				dst_bits[c] = src_bits[x];
 				dst_bits += bytespp;
@@ -440,7 +440,7 @@ Both src and dst must have the same width and height.
 @param channel Channel to modify
 @return Returns TRUE if successful, FALSE otherwise.
 */
-BOOL DLL_CALLCONV 
+FIBOOL DLL_CALLCONV 
 FreeImage_SetComplexChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	unsigned x, y;
 	double *src_bits = NULL;

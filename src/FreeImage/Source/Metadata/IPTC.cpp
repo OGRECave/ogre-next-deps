@@ -35,18 +35,18 @@ static const char* IPTC_DELIMITER = ";";	// keywords/supplemental category delim
 /**
 	Read and decode IPTC binary data
 */
-BOOL 
-read_iptc_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
+FIBOOL 
+read_iptc_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	char defaultKey[16];
 	size_t length = datalen;
-	BYTE *profile = (BYTE*)dataptr;
+	uint8_t *profile = (uint8_t*)dataptr;
 
 	const char *JPEG_AdobeCM_Tag = "Adobe_CM";
 
 	std::string Keywords;
 	std::string SupplementalCategory;
 
-	WORD tag_id;
+	uint16_t tag_id;
 
 	if(!dataptr || (datalen == 0)) {
 		return FALSE;
@@ -107,14 +107,14 @@ read_iptc_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
 
 		// process the tag
 
-		tag_id = (WORD)(tagType | (directoryType << 8));
+		tag_id = (uint16_t)(tagType | (directoryType << 8));
 
 		FreeImage_SetTagID(tag, tag_id);
 		FreeImage_SetTagLength(tag, tagByteCount);
 
 		// allocate a buffer to store the tag value
-		BYTE *iptc_value = (BYTE*)malloc((tagByteCount + 1) * sizeof(BYTE));
-		memset(iptc_value, 0, (tagByteCount + 1) * sizeof(BYTE));
+		uint8_t *iptc_value = (uint8_t*)malloc((tagByteCount + 1) * sizeof(uint8_t));
+		memset(iptc_value, 0, (tagByteCount + 1) * sizeof(uint8_t));
 
 		// get the tag value
 
@@ -194,8 +194,8 @@ read_iptc_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
 		FreeImage_SetTagID(tag, TAG_KEYWORDS);
 		FreeImage_SetTagKey(tag, tag_lib.getTagFieldName(TagLib::IPTC, TAG_KEYWORDS, defaultKey));
 		FreeImage_SetTagDescription(tag, tag_lib.getTagDescription(TagLib::IPTC, TAG_KEYWORDS));
-		FreeImage_SetTagLength(tag, (DWORD)Keywords.length());
-		FreeImage_SetTagCount(tag, (DWORD)Keywords.length());
+		FreeImage_SetTagLength(tag, (uint32_t)Keywords.length());
+		FreeImage_SetTagCount(tag, (uint32_t)Keywords.length());
 		FreeImage_SetTagValue(tag, (char*)Keywords.c_str());
 		FreeImage_SetMetadata(FIMD_IPTC, dib, FreeImage_GetTagKey(tag), tag);
 	}
@@ -206,8 +206,8 @@ read_iptc_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
 		FreeImage_SetTagID(tag, TAG_SUPPLEMENTAL_CATEGORIES);
 		FreeImage_SetTagKey(tag, tag_lib.getTagFieldName(TagLib::IPTC, TAG_SUPPLEMENTAL_CATEGORIES, defaultKey));
 		FreeImage_SetTagDescription(tag, tag_lib.getTagDescription(TagLib::IPTC, TAG_SUPPLEMENTAL_CATEGORIES));
-		FreeImage_SetTagLength(tag, (DWORD)SupplementalCategory.length());
-		FreeImage_SetTagCount(tag, (DWORD)SupplementalCategory.length());
+		FreeImage_SetTagLength(tag, (uint32_t)SupplementalCategory.length());
+		FreeImage_SetTagCount(tag, (uint32_t)SupplementalCategory.length());
 		FreeImage_SetTagValue(tag, (char*)SupplementalCategory.c_str());
 		FreeImage_SetMetadata(FIMD_IPTC, dib, FreeImage_GetTagKey(tag), tag);
 	}
@@ -221,13 +221,13 @@ read_iptc_profile(FIBITMAP *dib, const BYTE *dataptr, unsigned int datalen) {
 
 // --------------------------------------------------------------------------
 
-static BYTE* 
-append_iptc_tag(BYTE *profile, unsigned *profile_size, WORD id, DWORD length, const void *value) {
-	BYTE *buffer = NULL;
+static uint8_t* 
+append_iptc_tag(uint8_t *profile, unsigned *profile_size, uint16_t id, uint32_t length, const void *value) {
+	uint8_t *buffer = NULL;
 
 	// calculate the new buffer size
-	size_t buffer_size = (5 + *profile_size + length) * sizeof(BYTE);
-	buffer = (BYTE*)malloc(buffer_size);
+	size_t buffer_size = (5 + *profile_size + length) * sizeof(uint8_t);
+	buffer = (uint8_t*)malloc(buffer_size);
 	if(!buffer)
 		return NULL;
 
@@ -235,12 +235,12 @@ append_iptc_tag(BYTE *profile, unsigned *profile_size, WORD id, DWORD length, co
 	buffer[0] = 0x1C;
 	buffer[1] = 0x02;
 	// add the tag type
-	buffer[2] = (BYTE)(id & 0x00FF);
+	buffer[2] = (uint8_t)(id & 0x00FF);
 	// add the tag length
-	buffer[3] = (BYTE)(length >> 8);
-	buffer[4] = (BYTE)(length & 0xFF);
+	buffer[3] = (uint8_t)(length >> 8);
+	buffer[4] = (uint8_t)(length & 0xFF);
 	// add the tag value
-	memcpy(buffer + 5, (BYTE*)value, length);
+	memcpy(buffer + 5, (uint8_t*)value, length);
 	// append the previous profile
 	if(NULL == profile)	{
 		*profile_size = (5 + length);
@@ -258,12 +258,12 @@ append_iptc_tag(BYTE *profile, unsigned *profile_size, WORD id, DWORD length, co
 Encode IPTC metadata into a binary buffer. 
 The buffer is allocated by the function and must be freed by the caller. 
 */
-BOOL 
-write_iptc_profile(FIBITMAP *dib, BYTE **profile, unsigned *profile_size) {
+FIBOOL 
+write_iptc_profile(FIBITMAP *dib, uint8_t **profile, unsigned *profile_size) {
 	FITAG *tag = NULL;
 	FIMETADATA *mdhandle = NULL;
 
-	BYTE *buffer = NULL;
+	uint8_t *buffer = NULL;
 	unsigned buffer_size = 0;
 
 	// parse all IPTC tags and rebuild a IPTC profile
@@ -271,7 +271,7 @@ write_iptc_profile(FIBITMAP *dib, BYTE **profile, unsigned *profile_size) {
 
 	if(mdhandle) {
 		do {
-			WORD tag_id	= FreeImage_GetTagID(tag);
+			uint16_t tag_id	= FreeImage_GetTagID(tag);
 
 			// append the tag to the profile
 
@@ -303,7 +303,7 @@ write_iptc_profile(FIBITMAP *dib, BYTE **profile, unsigned *profile_size) {
 						// add as many tags as there are comma separated strings
 						for(int i = 0; i < (int)output.size(); i++) {
 							std::string& tag_value = output[i];
-							buffer = append_iptc_tag(buffer, &buffer_size, tag_id, (DWORD)tag_value.length(), tag_value.c_str());
+							buffer = append_iptc_tag(buffer, &buffer_size, tag_id, (uint32_t)tag_value.length(), tag_value.c_str());
 						}
 
 					}
@@ -311,14 +311,14 @@ write_iptc_profile(FIBITMAP *dib, BYTE **profile, unsigned *profile_size) {
 
 				case TAG_URGENCY:
 					if(FreeImage_GetTagType(tag) == FIDT_ASCII) {
-						DWORD length = 1;	// keep the first octet only
+						uint32_t length = 1;	// keep the first octet only
 						buffer = append_iptc_tag(buffer, &buffer_size, tag_id, length, FreeImage_GetTagValue(tag));
 					}
 					break;
 
 				default:
 					if(FreeImage_GetTagType(tag) == FIDT_ASCII) {
-						DWORD length = FreeImage_GetTagLength(tag);	
+						uint32_t length = FreeImage_GetTagLength(tag);	
 						buffer = append_iptc_tag(buffer, &buffer_size, tag_id, length, FreeImage_GetTagValue(tag));
 					}					
 					break;

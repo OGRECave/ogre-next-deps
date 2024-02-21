@@ -29,24 +29,24 @@
 // ----------------------------------------------------------
 
 void DLL_CALLCONV
-FreeImage_ConvertLine1To16_565(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
-	WORD *new_bits = (WORD *)target;
+FreeImage_ConvertLine1To16_565(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
+	uint16_t *new_bits = (uint16_t *)target;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		int index = (source[cols >> 3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
 
-		new_bits[cols] = RGB565(palette[index].rgbBlue, palette[index].rgbGreen, palette[index].rgbRed);
+		new_bits[cols] = RGB565(palette[index].blue, palette[index].green, palette[index].red);
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine4To16_565(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
-	WORD *new_bits = (WORD *)target;
-	BOOL lonibble = FALSE;
+FreeImage_ConvertLine4To16_565(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
+	uint16_t *new_bits = (uint16_t *)target;
+	FIBOOL lonibble = FALSE;
 	int x = 0;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		RGBQUAD *grab_palette;
+		FIRGBA8 *grab_palette;
 
 		if (lonibble) {
 			grab_palette = palette + LOWNIBBLE(source[x++]);
@@ -54,27 +54,27 @@ FreeImage_ConvertLine4To16_565(BYTE *target, BYTE *source, int width_in_pixels, 
 			grab_palette = palette + (HINIBBLE(source[x]) >> 4);								
 		}
 
-		new_bits[cols] = RGB565(grab_palette->rgbBlue, grab_palette->rgbGreen, grab_palette->rgbRed);
+		new_bits[cols] = RGB565(grab_palette->blue, grab_palette->green, grab_palette->red);
 
 		lonibble = !lonibble;
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine8To16_565(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette) {
-	WORD *new_bits = (WORD *)target;
+FreeImage_ConvertLine8To16_565(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
+	uint16_t *new_bits = (uint16_t *)target;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		RGBQUAD *grab_palette = palette + source[cols];
+		FIRGBA8 *grab_palette = palette + source[cols];
 
-		new_bits[cols] = RGB565(grab_palette->rgbBlue, grab_palette->rgbGreen, grab_palette->rgbRed);
+		new_bits[cols] = RGB565(grab_palette->blue, grab_palette->green, grab_palette->red);
 	}
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16_555_To16_565(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *src_bits = (WORD *)source;
-	WORD *new_bits = (WORD *)target;
+FreeImage_ConvertLine16_555_To16_565(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *src_bits = (uint16_t *)source;
+	uint16_t *new_bits = (uint16_t *)target;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		new_bits[cols] = RGB565((((src_bits[cols] & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F,
@@ -84,8 +84,8 @@ FreeImage_ConvertLine16_555_To16_565(BYTE *target, BYTE *source, int width_in_pi
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine24To16_565(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *new_bits = (WORD *)target;
+FreeImage_ConvertLine24To16_565(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *new_bits = (uint16_t *)target;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		new_bits[cols] = RGB565(source[FI_RGBA_BLUE], source[FI_RGBA_GREEN], source[FI_RGBA_RED]);
@@ -95,8 +95,8 @@ FreeImage_ConvertLine24To16_565(BYTE *target, BYTE *source, int width_in_pixels)
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine32To16_565(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *new_bits = (WORD *)target;
+FreeImage_ConvertLine32To16_565(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *new_bits = (uint16_t *)target;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		new_bits[cols] = RGB565(source[FI_RGBA_BLUE], source[FI_RGBA_GREEN], source[FI_RGBA_RED]);

@@ -19,7 +19,7 @@
 // Use at your own risk!
 // ==========================================================
 
-#include "../LibRawLite/libraw/libraw.h"
+#include "libraw/libraw.h"
 
 #include "FreeImage.h"
 #include "Utilities.h"
@@ -44,7 +44,7 @@ private:
 	FreeImageIO *_io;
 	fi_handle _handle;
 	long _eof;
-	INT64 _fsize;
+	int64_t _fsize;
 
 public:
 	LibRaw_freeimage_datastream(FreeImageIO *io, fi_handle handle) : _io(io), _handle(handle) {
@@ -55,41 +55,41 @@ public:
 		io->seek_proc(handle, start_pos, SEEK_SET);
 	}
 
-	~LibRaw_freeimage_datastream() {
+	~LibRaw_freeimage_datastream() override {
 	}
 
-    int valid() { 
+    int valid() override {
 		return (_io && _handle);
 	}
 
-    int read(void *buffer, size_t size, size_t count) { 
-		if(substream) return substream->read(buffer, size, count);
+    int read(void *buffer, size_t size, size_t count) override {
+		//if(substream) return substream->read(buffer, size, count);
 		return _io->read_proc(buffer, (unsigned)size, (unsigned)count, _handle);
 	}
 
-    int seek(INT64 offset, int origin) { 
-        if(substream) return substream->seek(offset, origin);
+    int seek(INT64 offset, int origin) override {
+        //if(substream) return substream->seek(offset, origin);
 		return _io->seek_proc(_handle, (long)offset, origin);
 	}
 
-    INT64 tell() { 
-		if(substream) return substream->tell();
+	INT64 tell() override {
+		//if(substream) return substream->tell();
         return _io->tell_proc(_handle);
     }
 	
-	INT64 size() {
+	INT64 size() override {
 		return _fsize;
 	}
 
-    int get_char() { 
+    int get_char() override {
 		int c = 0;
-		if(substream) return substream->get_char();
+		//if(substream) return substream->get_char();
 		if(!_io->read_proc(&c, 1, 1, _handle)) return -1;
 		return c;
    }
 	
-	char* gets(char *buffer, int length) { 
-		if (substream) return substream->gets(buffer, length);
+	char* gets(char *buffer, int length) override {
+		//if (substream) return substream->gets(buffer, length);
 		memset(buffer, 0, length);
 		for(int i = 0; i < length; i++) {
 			if(!_io->read_proc(&buffer[i], 1, 1, _handle))
@@ -100,11 +100,11 @@ public:
 		return buffer;
 	}
 
-	int scanf_one(const char *fmt, void* val) {
+	int scanf_one(const char *fmt, void* val) override {
 		std::string buffer;
 		char element = 0;
 		bool bDone = false;
-		if(substream) return substream->scanf_one(fmt,val);				
+		//if(substream) return substream->scanf_one(fmt,val);				
 		do {
 			if(_io->read_proc(&element, 1, 1, _handle) == 1) {
 				switch(element) {
@@ -126,12 +126,12 @@ public:
 		return sscanf(buffer.c_str(), fmt, val);
 	}
 
-	int eof() { 
-		if(substream) return substream->eof();
+	int eof() override {
+		//if(substream) return substream->eof();
         return (_io->tell_proc(_handle) >= _eof);
     }
 
-	void * make_jas_stream() {
+	void * make_jas_stream() override {
 		return NULL;
 	}
 };
@@ -217,7 +217,7 @@ libraw_ConvertProcessedImageToDib(libraw_processed_image_t *image) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 			// write data
-			WORD *raw_data = (WORD*)image->data;
+			uint16_t *raw_data = (uint16_t*)image->data;
 			for(unsigned y = 0; y < height; y++) {
 				FIRGB16 *output = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
 				for(unsigned x = 0; x < width; x++) {
@@ -234,13 +234,13 @@ libraw_ConvertProcessedImageToDib(libraw_processed_image_t *image) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 			// write data
-			BYTE *raw_data = (BYTE*)image->data;
+			uint8_t *raw_data = (uint8_t*)image->data;
 			for(unsigned y = 0; y < height; y++) {
-				RGBTRIPLE *output = (RGBTRIPLE*)FreeImage_GetScanLine(dib, height - 1 - y);
+				FIRGB8 *output = (FIRGB8*)FreeImage_GetScanLine(dib, height - 1 - y);
 				for(unsigned x = 0; x < width; x++) {
-					output[x].rgbtRed   = raw_data[0];
-					output[x].rgbtGreen = raw_data[1];
-					output[x].rgbtBlue  = raw_data[2];
+					output[x].red   = raw_data[0];
+					output[x].green = raw_data[1];
+					output[x].blue  = raw_data[2];
 					raw_data += 3;
 				}
 			}
@@ -279,7 +279,7 @@ libraw_LoadEmbeddedPreview(LibRaw *RawProcessor, int flags) {
 		if(thumb_image) {
 			if(thumb_image->type != LIBRAW_IMAGE_BITMAP) {
 				// attach the binary data to a memory stream
-				FIMEMORY *hmem = FreeImage_OpenMemory((BYTE*)thumb_image->data, (DWORD)thumb_image->data_size);
+				FIMEMORY *hmem = FreeImage_OpenMemory((uint8_t*)thumb_image->data, (uint32_t)thumb_image->data_size);
 				// get the file type
 				FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem, 0);
 				if(fif == FIF_JPEG) {
@@ -395,8 +395,8 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 		// allocate output dib
 		const unsigned width = RawProcessor->imgdata.sizes.raw_width;
 		const unsigned height = RawProcessor->imgdata.sizes.raw_height;
-		const size_t line_size = width * sizeof(WORD);
-		const WORD *src_bits = (WORD*)RawProcessor->imgdata.rawdata.raw_image;
+		const size_t line_size = width * sizeof(uint16_t);
+		const uint16_t *src_bits = (uint16_t*)RawProcessor->imgdata.rawdata.raw_image;
 
 		if(src_bits) {
 			dib = FreeImage_AllocateT(FIT_UINT16, width, height);
@@ -407,7 +407,7 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 
 		// retrieve the raw image
 		for(unsigned y = 0; y < height; y++) {
-			WORD *dst_bits = (WORD*)FreeImage_GetScanLine(dib, height - 1 - y);
+			uint16_t *dst_bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
 			memcpy(dst_bits, src_bits, line_size);
 			src_bits += width;
 		}
@@ -554,34 +554,34 @@ MimeType() {
 	return "image/x-dcraw";
 }
 
-static BOOL 
+static FIBOOL 
 HasMagicHeader(FreeImageIO *io, fi_handle handle) {
 	const unsigned signature_size = 32;
-	BYTE signature[signature_size] = { 0 };
+	uint8_t signature[signature_size] = { 0 };
 	/*
 	note: classic TIFF signature is
 	{ 0x49, 0x49, 0x2A, 0x00 } Classic TIFF, little-endian
 	{ 0x4D, 0x4D, 0x00, 0x2A } Classic TIFF, big-endian
 	*/
 	// Canon (CR2), little-endian byte order
-	const BYTE CR2_II[] = { 0x49, 0x49, 0x2A, 0x00, 0x10, 0x00, 0x00, 0x00, 0x43, 0x52, 0x02, 0x00 };
+	const uint8_t CR2_II[] = { 0x49, 0x49, 0x2A, 0x00, 0x10, 0x00, 0x00, 0x00, 0x43, 0x52, 0x02, 0x00 };
 	// Canon (CRW), little-endian byte order
-	const BYTE CRW_II[] = { 0x49, 0x49, 0x1A, 0x00, 0x00, 0x00, 0x48, 0x45, 0x41, 0x50, 0x43, 0x43, 0x44, 0x52, 0x02, 0x00 };
+	const uint8_t CRW_II[] = { 0x49, 0x49, 0x1A, 0x00, 0x00, 0x00, 0x48, 0x45, 0x41, 0x50, 0x43, 0x43, 0x44, 0x52, 0x02, 0x00 };
 	// Minolta (MRW)
-	const BYTE MRW[] = { 0x00, 0x4D, 0x52, 0x4D, 0x00 };
+	const uint8_t MRW[] = { 0x00, 0x4D, 0x52, 0x4D, 0x00 };
 	// Olympus (ORF), little-endian byte order
-	const BYTE ORF_IIRS[] = { 0x49, 0x49, 0x52, 0x53, 0x08, 0x00, 0x00, 0x00 }; 
-	const BYTE ORF_IIRO[] = { 0x49, 0x49, 0x52, 0x4F, 0x08, 0x00, 0x00, 0x00 }; 
+	const uint8_t ORF_IIRS[] = { 0x49, 0x49, 0x52, 0x53, 0x08, 0x00, 0x00, 0x00 }; 
+	const uint8_t ORF_IIRO[] = { 0x49, 0x49, 0x52, 0x4F, 0x08, 0x00, 0x00, 0x00 }; 
 	// Olympus (ORF), big-endian byte order
-	const BYTE ORF_MMOR[] = { 0x4D, 0x4D, 0x4F, 0x52, 0x00, 0x00, 0x00, 0x08 }; 
+	const uint8_t ORF_MMOR[] = { 0x4D, 0x4D, 0x4F, 0x52, 0x00, 0x00, 0x00, 0x08 }; 
 	// Fujifilm (RAF)
-	const BYTE RAF[] = { 0x46, 0x55, 0x4A, 0x49, 0x46, 0x49, 0x4C, 0x4D, 0x43, 0x43, 0x44, 0x2D, 0x52, 0x41, 0x57, 0x20 };
+	const uint8_t RAF[] = { 0x46, 0x55, 0x4A, 0x49, 0x46, 0x49, 0x4C, 0x4D, 0x43, 0x43, 0x44, 0x2D, 0x52, 0x41, 0x57, 0x20 };
 	// Panasonic (RW2) or Leica (RWL), little-endian byte order
-	const BYTE RWx_II[] = { 0x49, 0x49, 0x55, 0x00, 0x18, 0x00, 0x00, 0x00, 0x88, 0xE7, 0x74, 0xD8, 0xF8, 0x25, 0x1D, 0x4D, 0x94, 0x7A, 0x6E, 0x77, 0x82, 0x2B, 0x5D, 0x6A };
+	const uint8_t RWx_II[] = { 0x49, 0x49, 0x55, 0x00, 0x18, 0x00, 0x00, 0x00, 0x88, 0xE7, 0x74, 0xD8, 0xF8, 0x25, 0x1D, 0x4D, 0x94, 0x7A, 0x6E, 0x77, 0x82, 0x2B, 0x5D, 0x6A };
 	// Panasonic (RAW) or Leica (RAW), little-endian byte order
-	const BYTE RAW_II[] = { 0x49, 0x49, 0x55, 0x00, 0x08, 0x00, 0x00, 0x00, 0x22, 0x00, 0x01, 0x00, 0x07, 0x00, 0x04, 0x00, 0x00, 0x00 };
+	const uint8_t RAW_II[] = { 0x49, 0x49, 0x55, 0x00, 0x08, 0x00, 0x00, 0x00, 0x22, 0x00, 0x01, 0x00, 0x07, 0x00, 0x04, 0x00, 0x00, 0x00 };
 	// Foveon (X3F)
-	const BYTE X3F[] = { 0x46, 0x4F, 0x56, 0x62 };
+	const uint8_t X3F[] = { 0x46, 0x4F, 0x56, 0x62 };
 
 	if(io->read_proc(signature, 1, signature_size, handle) != signature_size) {
 		return FALSE;
@@ -610,7 +610,7 @@ HasMagicHeader(FreeImageIO *io, fi_handle handle) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
 	// some RAW files have a magic signature (most of them have a TIFF signature)
 	// try to check this in order to speed up the file identification
@@ -629,7 +629,7 @@ Validate(FreeImageIO *io, fi_handle handle) {
 		LibRaw *RawProcessor = new(std::nothrow) LibRaw;
 
 		if(RawProcessor) {
-			BOOL bSuccess = TRUE;
+			FIBOOL bSuccess = TRUE;
 
 			// wrap the input datastream
 			LibRaw_freeimage_datastream datastream(io, handle);
@@ -650,22 +650,22 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsExportDepth(int depth) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return FALSE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsICCProfiles() {
 	return TRUE;
 }
 
-static BOOL DLL_CALLCONV
+static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
 }
@@ -677,7 +677,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	FIBITMAP *dib = NULL;
 	LibRaw *RawProcessor = NULL;
 
-	BOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	try {
 		// do not declare RawProcessor on the stack as it may be huge (300 KB)

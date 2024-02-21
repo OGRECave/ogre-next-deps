@@ -89,7 +89,7 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 			const unsigned bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
 
 			for(unsigned y = 0; y < height; y++) {
-				const BYTE *src_bits = (BYTE*)FreeImage_GetScanLine(src, y);
+				const uint8_t *src_bits = (uint8_t*)FreeImage_GetScanLine(src, y);
 				FIRGB16 *dst_bits = (FIRGB16*)FreeImage_GetScanLine(dst, y);
 				for(unsigned x = 0; x < width; x++) {
 					dst_bits[x].red   = src_bits[FI_RGBA_RED] << 8;
@@ -104,7 +104,7 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 		case FIT_UINT16:
 		{
 			for(unsigned y = 0; y < height; y++) {
-				const WORD *src_bits = (WORD*)FreeImage_GetScanLine(src, y);
+				const uint16_t *src_bits = (uint16_t*)FreeImage_GetScanLine(src, y);
 				FIRGB16 *dst_bits = (FIRGB16*)FreeImage_GetScanLine(dst, y);
 				for(unsigned x = 0; x < width; x++) {
 					// convert by copying greyscale channel to each R, G, B channels

@@ -3,7 +3,7 @@
 //
 // Design and implementation by
 // - Floris van den Berg (flvdberg@wxs.nl)
-// - Hervé Drolon <drolon@infonie.fr>
+// - Herve Drolon <drolon@infonie.fr>
 // - Ryan Rubley (ryan@lostreality.org)
 // - Mihail Naydenov (mnaydenov@users.sourceforge.net)
 //
@@ -64,66 +64,6 @@
 void* FreeImage_Aligned_Malloc(size_t amount, size_t alignment);
 void FreeImage_Aligned_Free(void* mem);
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-/**
-Allocate a FIBITMAP with possibly no pixel data 
-(i.e. only header data and some or all metadata)
-@param header_only If TRUE, allocate a 'header only' FIBITMAP, otherwise allocate a full FIBITMAP
-@param type Image type
-@param width Image width
-@param height Image height
-@param bpp Number of bits per pixel
-@param red_mask Image red mask 
-@param green_mask Image green mask
-@param blue_mask Image blue mask
-@return Returns the allocated FIBITMAP
-@see FreeImage_AllocateT
-*/
-DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeaderT(BOOL header_only, FREE_IMAGE_TYPE type, int width, int height, int bpp FI_DEFAULT(8), unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
-
-/**
-Allocate a FIBITMAP of type FIT_BITMAP, with possibly no pixel data 
-(i.e. only header data and some or all metadata)
-@param header_only If TRUE, allocate a 'header only' FIBITMAP, otherwise allocate a full FIBITMAP
-@param width Image width
-@param height Image height
-@param bpp Number of bits per pixel
-@param red_mask Image red mask 
-@param green_mask Image green mask
-@param blue_mask Image blue mask
-@return Returns the allocated FIBITMAP
-@see FreeImage_Allocate
-*/
-DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeader(BOOL header_only, int width, int height, int bpp, unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
-
-/**
-Allocate a FIBITMAP with no pixel data and wrap a user provided pixel buffer
-@param ext_bits Pointer to external user's pixel buffer
-@param ext_pitch Pointer to external user's pixel buffer pitch
-@param type Image type
-@param width Image width
-@param height Image height
-@param bpp Number of bits per pixel
-@param red_mask Image red mask 
-@param green_mask Image green mask
-@param blue_mask Image blue mask
-@return Returns the allocated FIBITMAP
-@see FreeImage_ConvertFromRawBitsEx
-*/
-DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeaderForBits(BYTE *ext_bits, unsigned ext_pitch, FREE_IMAGE_TYPE type, int width, int height, int bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask);
-
-/**
-Helper for 16-bit FIT_BITMAP
-@see FreeImage_GetRGBMasks
-*/
-DLL_API BOOL DLL_CALLCONV FreeImage_HasRGBMasks(FIBITMAP *dib);
-
-#if defined(__cplusplus)
-}
-#endif
 
 
 // ==========================================================
@@ -294,8 +234,8 @@ CalculateUsedPaletteEntries(const unsigned bit_count) {
 	return 0;
 }
 
-inline BYTE*
-CalculateScanLine(BYTE *bits, const unsigned pitch, const int scanline) {
+inline uint8_t*
+CalculateScanLine(uint8_t *bits, const unsigned pitch, const int scanline) {
 	return bits ? (bits + ((size_t)pitch * scanline)) : NULL;
 }
 
@@ -308,35 +248,35 @@ Fast generic assign (faster than for loop)
 @param bytesperpixel # of bytes per pixel
 */
 inline void 
-AssignPixel(BYTE* dst, const BYTE* src, unsigned bytesperpixel) {
+AssignPixel(uint8_t* dst, const uint8_t* src, unsigned bytesperpixel) {
 	switch (bytesperpixel) {
 		case 1:	// FIT_BITMAP (8-bit)
 			*dst = *src;
 			break;
 
 		case 2: // FIT_UINT16 / FIT_INT16 / 16-bit
-			*(reinterpret_cast<WORD*>(dst)) = *(reinterpret_cast<const WORD*> (src));
+			*(reinterpret_cast<uint16_t*>(dst)) = *(reinterpret_cast<const uint16_t*> (src));
 			break;
 
 		case 3: // FIT_BITMAP (24-bit)
-			*(reinterpret_cast<WORD*>(dst)) = *(reinterpret_cast<const WORD*> (src));
+			*(reinterpret_cast<uint16_t*>(dst)) = *(reinterpret_cast<const uint16_t*> (src));
 			dst[2] = src[2];
 			break;
 
 		case 4: // FIT_BITMAP (32-bit) / FIT_UINT32 / FIT_INT32 / FIT_FLOAT
-			*(reinterpret_cast<DWORD*>(dst)) = *(reinterpret_cast<const DWORD*> (src));
+			*(reinterpret_cast<uint32_t*>(dst)) = *(reinterpret_cast<const uint32_t*> (src));
 			break;
 
 		case 6: // FIT_RGB16 (3 x 16-bit)
-			*(reinterpret_cast<DWORD*>(dst)) = *(reinterpret_cast<const DWORD*> (src));
-			*(reinterpret_cast<WORD*>(dst + 4)) = *(reinterpret_cast<const WORD*> (src + 4));	
+			*(reinterpret_cast<uint32_t*>(dst)) = *(reinterpret_cast<const uint32_t*> (src));
+			*(reinterpret_cast<uint16_t*>(dst + 4)) = *(reinterpret_cast<const uint16_t*> (src + 4));	
 			break;
 
 		// the rest can be speeded up with int64
 			
 		case 8: // FIT_RGBA16 (4 x 16-bit)
-			*(reinterpret_cast<DWORD*>(dst)) = *(reinterpret_cast<const DWORD*> (src));
-			*(reinterpret_cast<DWORD*>(dst + 4)) = *(reinterpret_cast<const DWORD*> (src + 4));	
+			*(reinterpret_cast<uint32_t*>(dst)) = *(reinterpret_cast<const uint32_t*> (src));
+			*(reinterpret_cast<uint32_t*>(dst + 4)) = *(reinterpret_cast<const uint32_t*> (src + 4));	
 			break;
 		
 		case 12: // FIT_RGBF (3 x 32-bit IEEE floating point)
@@ -357,102 +297,67 @@ AssignPixel(BYTE* dst, const BYTE* src, unsigned bytesperpixel) {
 	}
 }
 
-/**
-Swap red and blue channels in a 24- or 32-bit dib. 
-@return Returns TRUE if successful, returns FALSE otherwise
-@see See definition in Conversion.cpp
-*/
-BOOL SwapRedBlue32(FIBITMAP* dib);
-
-/**
-Inplace convert CMYK to RGBA.(8- and 16-bit). 
-Alpha is filled with the first extra channel if any or white otherwise.
-@return Returns TRUE if successful, returns FALSE otherwise
-@see See definition in Conversion.cpp
-*/
-BOOL ConvertCMYKtoRGBA(FIBITMAP* dib);
-
-/**
-Inplace convert CIELab to RGBA (8- and 16-bit).
-@return Returns TRUE if successful, returns FALSE otherwise
-@see See definition in Conversion.cpp
-*/
-BOOL ConvertLABtoRGB(FIBITMAP* dib);
-
-/**
-RGBA to RGB conversion
-@see See definition in Conversion.cpp
-*/
-FIBITMAP* RemoveAlphaChannel(FIBITMAP* dib);
-
-/**
-Rotate a dib according to Exif info
-@param dib Input / Output dib to rotate
-@see Exif.cpp, PluginJPEG.cpp
-*/
-void RotateExif(FIBITMAP **dib);
-
 
 // ==========================================================
 //   Big Endian / Little Endian utility functions
 // ==========================================================
 
-inline WORD 
-__SwapUInt16(WORD arg) { 
+inline uint16_t 
+__SwapUInt16(uint16_t arg) { 
 #if defined(_MSC_VER) && _MSC_VER >= 1310 
 	return _byteswap_ushort(arg); 
 #elif defined(__i386__) && defined(__GNUC__) 
 	__asm__("xchgb %b0, %h0" : "+q" (arg)); 
 	return arg; 
 #elif defined(__ppc__) && defined(__GNUC__) 
-	WORD result; 
+	uint16_t result; 
 	__asm__("lhbrx %0,0,%1" : "=r" (result) : "r" (&arg), "m" (arg)); 
 	return result; 
 #else 
 	// swap bytes 
-	WORD result;
+	uint16_t result;
 	result = ((arg << 8) & 0xFF00) | ((arg >> 8) & 0x00FF); 
 	return result; 
 #endif 
 } 
  
-inline DWORD 
-__SwapUInt32(DWORD arg) { 
+inline uint32_t 
+__SwapUInt32(uint32_t arg) { 
 #if defined(_MSC_VER) && _MSC_VER >= 1310 
 	return _byteswap_ulong(arg); 
 #elif defined(__i386__) && defined(__GNUC__) 
 	__asm__("bswap %0" : "+r" (arg)); 
 	return arg; 
 #elif defined(__ppc__) && defined(__GNUC__) 
-	DWORD result; 
+	uint32_t result; 
 	__asm__("lwbrx %0,0,%1" : "=r" (result) : "r" (&arg), "m" (arg)); 
 	return result; 
 #else 
 	// swap words then bytes
-	DWORD result; 
+	uint32_t result; 
 	result = ((arg & 0x000000FF) << 24) | ((arg & 0x0000FF00) << 8) | ((arg >> 8) & 0x0000FF00) | ((arg >> 24) & 0x000000FF); 
 	return result; 
 #endif 
 } 
 
 inline void
-SwapShort(WORD *sp) {
+SwapShort(uint16_t *sp) {
 	*sp = __SwapUInt16(*sp);
 }
 
 inline void
-SwapLong(DWORD *lp) {
+SwapLong(uint32_t *lp) {
 	*lp = __SwapUInt32(*lp);
 }
  
 inline void
-SwapInt64(UINT64 *arg) {
+SwapInt64(uint64_t *arg) {
 #if defined(_MSC_VER) && _MSC_VER >= 1310
 	*arg = _byteswap_uint64(*arg);
 #else
 	union Swap {
-		UINT64 sv;
-		DWORD ul[2];
+		uint64_t sv;
+		uint32_t ul[2];
 	} tmp, result;
 	tmp.sv = *arg;
 	SwapLong(&tmp.ul[0]);
@@ -477,12 +382,12 @@ A Standard Default Color Space for the Internet - sRGB.
 */
 #define LUMA_REC709(r, g, b)	(0.2126F * r + 0.7152F * g + 0.0722F * b)
 
-#define GREY(r, g, b) (BYTE)(LUMA_REC709(r, g, b) + 0.5F)
+#define GREY(r, g, b) (uint8_t)(LUMA_REC709(r, g, b) + 0.5F)
 /*
-#define GREY(r, g, b) (BYTE)(((WORD)r * 77 + (WORD)g * 150 + (WORD)b * 29) >> 8)	// .299R + .587G + .114B
+#define GREY(r, g, b) (uint8_t)(((uint16_t)r * 77 + (uint16_t)g * 150 + (uint16_t)b * 29) >> 8)	// .299R + .587G + .114B
 */
 /*
-#define GREY(r, g, b) (BYTE)(((WORD)r * 169 + (WORD)g * 256 + (WORD)b * 87) >> 9)	// .33R + 0.5G + .17B
+#define GREY(r, g, b) (uint8_t)(((uint16_t)r * 169 + (uint16_t)g * 256 + (uint16_t)b * 87) >> 9)	// .33R + 0.5G + .17B
 */
 
 /**
@@ -501,9 +406,9 @@ Returns TRUE if the format of a dib is RGB565
 #define IS_FORMAT_RGB565(dib) ((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK))
 
 /**
-Convert a RGB565 or RGB555 RGBQUAD pixel to a WORD
+Convert a RGB565 or RGB555 FIRGBA8 pixel to a uint16_t
 */
-#define RGBQUAD_TO_WORD(dib, color) (IS_FORMAT_RGB565(dib) ? RGB565((color)->rgbBlue, (color)->rgbGreen, (color)->rgbRed) : RGB555((color)->rgbBlue, (color)->rgbGreen, (color)->rgbRed))
+#define RGBQUAD_TO_WORD(dib, color) (IS_FORMAT_RGB565(dib) ? RGB565((color)->blue, (color)->green, (color)->red) : RGB555((color)->blue, (color)->green, (color)->red))
 
 /**
 Create a greyscale palette

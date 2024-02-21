@@ -24,21 +24,21 @@
 
 /**
 Helper class to deal with rational numbers. 
-NB: LONG data type is assumed to be a signed 32-bit number. 
+NB: int32_t data type is assumed to be a signed 32-bit number. 
 */
 class FIRational {
 private:
 	/// numerator
-	LONG _numerator;
+	int32_t _numerator;
 	/// denominator
-	LONG _denominator;
+	int32_t _denominator;
 
 public:
 	/// Default constructor
 	FIRational();
 
 	/// Constructor with longs
-	FIRational(LONG n, LONG d = 1);
+	FIRational(int32_t n, int32_t d = 1);
 
 	/// Constructor with FITAG
 	FIRational(const FITAG *tag);
@@ -56,15 +56,15 @@ public:
 	FIRational& operator=(FIRational& r);
 
 	/// Get the numerator
-	LONG getNumerator();
+	int32_t getNumerator();
 
 	/// Get the denominator
-	LONG getDenominator();
+	int32_t getDenominator();
 
 	/// Converts rational value by truncating towards zero
-	LONG truncate() {
+	int32_t truncate() {
 		// Return truncated rational
-		return _denominator ? (LONG) (_numerator / _denominator) : 0;
+		return _denominator ? (int32_t) (_numerator / _denominator) : 0;
 	}
 
 	/**@name Implicit conversions */
@@ -75,8 +75,8 @@ public:
 	int intValue() {
 		return (int)truncate();
 	}
-	LONG longValue() {
-		return (LONG)truncate();
+	int32_t longValue() {
+		return (int32_t)truncate();
 	}
 	float floatValue() {
 		return _denominator ? ((float)_numerator)/((float)_denominator) : 0;
@@ -87,17 +87,17 @@ public:
 	//@}
 
 	/// Checks if this rational number is an integer, either positive or negative
-	BOOL isInteger();
+	FIBOOL isInteger();
 
 	/// Convert as "numerator/denominator"
 	std::string toString();
 
 private:
 	/// Initialize and normalize a rational number
-	void initialize(LONG n, LONG d);
+	void initialize(int32_t n, int32_t d);
 
 	/// Calculate GCD
-	LONG gcd(LONG a, LONG b);
+	int32_t gcd(int32_t a, int32_t b);
 	
 	/// Normalize numerator / denominator 
 	void normalize();

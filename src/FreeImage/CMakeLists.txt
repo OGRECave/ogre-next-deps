@@ -376,6 +376,7 @@ set(FreeImage_SOURCES
 	Source/LibWebP/src/demux/demux.c
 	Source/LibWebP/src/dsp/filters.c
 	Source/LibWebP/src/dsp/lossless_sse2.c
+	Source/LibWebP/src/dsp/lossless_sse41.c
 	Source/LibWebP/src/dsp/enc_sse41.c
 	Source/LibWebP/src/dsp/common_sse2.h
 	Source/LibWebP/src/dsp/dec_mips_dsp_r2.c
@@ -409,6 +410,7 @@ set(FreeImage_SOURCES
 	Source/LibWebP/src/dsp/lossless_common.h
 	Source/LibWebP/src/dsp/dec_clip_tables.c
 	Source/LibWebP/src/dsp/upsampling_msa.c
+	Source/LibWebP/src/dsp/cost_neon.c
 	Source/LibWebP/src/dsp/cost_sse2.c
 	Source/LibWebP/src/dsp/msa_macro.h
 	Source/LibWebP/src/dsp/enc_neon.c
@@ -442,7 +444,6 @@ set(FreeImage_SOURCES
 	Source/LibWebP/src/dsp/dec_neon.c
 	Source/LibWebP/src/dsp/lossless_msa.c
 	Source/LibWebP/src/dsp/filters_msa.c
-	Source/LibWebP/src/dsp/enc_avx2.c
 	Source/LibWebP/src/dsp/rescaler_sse2.c
 	Source/LibWebP/src/dsp/upsampling_sse2.c
 	Source/LibWebP/src/dsp/lossless_enc_sse41.c

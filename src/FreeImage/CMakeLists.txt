@@ -262,6 +262,7 @@ set(FreeImage_SOURCES
 	Source/LibTIFF4/tif_getimage.c
 	Source/LibTIFF4/tif_jpeg.c
     Source/LibTIFF4/tif_jpeg_12.c
+    Source/LibTIFF4/tif_lerc.c
 	Source/LibTIFF4/tif_luv.c
     Source/LibTIFF4/tif_lzma.c
 	Source/LibTIFF4/tif_lzw.c
@@ -280,6 +281,7 @@ set(FreeImage_SOURCES
 	Source/LibTIFF4/tif_tile.c
 	Source/LibTIFF4/tif_version.c
 	Source/LibTIFF4/tif_warning.c
+	Source/LibTIFF4/tif_webp.c
 	Source/LibTIFF4/tif_write.c
 	Source/LibTIFF4/tif_zip.c
 	Source/LibTIFF4/tiff.h

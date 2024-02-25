@@ -289,6 +289,16 @@ set(FreeImage_SOURCES
 	Source/LibTIFF4/tiffiop.h
 	Source/LibTIFF4/tiffvers.h
 	Source/LibTIFF4/uvcode.h
+	Source/LibWebP/sharpyuv/sharpyuv.c
+	Source/LibWebP/sharpyuv/sharpyuv_csp.c
+	Source/LibWebP/sharpyuv/sharpyuv_csp.h
+	Source/LibWebP/sharpyuv/sharpyuv_dsp.c
+	Source/LibWebP/sharpyuv/sharpyuv_dsp.h
+	Source/LibWebP/sharpyuv/sharpyuv_gamma.c
+	Source/LibWebP/sharpyuv/sharpyuv_gamma.h
+	Source/LibWebP/sharpyuv/sharpyuv.h
+	Source/LibWebP/sharpyuv/sharpyuv_neon.c
+	Source/LibWebP/sharpyuv/sharpyuv_sse2.c
 	Source/LibWebP/src/mux/muxinternal.c
 	Source/LibWebP/src/mux/muxedit.c
 	Source/LibWebP/src/mux/anim_encode.c
@@ -829,32 +839,6 @@ set(FreeImage_SOURCES
 	Source/Quantizers.h
 	Source/ToneMapping.h
 	Source/Utilities.h
-	Source/ZLib/adler32.c
-	Source/ZLib/compress.c
-	Source/ZLib/crc32.c
-	Source/ZLib/crc32.h
-	Source/ZLib/deflate.c
-	Source/ZLib/deflate.h
-    Source/ZLib/gzclose.c
-    Source/ZLib/gzguts.h
-    Source/ZLib/gzlib.c
-    Source/ZLib/gzread.c
-    Source/ZLib/gzwrite.c
-	Source/ZLib/infback.c
-	Source/ZLib/inffast.c
-	Source/ZLib/inffast.h
-	Source/ZLib/inffixed.h
-	Source/ZLib/inflate.c
-	Source/ZLib/inflate.h
-	Source/ZLib/inftrees.c
-	Source/ZLib/inftrees.h
-	Source/ZLib/trees.c
-	Source/ZLib/trees.h
-	Source/ZLib/uncompr.c
-	Source/ZLib/zconf.h
-	Source/ZLib/zlib.h
-	Source/ZLib/zutil.c
-	Source/ZLib/zutil.h
 )
 
 if( WIN32 )
@@ -902,7 +886,7 @@ include_directories(Source/OpenEXR/Imath)
 include_directories(Source/OpenEXR/OpenEXR)
 include_directories(Source/OpenEXR/OpenEXRCore)
 include_directories(Source/openjp2)
-include_directories(Source/ZLib)
+include_directories(../zlib)
 
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DPNG_INTEL_SSE_OPT=1)
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")

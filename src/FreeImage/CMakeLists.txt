@@ -1,5 +1,8 @@
 project(FreeImage)
 
+include( CheckIncludeFiles )
+include( CheckStructHasMember )
+
 set(FREEIMAGERE_MAJOR_VERSION "0")
 set(FREEIMAGERE_MINOR_VERSION "2")
 
@@ -879,6 +882,7 @@ include_directories(Source/LibPNG)
 include_directories(Source/LibRawLite)
 include_directories(Source/LibTIFF4)
 include_directories(Source/LibWebP)
+include_directories(Source/LibWebP/src)
 include_directories(Source/OpenEXR)
 include_directories(Source/OpenEXR/Iex)
 include_directories(Source/OpenEXR/IlmThread)
@@ -891,6 +895,26 @@ include_directories(../zlib)
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DPNG_INTEL_SSE_OPT=1)
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")
 add_definitions("-DFREEIMAGERE_MINOR_VERSION=${FREEIMAGERE_MINOR_VERSION}")
+
+check_include_files(ucontext.h IEX_HAVE_UCONTEXT_H)
+if(IEX_HAVE_UCONTEXT_H)
+  check_struct_has_member("struct _libc_fpstate" mxcsr ucontext.h IEX_HAVE_CONTROL_REGISTER_SUPPORT)
+  if(NOT IEX_HAVE_CONTROL_REGISTER_SUPPORT)
+    check_include_files(asm/sigcontext.h IEX_HAVE_SIGCONTEXT_H)
+    if(IEX_HAVE_SIGCONTEXT_H)
+      check_struct_has_member("struct _fpstate" mxcsr asm/sigcontext.h IEX_HAVE_SIGCONTEXT_CONTROL_REGISTER_SUPPORT)
+    endif()
+  endif()
+
+
+  add_definitions("-DHAVE_UCONTEXT_H=1")
+  if( IEX_HAVE_CONTROL_REGISTER_SUPPORT )
+      add_definitions("-DIEX_HAVE_CONTROL_REGISTER_SUPPORT=1")
+  endif()
+  if( IEX_HAVE_SIGCONTEXT_CONTROL_REGISTER_SUPPORT )
+      add_definitions("-DIEX_HAVE_SIGCONTEXT_CONTROL_REGISTER_SUPPORT=1")
+  endif()
+endif()
 
 add_library(FreeImage STATIC ${FreeImage_SOURCES})
 if (OGRE_PROJECT_FOLDERS)

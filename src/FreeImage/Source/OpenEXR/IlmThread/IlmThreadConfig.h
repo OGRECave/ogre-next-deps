@@ -12,8 +12,8 @@
 //
 // C++ namespace configuration / options
 
-#define ILMTHREAD_THREADING_ENABLED 1
-#define ILMTHREAD_HAVE_POSIX_SEMAPHORES 1
+// #define ILMTHREAD_THREADING_ENABLED 1
+// #define ILMTHREAD_HAVE_POSIX_SEMAPHORES 1
 
 //
 // Current internal library namepace name

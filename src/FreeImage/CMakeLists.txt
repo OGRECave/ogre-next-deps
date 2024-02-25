@@ -537,7 +537,6 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/Imath/toFloat.h
 	Source/OpenEXR/OpenEXR/b44ExpLogTable.cpp
 	Source/OpenEXR/OpenEXR/b44ExpLogTable.h
-	Source/OpenEXR/OpenEXR/dwaLookups.cpp
 	Source/OpenEXR/OpenEXR/dwaLookups.h
 	Source/OpenEXR/OpenEXR/ImfAcesFile.cpp
 	Source/OpenEXR/OpenEXR/ImfAcesFile.h
@@ -896,6 +895,7 @@ add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_L
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")
 add_definitions("-DFREEIMAGERE_MINOR_VERSION=${FREEIMAGERE_MINOR_VERSION}")
 
+# ======== BEGIN OpenEXR definitions ========
 check_include_files(ucontext.h IEX_HAVE_UCONTEXT_H)
 if(IEX_HAVE_UCONTEXT_H)
   check_struct_has_member("struct _libc_fpstate" mxcsr ucontext.h IEX_HAVE_CONTROL_REGISTER_SUPPORT)
@@ -915,6 +915,8 @@ if(IEX_HAVE_UCONTEXT_H)
       add_definitions("-DIEX_HAVE_SIGCONTEXT_CONTROL_REGISTER_SUPPORT=1")
   endif()
 endif()
+
+# ========= END OpenEXR definitions =========
 
 add_library(FreeImage STATIC ${FreeImage_SOURCES})
 if (OGRE_PROJECT_FOLDERS)

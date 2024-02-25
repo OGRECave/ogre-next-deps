@@ -62,7 +62,7 @@ set(FreeImage_SOURCES
     Source/FreeImage/PluginJNG.cpp
 	Source/FreeImage/PluginJP2.cpp
 	Source/FreeImage/PluginJPEG.cpp
-	# Source/FreeImage/PluginJXR.cpp
+	Source/FreeImage/PluginJXR.cpp
 	Source/FreeImage/PluginKOALA.cpp
 	Source/FreeImage/PluginMNG.cpp
 	Source/FreeImage/PluginPCD.cpp
@@ -161,6 +161,29 @@ set(FreeImage_SOURCES
 	Source/LibJPEG/jversion.h
 	Source/LibJPEG/transupp.c
 	Source/LibJPEG/transupp.h
+	Source/LibJXR/image/decode/decode.c
+	Source/LibJXR/image/decode/JXRTranscode.c
+	Source/LibJXR/image/decode/postprocess.c
+	Source/LibJXR/image/decode/segdec.c
+	Source/LibJXR/image/decode/strdec.c
+	Source/LibJXR/image/decode/strdec_x86.c
+	Source/LibJXR/image/decode/strInvTransform.c
+	Source/LibJXR/image/decode/strPredQuantDec.c
+	Source/LibJXR/image/encode/encode.c
+	Source/LibJXR/image/encode/segenc.c
+	Source/LibJXR/image/encode/strenc.c
+	Source/LibJXR/image/encode/strenc_x86.c
+	Source/LibJXR/image/encode/strFwdTransform.c
+	Source/LibJXR/image/encode/strPredQuantEnc.c
+	Source/LibJXR/image/sys/adapthuff.c
+	Source/LibJXR/image/sys/image.c
+	Source/LibJXR/image/sys/strcodec.c
+	Source/LibJXR/image/sys/strPredQuant.c
+	Source/LibJXR/image/sys/strTransform.c
+	Source/LibJXR/jxrgluelib/JXRGlue.c
+	Source/LibJXR/jxrgluelib/JXRGlueJxr.c
+	Source/LibJXR/jxrgluelib/JXRGluePFC.c
+	Source/LibJXR/jxrgluelib/JXRMeta.c
 	Source/openjp2/bio.c
 	Source/openjp2/bio.h
 	# Source/openjp2/cidx_manager.c
@@ -173,6 +196,7 @@ set(FreeImage_SOURCES
 	Source/openjp2/event.h
 	Source/openjp2/function_list.c
 	Source/openjp2/function_list.h
+	Source/openjp2/ht_dec.c
 	Source/openjp2/image.c
 	Source/openjp2/image.h
 	Source/openjp2/invert.c
@@ -189,11 +213,13 @@ set(FreeImage_SOURCES
 	Source/openjp2/openjpeg.h
 	Source/openjp2/opj_config.h
 	Source/openjp2/opj_includes.h
+	Source/openjp2/opj_malloc.c
 	Source/openjp2/opj_malloc.h
 	# Source/openjp2/phix_manager.c
 	Source/openjp2/pi.c
 	Source/openjp2/pi.h
 	# Source/openjp2/ppix_manager.c
+	Source/openjp2/sparse_array.c
 	Source/openjp2/t1.c
 	Source/openjp2/t1.h
 	Source/openjp2/t1_luts.h
@@ -203,6 +229,7 @@ set(FreeImage_SOURCES
 	Source/openjp2/tcd.h
 	Source/openjp2/tgt.c
 	Source/openjp2/tgt.h
+	Source/openjp2/thread.c
 	# Source/openjp2/thix_manager.c
 	# Source/openjp2/tpix_manager.c
 	Source/LibPNG/png.c
@@ -741,7 +768,6 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/OpenEXR/ImfZipCompressor.h
 	Source/OpenEXR/OpenEXR/ImfZip.cpp
 	Source/OpenEXR/OpenEXR/ImfZip.h
-	Source/OpenEXR/OpenEXRCore/attributes.c
 	Source/OpenEXR/OpenEXRCore/backward_compatibility.h
 	Source/OpenEXR/OpenEXRCore/base.c
 	Source/OpenEXR/OpenEXRCore/channel_list.c
@@ -873,9 +899,14 @@ endif()
 include_directories(Source)
 include_directories(Source/FreeImageToolkit)
 include_directories(Source/LibJPEG)
-#include_directories(Source/LibJXR/common/include)
-#include_directories(Source/LibJXR/jxrgluelib)
-#include_directories(Source/LibJXR/image/sys)
+include_directories(Source/LibJXR)
+include_directories(Source/LibJXR/jxrgluelib)
+include_directories(Source/LibJXR/image/sys)
+include_directories(Source/LibJXR/common/include)
+include_directories(Source/LibJXR/image)
+include_directories(Source/LibJXR/image/decode)
+include_directories(Source/LibJXR/image/encode)
+include_directories(Source/LibJXR/image/x86)
 include_directories(Source/LibMNG)
 include_directories(Source/LibPNG)
 include_directories(Source/LibRawLite)
@@ -895,6 +926,12 @@ add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_L
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")
 add_definitions("-DFREEIMAGERE_MINOR_VERSION=${FREEIMAGERE_MINOR_VERSION}")
 
+# LibJXR
+add_definitions( "-DDISABLE_PERF_MEASUREMENT" )
+if( NOT MSVC )
+    add_definitions( "-D__ANSI__=1" )
+endif()
+
 # ======== BEGIN OpenEXR definitions ========
 check_include_files(ucontext.h IEX_HAVE_UCONTEXT_H)
 if(IEX_HAVE_UCONTEXT_H)
@@ -907,13 +944,58 @@ if(IEX_HAVE_UCONTEXT_H)
   endif()
 
 
-  add_definitions("-DHAVE_UCONTEXT_H=1")
+  add_definitions( "-DHAVE_UCONTEXT_H=1" )
   if( IEX_HAVE_CONTROL_REGISTER_SUPPORT )
-      add_definitions("-DIEX_HAVE_CONTROL_REGISTER_SUPPORT=1")
+      add_definitions( "-DIEX_HAVE_CONTROL_REGISTER_SUPPORT=1" )
   endif()
   if( IEX_HAVE_SIGCONTEXT_CONTROL_REGISTER_SUPPORT )
-      add_definitions("-DIEX_HAVE_SIGCONTEXT_CONTROL_REGISTER_SUPPORT=1")
+      add_definitions( "-DIEX_HAVE_SIGCONTEXT_CONTROL_REGISTER_SUPPORT=1" )
   endif()
+endif()
+
+if( UNIX AND NOT APPLE )
+    add_definitions( "-DILMTHREAD_HAVE_POSIX_SEMAPHORES=1" )
+endif()
+
+if( APPLE )
+    add_definitions( "-DOPENEXR_IMF_HAVE_DARWIN=1" )
+endif()
+
+check_cxx_source_compiles(
+"
+#include <unistd.h>
+int main()
+{
+	sysconf(_SC_NPROCESSORS_ONLN);
+}
+" OPENEXR_IMF_HAVE_SYSCONF_NPROCESSORS_ONLN
+)
+
+if( OPENEXR_IMF_HAVE_SYSCONF_NPROCESSORS_ONLN )
+	add_definitions( "-DOPENEXR_IMF_HAVE_SYSCONF_NPROCESSORS_ONLN=1" )
+endif()
+
+check_cxx_source_compiles(
+"
+int main()
+{
+#if defined(__SSE2__)
+    int n   = 0;
+    int eax = 0;
+    int edx = 0;
+    __asm__(
+        \"xgetbv     ;\"
+        \"vzeroupper  \"
+        : \"=a\"(eax), \"=d\"(edx) : \"c\"(n) : );
+#else
+#    error No SSE support enabled to query AVX support
+#endif
+}
+" OPENEXR_IMF_HAVE_GCC_INLINE_ASM_AVX
+)
+
+if( OPENEXR_IMF_HAVE_GCC_INLINE_ASM_AVX )
+	add_definitions( "-DOPENEXR_IMF_HAVE_GCC_INLINE_ASM_AVX=1" )
 endif()
 
 # ========= END OpenEXR definitions =========

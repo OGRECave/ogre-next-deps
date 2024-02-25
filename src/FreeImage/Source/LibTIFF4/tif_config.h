@@ -70,9 +70,6 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
-/* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H 1
-
 /* 8/12 bit libjpeg dual mode enabled */
 /* #undef JPEG_DUAL_MODE_8_12 */
 
@@ -122,7 +119,7 @@
 /* #undef WEBP_SUPPORT */
 
 /* Support ZSTD compression */
-#define ZSTD_SUPPORT 1
+// #define ZSTD_SUPPORT 1
 
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most

@@ -9,15 +9,6 @@
 #pragma once
 
 //
-// Define and set to 1 if the target system supports a proc filesystem
-// compatible with the Linux kernel's proc filesystem.  Note that this
-// is only used by a program in the OpenEXRTest test suite, it's not
-// used by any OpenEXR library or application code.
-//
-
-#define OPENEXR_IMF_HAVE_LINUX_PROCFS 1
-
-//
 // Define and set to 1 if the target system is a Darwin-based system
 // (e.g., OS X).
 //
@@ -36,12 +27,12 @@
 // Define if we can use sysconf(_SC_NPROCESSORS_ONLN) to get CPU count
 //
 
-#define OPENEXR_IMF_HAVE_SYSCONF_NPROCESSORS_ONLN 1
+// #define OPENEXR_IMF_HAVE_SYSCONF_NPROCESSORS_ONLN 1
 
 //
 // Define if we can support GCC style inline asm with AVX instructions
 //
 
-#define OPENEXR_IMF_HAVE_GCC_INLINE_ASM_AVX 1
+// #define OPENEXR_IMF_HAVE_GCC_INLINE_ASM_AVX 1
 
 #endif // INCLUDED_OPENEXR_INTERNAL_CONFIG_H

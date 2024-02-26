@@ -888,6 +888,7 @@ if( CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL
 	set( FreeImage_SOURCES ${FreeImage_SOURCES}
 		Source/LibPNG/arm/arm_init.c
 		Source/LibPNG/arm/filter_neon_intrinsics.c
+		Source/LibPNG/arm/palette_neon_intrinsics.c
 	)
 else()
 	set( FreeImage_SOURCES ${FreeImage_SOURCES}

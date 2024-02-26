@@ -15,6 +15,10 @@ if (APPLE AND NOT ANDROID)
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
 endif()
 
+if( NOT WIN32 )
+    add_definitions(-DHAVE_UNISTD_H=1)
+endif()
+
 if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
   # Set build variables
   set(XCODE_ATTRIBUTE_SDKROOT iphoneos)
@@ -24,7 +28,6 @@ if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
   else()
     set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)")
   endif()
-  add_definitions(-DHAVE_UNISTD_H=1)
 elseif (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
   # OgreNext no longer targets OpenGL on Apple and the first
   # macOS with Metal support was El Capitan

@@ -36,6 +36,19 @@
 #include "memtrace.h"
 #endif
 
+#if( defined( WIN32 ) && !defined( UNDER_CE ) && \
+     ( !defined( __MINGW32__ ) || defined( __MINGW64_TOOLCHAIN__ ) ) ) || \
+    ( defined( UNDER_CE ) && defined( _ARM_ ) )
+// WinCE ARM and Desktop x86
+#else
+// other platform
+#	ifdef _BIG__ENDIAN_
+#		define _byteswap_ulong( x ) ( x )
+#	else   // _BIG__ENDIAN_
+extern U32 _byteswap_ulong( U32 bits );
+#	endif  // _BIG__ENDIAN_
+#endif
+
 extern const int dctIndex[3][16];
 extern const int blkOffset[16];
 extern const int blkOffsetUV[4];

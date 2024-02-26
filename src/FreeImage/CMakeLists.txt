@@ -2,6 +2,7 @@ project(FreeImage)
 
 include( CheckIncludeFiles )
 include( CheckStructHasMember )
+include( CheckSymbolExists )
 
 set(FREEIMAGERE_MAJOR_VERSION "0")
 set(FREEIMAGERE_MINOR_VERSION "2")
@@ -925,6 +926,24 @@ include_directories(../zlib)
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DPNG_INTEL_SSE_OPT=1)
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")
 add_definitions("-DFREEIMAGERE_MINOR_VERSION=${FREEIMAGERE_MINOR_VERSION}")
+
+# ======== BEGIN openjpeg definitions ========
+# _aligned_alloc https://msdn.microsoft.com/en-us/library/8z34s9c6.aspx
+check_symbol_exists(_aligned_malloc malloc.h OPJ_HAVE__ALIGNED_MALLOC)
+if( OPJ_HAVE__ALIGNED_MALLOC )
+    add_definitions( "-DOPJ_HAVE__ALIGNED_MALLOC=1" )
+endif()
+# posix_memalign (needs _POSIX_C_SOURCE >= 200112L on Linux)
+check_symbol_exists(memalign malloc.h OPJ_HAVE_MEMALIGN)
+if( OPJ_HAVE_MEMALIGN )
+    add_definitions( "-DOPJ_HAVE_MEMALIGN=1" )
+endif()
+# memalign (obsolete)
+check_symbol_exists(posix_memalign stdlib.h OPJ_HAVE_POSIX_MEMALIGN)
+if( OPJ_HAVE_POSIX_MEMALIGN )
+    add_definitions( "-DOPJ_HAVE_POSIX_MEMALIGN=1" )
+endif()
+# ========= END openjpeg definitions =========
 
 # LibJXR
 add_definitions( "-DDISABLE_PERF_MEASUREMENT" )

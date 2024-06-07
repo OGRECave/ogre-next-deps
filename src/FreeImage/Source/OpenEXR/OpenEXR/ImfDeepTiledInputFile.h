@@ -14,6 +14,8 @@
 
 #include "ImfForward.h"
 
+#include <cstdint>
+
 #include "ImfThreading.h"
 #include "ImfGenericInputFile.h"
 

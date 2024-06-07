@@ -19,7 +19,7 @@
 
 #include <stdio.h>
 #include <vector>
-
+#include <cstdint>
 
 OPENEXR_IMF_INTERNAL_NAMESPACE_HEADER_ENTER
 

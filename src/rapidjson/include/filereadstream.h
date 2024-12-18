@@ -1,6 +1,6 @@
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
-// Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.
+// Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
 //
 // Licensed under the MIT License (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -15,8 +15,15 @@
 #ifndef RAPIDJSON_FILEREADSTREAM_H_
 #define RAPIDJSON_FILEREADSTREAM_H_
 
-#include "rapidjson.h"
+#include "stream.h"
 #include <cstdio>
+
+#ifdef __clang__
+RAPIDJSON_DIAG_PUSH
+RAPIDJSON_DIAG_OFF(padded)
+RAPIDJSON_DIAG_OFF(unreachable-code)
+RAPIDJSON_DIAG_OFF(missing-noreturn)
+#endif
 
 RAPIDJSON_NAMESPACE_BEGIN
 
@@ -52,7 +59,7 @@ public:
 
     // For encoding detection only.
     const Ch* Peek4() const {
-        return (current_ + 4 <= bufferLast_) ? current_ : 0;
+        return (current_ + 4 - !eof_ <= bufferLast_) ? current_ : 0;
     }
 
 private:
@@ -61,7 +68,7 @@ private:
             ++current_;
         else if (!eof_) {
             count_ += readCount_;
-            readCount_ = fread(buffer_, 1, bufferSize_, fp_);
+            readCount_ = std::fread(buffer_, 1, bufferSize_, fp_);
             bufferLast_ = buffer_ + readCount_ - 1;
             current_ = buffer_;
 
@@ -84,5 +91,9 @@ private:
 };
 
 RAPIDJSON_NAMESPACE_END
+
+#ifdef __clang__
+RAPIDJSON_DIAG_POP
+#endif
 
 #endif // RAPIDJSON_FILESTREAM_H_

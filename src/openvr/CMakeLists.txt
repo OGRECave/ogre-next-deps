@@ -1,5 +1,9 @@
 project(OPENVR)
 
+if(CMAKE_VS_PLATFORM_NAME STREQUAL "ARM64")
+	return()
+endif()
+
 if(OGREDEPS_PLATFORM_X64)
 	set(PROCESSOR_ARCH "64")
 else()

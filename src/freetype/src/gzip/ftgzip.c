@@ -47,7 +47,9 @@
 
 #ifdef FT_CONFIG_OPTION_SYSTEM_ZLIB
 
-#include <zlib.h>
+// #include <zlib.h>
+// dark_sylinc: Just use our own version bundled with ogre-next-deps.
+#include "../../../zlib/zlib.h"
 
 #else /* !FT_CONFIG_OPTION_SYSTEM_ZLIB */
 

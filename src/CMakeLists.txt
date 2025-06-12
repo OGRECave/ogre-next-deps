@@ -1,4 +1,5 @@
 include(ExternalProject)
+include(CMakeDependentOption)
 
 # provide configuration options to choose which of the dependencies to build
 if (WIN32)
@@ -15,8 +16,8 @@ if (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
   option(OGREDEPS_BUILD_SDL2 "Build SDL2 dependency" FALSE)
 endif ()
 option(OGREDEPS_BUILD_FREEIMAGE "Build FreeImage dependency" TRUE)
-option(OGREDEPS_BUILD_FREETYPE "Build FreeType dependency" TRUE)
 option(OGREDEPS_BUILD_ZLIB "Build zlib dependency" TRUE)
+cmake_dependent_option(OGREDEPS_BUILD_FREETYPE "Build FreeType dependency" TRUE "OGREDEPS_BUILD_ZLIB" FALSE)
 option(OGREDEPS_BUILD_ZZIPLIB "Build zziplib dependency" TRUE)
 option(OGREDEPS_BUILD_RAPIDJSON "Build rapidjson dependency" TRUE)
 if( NOT ANDROID )

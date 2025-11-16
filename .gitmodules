@@ -1,6 +1,6 @@
 [submodule "src/SDL2"]
 	path = src/SDL2
-	url = https://github.com/spurious/SDL-mirror.git
+	url = https://github.com/libsdl-org/SDL.git
 [submodule "src/vulkan/shaderc/src/third_party/effcee"]
 	path = src/vulkan/shaderc/src/third_party/effcee
 	url = https://github.com/google/effcee

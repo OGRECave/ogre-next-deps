@@ -948,8 +948,17 @@ endif()
 
 # LibJXR
 add_definitions( "-DDISABLE_PERF_MEASUREMENT" )
-if( NOT MSVC )
+# __ANSI__ selects LibJXR's non-Windows platform header. MinGW is a WIN32
+# target, and defining both activates x86.h and ansi.h together. ansi.h then
+# redefines UINTPTR_T/INTPTR_T as 32-bit int on Windows x64.
+if( NOT MSVC AND NOT WIN32 )
     add_definitions( "-D__ANSI__=1" )
+endif()
+# FreeImage's MinGW-w64 makefiles define this. Without it, LibJXR treats
+# MinGW-w64 as "some other platform" and declares _byteswap_ulong(U32), which
+# conflicts with the MinGW-w64 CRT declaration in stdlib.h.
+if( MINGW )
+    add_definitions( "-D__MINGW64_TOOLCHAIN__" )
 endif()
 
 # ======== BEGIN OpenEXR definitions ========

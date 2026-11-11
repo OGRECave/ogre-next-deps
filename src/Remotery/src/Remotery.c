@@ -1167,7 +1167,9 @@ static void rmtThread_Destructor(rmtThread* thread)
 typedef int errno_t;
 #endif
 
-#if (!defined(_WIN64) && !defined(__APPLE__)) || (defined(__MINGW32__) && !defined(RSIZE_T_DEFINED))
+/* MinGW-w64 already typedefs rsize_t to size_t in corecrt.h. Redefining it
+ * as unsigned int conflicts on x64, where size_t is 64-bit. */
+#if !defined(_WIN64) && !defined(__APPLE__) && !defined(__MINGW32__)
 typedef unsigned int rsize_t;
 #endif
 

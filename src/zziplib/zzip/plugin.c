@@ -1,6 +1,6 @@
 
 /*
- * Author: 
+ * Author:
  *	Guido Draheim <guidod@gmx.de>
  *      Mike Nordell <tamlin-@-algonet-se>
  *
@@ -8,7 +8,7 @@
  * 	    All rights reserved,
  *	    use under the restrictions of the
  *	    Lesser GNU General Public License
- *          or alternatively the restrictions 
+ *          or alternatively the restrictions
  *          of the Mozilla Public License 1.1
  */
 
@@ -25,6 +25,37 @@
 
 #include <zzip/file.h>
 #include <zzip/format.h>
+
+#if defined(__MINGW32__) && defined(_WIN64)
+#include <limits.h>
+
+/* Limit each transfer to INT_MAX:
+ * zzip_size_t specifies the requested number of bytes and is 64-bit on Win64
+ * (maximum about 16 EiB). zzip_ssize_t reports the number of bytes actually
+ * transferred and is a 32-bit int (maximum about 2 GiB).
+ * Therefore, limit each read/write operation to INT_MAX bytes
+ * (i.e. 2 GiB - 1 byte).
+ */
+static zzip_ssize_t
+zzip_mingw64_read(int fd, void *buf, zzip_size_t len)
+{
+    unsigned int count = len > (zzip_size_t)INT_MAX
+        ? (unsigned int)INT_MAX
+        : (unsigned int)len;
+
+    return _read(fd, buf, count);
+}
+
+static zzip_ssize_t
+zzip_mingw64_write(int fd, const void *buf, zzip_size_t len)
+{
+    unsigned int count = len > (zzip_size_t)INT_MAX
+        ? (unsigned int)INT_MAX
+        : (unsigned int)len;
+
+    return _write(fd, buf, count);
+}
+#endif
 
 zzip_off_t
 zzip_filesize(int fd)
@@ -46,11 +77,19 @@ zzip_filesize(int fd)
 static const struct zzip_plugin_io default_io = {
     &open,
     &close,
+#if defined(__MINGW32__) && defined(_WIN64)
+    &zzip_mingw64_read,
+#else
     &_zzip_read,
+#endif
     &_zzip_lseek,
     &zzip_filesize,
     1, 1,
+#if defined(__MINGW32__) && defined(_WIN64)
+    &zzip_mingw64_write
+#else
     &_zzip_write
+#endif
 };
 
 /** => zzip_init_io
@@ -65,10 +104,10 @@ zzip_get_default_io(void)
 }
 
 /**
- * This function initializes the users handler struct to default values 
+ * This function initializes the users handler struct to default values
  * being the posix io functions in default configured environments.
  *
- * Note that the target io_handlers_t structure should be static or 
+ * Note that the target io_handlers_t structure should be static or
  * atleast it should be kept during the lifetime of zzip operations.
  */
 int
@@ -83,7 +122,7 @@ zzip_init_io(zzip_plugin_io_handlers_t io, int flags)
     return 0;
 }
 
-/* 
+/*
  * Local variables:
  * c-file-style: "stroustrup"
  * End:

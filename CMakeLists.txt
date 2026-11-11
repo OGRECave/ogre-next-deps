@@ -29,10 +29,8 @@ if (APPLE AND OGRE_BUILD_PLATFORM_APPLE_IOS)
     set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)")
   endif()
 elseif (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
-  # OgreNext no longer targets OpenGL on Apple and the first
-  # macOS with Metal support was El Capitan
-  # Also see https://github.com/OGRECave/ogre-next-deps/issues/11
-  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11)
+  # Xcode requires a minimum deployment target of 12.0 for macOS
+  set(CMAKE_OSX_DEPLOYMENT_TARGET 12.0)
 
   if (NOT CMAKE_OSX_ARCHITECTURES)
 	if(XCODE_VERSION VERSION_LESS 11.0)

@@ -904,7 +904,6 @@ include_directories(Source/LibJPEG)
 include_directories(Source/LibJXR)
 include_directories(Source/LibJXR/jxrgluelib)
 include_directories(Source/LibJXR/image/sys)
-include_directories(Source/LibJXR/common/include)
 include_directories(Source/LibJXR/image)
 include_directories(Source/LibJXR/image/decode)
 include_directories(Source/LibJXR/image/encode)
@@ -923,6 +922,19 @@ include_directories(Source/OpenEXR/OpenEXR)
 include_directories(Source/OpenEXR/OpenEXRCore)
 include_directories(Source/openjp2)
 include_directories(../zlib)
+
+# common/include is private to the JXR glue. It holds LibJXR's guiddef.h
+# and the SAL stubs (wmspecstring.h). A target-wide -I makes MinGW-w64
+# #include <guiddef.h> open that copy, which never declares __mingw_uuidof.
+set_property(SOURCE
+	Source/LibJXR/jxrgluelib/JXRGlue.c
+	Source/LibJXR/jxrgluelib/JXRGlueJxr.c
+	Source/LibJXR/jxrgluelib/JXRGluePFC.c
+	Source/LibJXR/jxrgluelib/JXRMeta.c
+	Source/FreeImage/PluginJXR.cpp
+	APPEND PROPERTY INCLUDE_DIRECTORIES
+	"${CMAKE_CURRENT_SOURCE_DIR}/Source/LibJXR/common/include"
+)
 
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DPNG_INTEL_SSE_OPT=1)
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")
@@ -948,8 +960,17 @@ endif()
 
 # LibJXR
 add_definitions( "-DDISABLE_PERF_MEASUREMENT" )
-if( NOT MSVC )
+# __ANSI__ selects LibJXR's non-Windows platform header. MinGW is a WIN32
+# target, and defining both activates x86.h and ansi.h together. ansi.h then
+# redefines UINTPTR_T/INTPTR_T as 32-bit int on Windows x64.
+if( NOT MSVC AND NOT WIN32 )
     add_definitions( "-D__ANSI__=1" )
+endif()
+# FreeImage's MinGW-w64 makefiles define this. Without it, LibJXR treats
+# MinGW-w64 as "some other platform" and declares _byteswap_ulong(U32), which
+# conflicts with the MinGW-w64 CRT declaration in stdlib.h.
+if( MINGW )
+    add_definitions( "-D__MINGW64_TOOLCHAIN__" )
 endif()
 
 # ======== BEGIN OpenEXR definitions ========

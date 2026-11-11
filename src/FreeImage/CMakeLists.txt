@@ -904,7 +904,6 @@ include_directories(Source/LibJPEG)
 include_directories(Source/LibJXR)
 include_directories(Source/LibJXR/jxrgluelib)
 include_directories(Source/LibJXR/image/sys)
-include_directories(Source/LibJXR/common/include)
 include_directories(Source/LibJXR/image)
 include_directories(Source/LibJXR/image/decode)
 include_directories(Source/LibJXR/image/encode)
@@ -923,6 +922,19 @@ include_directories(Source/OpenEXR/OpenEXR)
 include_directories(Source/OpenEXR/OpenEXRCore)
 include_directories(Source/openjp2)
 include_directories(../zlib)
+
+# common/include is private to the JXR glue. It holds LibJXR's guiddef.h
+# and the SAL stubs (wmspecstring.h). A target-wide -I makes MinGW-w64
+# #include <guiddef.h> open that copy, which never declares __mingw_uuidof.
+set_property(SOURCE
+	Source/LibJXR/jxrgluelib/JXRGlue.c
+	Source/LibJXR/jxrgluelib/JXRGlueJxr.c
+	Source/LibJXR/jxrgluelib/JXRGluePFC.c
+	Source/LibJXR/jxrgluelib/JXRMeta.c
+	Source/FreeImage/PluginJXR.cpp
+	APPEND PROPERTY INCLUDE_DIRECTORIES
+	"${CMAKE_CURRENT_SOURCE_DIR}/Source/LibJXR/common/include"
+)
 
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DPNG_INTEL_SSE_OPT=1)
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")

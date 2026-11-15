@@ -24,6 +24,11 @@ endif()
 if( APPLE )
 	set( RMT_USE_METAL 1 )
 endif()
+if( WIN32 )
+	# Remotery's viewer socket uses the Windows Sockets API. MinGW does not
+	# link ws2_32 automatically the way MSVC's default libraries can.
+	target_link_libraries( Remotery ws2_32 )
+endif()
 configure_file( RemoteryConfig.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/RemoteryConfig.h )
 
 install_dep( Remotery include src/Remotery.h src/RemoteryConfig.h )

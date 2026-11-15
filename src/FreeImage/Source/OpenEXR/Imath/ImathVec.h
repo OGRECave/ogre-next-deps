@@ -16,6 +16,7 @@
 
 #include "ImathMath.h"
 
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
